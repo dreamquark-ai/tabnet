@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "tabnet"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+authors = []
+exclude = ["tabnet/*.ipynb"]
+
+[tool.poetry.dependencies]
+python = "^3.6.8"
+
+numpy="1.17.2"
+torch="1.0.1"
+tqdm="4.30.0"
+scikit_learn="0.21.3"
+pandas="0.25.1"
+
+[tool.poetry.dev-dependencies]
+jupyter="1.0.0"
+xgboost="0.90"
+matplotlib="3.1.1"
+wget="3.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
