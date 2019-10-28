@@ -13,13 +13,13 @@ numpy="1.17.2"
 torch="1.0.1"
 tqdm="4.30.0"
 scikit_learn="0.21.3"
-pandas="0.25.1"
 
 [tool.poetry.dev-dependencies]
 jupyter="1.0.0"
 xgboost="0.90"
 matplotlib="3.1.1"
 wget="3.2"
+pandas="0.25.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
