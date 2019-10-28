@@ -1,8 +1,0 @@
-numpy>=1.16.4
-matplotlib>=3.1.1
-torch>=1.0.1
-tqdm>=4.30.0
-ipython>=7.8.0
-scikit_learn>=0.21.3
-xgboost>=0.90
-tqdm>=4.30.0
