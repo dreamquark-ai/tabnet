@@ -1,9 +1,7 @@
 import torch
 import numpy as np
 from tqdm import tqdm
-import time
 from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
-from torch.autograd import Variable
 from IPython.display import clear_output
 from torch.nn.utils import clip_grad_norm_
 import matplotlib.pyplot as plt
@@ -165,13 +163,17 @@ class Model(object):
             samples_weight = np.array([weights[t] for t in y_train])
 
             samples_weight = torch.from_numpy(samples_weight)
-            samples_weigth = samples_weight.double()
+            samples_weight = samples_weight.double()
             sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
-            train_dataloader = DataLoader(TorchDataset(X_train, y_train), batch_size=self.batch_size, sampler=sampler)
-            valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid), batch_size=self.batch_size, shuffle=False)
+            train_dataloader = DataLoader(TorchDataset(X_train, y_train),
+                                          batch_size=self.batch_size, sampler=sampler)
+            valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
+                                          batch_size=self.batch_size, shuffle=False)
 
-        train_dataloader = DataLoader(TorchDataset(X_train, y_train), batch_size=self.batch_size, shuffle=True)
-        valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid), batch_size=self.batch_size, shuffle=False)
+        train_dataloader = DataLoader(TorchDataset(X_train, y_train),
+                                      batch_size=self.batch_size, shuffle=True)
+        valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
+                                      batch_size=self.batch_size, shuffle=False)
 
         losses_train = []
         losses_valid = []
@@ -188,7 +190,6 @@ class Model(object):
             metrics_train.append(fit_metrics['train']['stopping_loss'])
             metrics_valid.append(fit_metrics['valid']['stopping_loss'])
 
-
             stopping_loss = fit_metrics['valid']['stopping_loss']
             if stopping_loss < self.best_cost:
                 self.best_cost = stopping_loss
@@ -204,14 +205,13 @@ class Model(object):
 
             if self.epoch % self.verbose == 0:
                 clear_output()
-                fig = plt.figure(figsize=(15, 5))
+                plt.figure(figsize=(15, 5))
                 plt.subplot(1, 2, 1)
                 plt.plot(range(len(losses_train)), losses_train, label='Train')
                 plt.plot(range(len(losses_valid)), losses_valid, label='Valid')
                 plt.grid()
                 plt.title('Losses')
                 plt.legend()
-                #plt.show()
 
                 plt.subplot(1, 2, 2)
                 plt.plot(range(len(metrics_train)), metrics_train, label='Train')
@@ -266,7 +266,7 @@ class Model(object):
                     values, indices = torch.max(batch_outs["y_preds"], dim=1)
                     y_preds.append(indices.cpu().detach().numpy())
                 ys.append(batch_outs["y"].cpu().detach().numpy())
-                total_loss+=batch_outs["loss"]
+                total_loss += batch_outs["loss"]
                 pbar.update(1)
 
         y_preds = np.hstack(y_preds)
@@ -323,8 +323,8 @@ class Model(object):
 
         loss_value = loss.item()
         batch_outs = {'loss': loss_value,
-                       'y_preds': output,
-                       'y': targets}
+                      'y_preds': output,
+                      'y': targets}
         return batch_outs
 
     def predict_epoch(self, loader):

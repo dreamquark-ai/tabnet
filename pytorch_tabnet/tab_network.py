@@ -8,14 +8,14 @@ from copy import deepcopy
 def initialize_non_glu(module, input_dim, output_dim):
     gain_value = np.sqrt((input_dim+output_dim)/np.sqrt(4*input_dim))
     torch.nn.init.xavier_normal_(module.weight, gain=gain_value)
-    #torch.nn.init.zeros_(module.bias)
+    # torch.nn.init.zeros_(module.bias)
     return
 
 
 def initialize_glu(module, input_dim, output_dim):
     gain_value = np.sqrt((input_dim+output_dim)/np.sqrt(input_dim))
     torch.nn.init.xavier_normal_(module.weight, gain=gain_value)
-    #torch.nn.init.zeros_(module.bias)
+    # torch.nn.init.zeros_(module.bias)
     return
 
 
@@ -33,7 +33,8 @@ class GBN(torch.nn.Module):
         self.device = device
 
     def forward(self, x):
-        chunks = x.chunk(x.shape[0] // self.virtual_batch_size + ((x.shape[0] % self.virtual_batch_size) > 0))
+        chunks = x.chunk(x.shape[0] // self.virtual_batch_size +
+                         ((x.shape[0] % self.virtual_batch_size) > 0))
         res = torch.Tensor([]).to(self.device)
         for x_ in chunks:
             y = self.bn(x_)
@@ -185,7 +186,8 @@ class TabNet(torch.nn.Module):
         for step in range(self.n_steps):
             M = self.att_transformers[step](prior, att)
             masks[step] = M
-            M_loss += torch.mean(torch.sum(torch.mul(M, torch.log(M+self.epsilon)), dim=1)) / (self.n_steps)
+            M_loss += torch.mean(torch.sum(torch.mul(M, torch.log(M+self.epsilon)),
+                                           dim=1)) / (self.n_steps)
             # update prior
             prior = torch.mul(self.gamma - M, prior)
             # output
@@ -220,11 +222,12 @@ class AttentiveTransformer(torch.nn.Module):
         super(AttentiveTransformer, self).__init__()
         self.fc = Linear(input_dim, output_dim, bias=False)
         initialize_non_glu(self.fc, input_dim, output_dim)
-        self.bn = GBN(output_dim, virtual_batch_size=virtual_batch_size, momentum=momentum, device=device)
+        self.bn = GBN(output_dim, virtual_batch_size=virtual_batch_size,
+                      momentum=momentum, device=device)
 
         # Sparsemax
         self.sp_max = sparsemax.Sparsemax(dim=-1)
-        #Entmax
+        # Entmax
         # self.sp_max = sparsemax.Entmax15(dim=-1)
 
     def forward(self, priors, processed_feat):
@@ -257,7 +260,8 @@ class FeatTransformer(torch.nn.Module):
         self.shared = deepcopy(shared_blocks)
         if self.shared is not None:
             for l in self.shared.glu_layers:
-                l.bn = GBN(2*output_dim, virtual_batch_size=virtual_batch_size, momentum=momentum, device=device)
+                l.bn = GBN(2*output_dim, virtual_batch_size=virtual_batch_size,
+                           momentum=momentum, device=device)
 
         if self.shared is None:
             self.specifics = GLU_Block(input_dim, output_dim,
@@ -303,7 +307,6 @@ class GLU_Block(torch.nn.Module):
                                                  momentum=momentum,
                                                  device=device))
 
-
     def forward(self, x):
         if self.first:  # the first layer of the block has no scale multiplication
             x = self.glu_layers[0](x)
@@ -326,7 +329,8 @@ class GLU_Layer(torch.nn.Module):
         self.fc = Linear(input_dim, 2*output_dim, bias=False)
         initialize_glu(self.fc, input_dim, 2*output_dim)
 
-        self.bn = GBN(2*output_dim, virtual_batch_size=virtual_batch_size, momentum=momentum, device=device)
+        self.bn = GBN(2*output_dim, virtual_batch_size=virtual_batch_size,
+                      momentum=momentum, device=device)
 
     def forward(self, x):
         x = self.fc(x)
