@@ -7,7 +7,7 @@ This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). T
 # Installation
 
 You can install using pip by running:
-`pip install tabnet`
+`pip install pytorch-tabnet`
 
 If you wan to use it locally within a docker container:
 

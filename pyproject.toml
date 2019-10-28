@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "tabnet"
+name = "pytorch_tabnet"
 version = "0.1.0"
 description = ""
 readme = "README.md"

@@ -1,7 +1,7 @@
 import torch
 from torch.nn import Linear, BatchNorm1d, ReLU
 import numpy as np
-from tabnet import sparsemax
+from pytorch_tabnet import sparsemax
 from copy import deepcopy
 
 
