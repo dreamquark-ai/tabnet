@@ -283,7 +283,7 @@ class Model(object):
             for data, targets in train_loader:
                 batch_outs = self.train_batch(data, targets)
                 if self.output_dim == 1:
-                    y_preds.append(batch_outs["y_preds"].cpu().detach().numpy())
+                    y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
                 elif self.output_dim == 2:
                     y_preds.append(batch_outs["y_preds"][:, 1].cpu().detach().numpy())
                 else:
@@ -328,7 +328,11 @@ class Model(object):
         """
         self.network.train()
         data = data.to(self.device).float()
-        targets = targets.to(self.device).long()
+
+        if self.output_dim == 1:
+            targets = targets.to(self.device).float()
+        else:
+            targets = targets.to(self.device).long()
         self.optimizer.zero_grad()
 
         output, M_loss, M_explain, _ = self.network(data)
@@ -365,7 +369,7 @@ class Model(object):
             batch_outs = self.predict_batch(data, targets)
             total_loss += batch_outs["loss"]
             if self.output_dim == 1:
-                y_preds.append(batch_outs["y_preds"].cpu().detach().numpy())
+                y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
             elif self.output_dim == 2:
                 y_preds.append(batch_outs["y_preds"][:, 1].cpu().detach().numpy())
             else:
@@ -409,7 +413,10 @@ class Model(object):
         """
         self.network.eval()
         data = data.to(self.device).float()
-        targets = targets.to(self.device).long()
+        if self.output_dim == 1:
+            targets = targets.to(self.device).float()
+        else:
+            targets = targets.to(self.device).long()
 
         output, M_loss, M_explain, _ = self.network(data)
 
