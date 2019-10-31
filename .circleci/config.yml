@@ -1,0 +1,22 @@
+---
+version: 2
+jobs:
+    lint-code:
+        machine:
+            image: circleci/classic:latest
+        working_directory: ~/tabnet
+        resource_class: medium
+        steps:
+            - checkout
+            - run:
+                name: LintCode
+                command: |
+                    make build
+                    make install
+                    make lint
+
+workflows:
+    version: 2
+    CI-tabnet:
+        jobs:
+            - lint-code
