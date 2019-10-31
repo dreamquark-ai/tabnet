@@ -10,6 +10,7 @@ WARN_COLOR=\\e[33m
 PORT=8889
 .SILENT: ;
 default: help;   # default target
+DOCKER_RUN = docker run  --rm  -v ${FOLDER}:/work -w /work --entrypoint bash -lc python-poetry:latest -c
 
 IMAGE_NAME=python-poetry:latest
 
@@ -22,6 +23,14 @@ start: build
 	echo "Starting container ${IMAGE_NAME}"
 	docker run --rm -it -v ${FOLDER}:/work -w /work -p ${PORT}:${PORT} -e "JUPYTER_PORT=${PORT}" ${IMAGE_NAME}
 .PHONY: start
+
+install: build
+	$(DOCKER_RUN) 'poetry install'
+.PHONY: install
+
+lint:
+	$(DOCKER_RUN) 'poetry run flake8'
+.PHONY: lint
 
 notebook:
 	poetry run jupyter notebook --allow-root --ip 0.0.0.0 --port ${PORT} --no-browser --notebook-dir .
