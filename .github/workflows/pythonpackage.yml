@@ -20,7 +20,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python 
+        curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+        source $HOME/.poetry/env
+        poetry config settings.virtualenvs.create false
         poetry install
     - name: Lint with flake8
       run: |
