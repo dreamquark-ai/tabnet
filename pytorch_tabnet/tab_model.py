@@ -6,31 +6,7 @@ from IPython.display import clear_output
 from torch.nn.utils import clip_grad_norm_
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
-
-
-class TorchDataset(Dataset):
-    """
-    Format for numpy array
-
-    Parameters
-    ----------
-        X: 2D array
-            The input matrix
-        y: 2D array
-            The one-hot encoded target
-    """
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.timer = []
-
-    def __len__(self):
-        return len(self.x)
-
-    def __getitem__(self, index):
-        x, y = self.x[index], self.y[index]
-        return x, y
+from pytorch_tabnet.utils import TorchDataset, PredictDataset
 
 
 class Model(object):
@@ -434,7 +410,7 @@ class Model(object):
 
     def predict_proba(self, X):
         """
-        Make predictions on a batch (valid)
+        Make predictions for classification on a batch (valid)
 
         Parameters
         ----------
@@ -448,9 +424,95 @@ class Model(object):
             batch_outs: dict
         """
         self.network.eval()
-        data = torch.Tensor(X).to(self.device).float()
 
-        output, M_loss, M_explain, masks = self.network(data)
-        predictions = output.cpu().detach().numpy()
+        dataloader = DataLoader(PredictDataset(X),
+                                batch_size=self.batch_size, shuffle=False)
 
-        return predictions, M_explain, masks
+        for batch_nb, data in enumerate(dataloader):
+            data = data.to(self.device).float()
+
+            output, M_loss, M_explain, masks = self.network(data)
+            predictions = torch.nn.Softmax(dim=1)(output).cpu().detach().numpy()
+            if batch_nb == 0:
+                res = predictions
+            else:
+                res = np.vstack([res, predictions])
+        return res
+
+    def predict(self, X):
+        """
+        Make predictions on a batch (valid)
+
+        Parameters
+        ----------
+            data: a :tensor: `torch.Tensor`
+                Input data
+            target: a :tensor: `torch.Tensor`
+                Target data
+
+        Returns
+        -------
+            predictions: np.array
+                Predictions of the regression problem or the last class
+        """
+        self.network.eval()
+        dataloader = DataLoader(PredictDataset(X),
+                                batch_size=self.batch_size, shuffle=False)
+
+        for batch_nb, data in enumerate(dataloader):
+            data = data.to(self.device).float()
+
+            output, M_loss, M_explain, masks = self.network(data)
+            if self.output_dim == 1:
+                predictions = output.cpu().detach().numpy().reshape(-1)
+            else:
+                predictions = torch.argmax(torch.nn.Softmax(dim=1)(output),
+                                           dim=1)
+                predictions = predictions.cpu().detach().numpy().reshape(-1)
+
+            if batch_nb == 0:
+                res = predictions
+            else:
+                res = np.hstack([res, predictions])
+
+        return res
+
+    def explain(self, X):
+        """
+        Return local explanation
+
+        Parameters
+        ----------
+            data: a :tensor: `torch.Tensor`
+                Input data
+            target: a :tensor: `torch.Tensor`
+                Target data
+
+        Returns
+        -------
+            M_explain: matrix
+                Importance per sample, per columns.
+            masks: matrix
+                Sparse matrix showing attention masks used by network.
+        """
+        self.network.eval()
+
+        dataloader = DataLoader(PredictDataset(X),
+                                batch_size=self.batch_size, shuffle=False)
+
+        for batch_nb, data in enumerate(dataloader):
+            data = data.to(self.device).float()
+
+            output, M_loss, M_explain, masks = self.network(data)
+            for key, value in masks.items():
+                masks[key] = value.cpu().detach().numpy()
+
+            if batch_nb == 0:
+                res_explain = M_explain.cpu().detach().numpy()
+                res_masks = masks
+            else:
+                res_explain = np.vstack([res_explain,
+                                         M_explain.cpu().detach().numpy()])
+                for key, value in masks.items():
+                    res_masks[key] = np.vstack([res_masks[key], value])
+        return M_explain, res_masks
