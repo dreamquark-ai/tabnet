@@ -17,8 +17,11 @@ IMAGE_RELEASER_NAME=release-changelog:latest
 
 prepare-release: build build-releaser ## Prepare release branch with changelog for given version
 	./release-script/prepare-release.sh
-	#docker build -t ${IMAGE_RELEASER_NAME} .
-.PHONY: build
+.PHONY: prepare-release
+
+do-release: build build-releaser ## Prepare release branch with changelog for given version
+	./release-script/do-release.sh
+.PHONY: do-release
 
 build-releaser: ## Build docker image for releaser
 	echo "Building Dockerfile"
