@@ -1,13 +1,15 @@
 from torch import nn
 from torch.autograd import Function
+import torch.nn.functional as F
+
 import torch
 
-
-# Other possible implementations:
-#  https://github.com/KrisKorrel/sparsemax-pytorch/blob/master/sparsemax.py
-#  https://github.com/msobroza/SparsemaxPytorch/blob/master/mnist/sparsemax.py
-# https://github.com/vene/sparse-structured-attention/blob/master/pytorch/torchsparseattn/sparsemax.py
-
+"""
+Other possible implementations:
+https://github.com/KrisKorrel/sparsemax-pytorch/blob/master/sparsemax.py
+https://github.com/msobroza/SparsemaxPytorch/blob/master/mnist/sparsemax.py
+https://github.com/vene/sparse-structured-attention/blob/master/pytorch/torchsparseattn/sparsemax.py
+"""
 
 
 # credits to Yandex https://github.com/Qwicen/node/blob/master/lib/nn_utils.py
@@ -55,7 +57,6 @@ class SparsemaxFunction(Function):
         grad_input = torch.where(output != 0, grad_input - v_hat, grad_input)
         return grad_input, None
 
-
     @staticmethod
     def _threshold_and_support(input, dim=-1):
         """Sparsemax building block: compute the threshold
@@ -75,9 +76,6 @@ class SparsemaxFunction(Function):
         tau = input_cumsum.gather(dim, support_size - 1)
         tau /= support_size.to(input.dtype)
         return tau, support_size
-
-
-#sparsemax = lambda input, dim=-1: SparsemaxFunction.apply(input, dim)
 
 
 sparsemax = SparsemaxFunction.apply
@@ -174,9 +172,9 @@ class Entmoid15(Function):
         return grad_input
 
 
-
 entmax15 = Entmax15Function.apply
 entmoid15 = Entmoid15.apply
+
 
 class Entmax15(nn.Module):
 
@@ -186,8 +184,6 @@ class Entmax15(nn.Module):
 
     def forward(self, input):
         return entmax15(input, self.dim)
-
-
 
 
 # Credits were lost...

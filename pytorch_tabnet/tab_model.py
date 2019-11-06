@@ -1,38 +1,12 @@
 import torch
 import numpy as np
 from tqdm import tqdm
-import time
 from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
-from torch.autograd import Variable
 from IPython.display import clear_output
 from torch.nn.utils import clip_grad_norm_
 import matplotlib.pyplot as plt
-from torch.utils.data import Dataset, DataLoader, WeightedRandomSampler
-
-
-class TorchDataset(Dataset):
-    """
-    Format for numpy array
-
-    Parameters
-    ----------
-        X: 2D array
-            The input matrix
-        y: 2D array
-            The one-hot encoded target
-    """
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.timer = []
-
-    def __len__(self):
-        return len(self.x)
-
-    def __getitem__(self, index):
-        x, y = self.x[index], self.y[index]
-        return x, y
+from torch.utils.data import DataLoader, WeightedRandomSampler
+from pytorch_tabnet.utils import TorchDataset, PredictDataset
 
 
 class Model(object):
@@ -189,13 +163,17 @@ class Model(object):
             samples_weight = np.array([weights[t] for t in y_train])
 
             samples_weight = torch.from_numpy(samples_weight)
-            samples_weigth = samples_weight.double()
+            samples_weight = samples_weight.double()
             sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
-            train_dataloader = DataLoader(TorchDataset(X_train, y_train), batch_size=self.batch_size, sampler=sampler)
-            valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid), batch_size=self.batch_size, shuffle=False)
+            train_dataloader = DataLoader(TorchDataset(X_train, y_train),
+                                          batch_size=self.batch_size, sampler=sampler)
+            valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
+                                          batch_size=self.batch_size, shuffle=False)
 
-        train_dataloader = DataLoader(TorchDataset(X_train, y_train), batch_size=self.batch_size, shuffle=True)
-        valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid), batch_size=self.batch_size, shuffle=False)
+        train_dataloader = DataLoader(TorchDataset(X_train, y_train),
+                                      batch_size=self.batch_size, shuffle=True)
+        valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
+                                      batch_size=self.batch_size, shuffle=False)
 
         losses_train = []
         losses_valid = []
@@ -212,7 +190,6 @@ class Model(object):
             metrics_train.append(fit_metrics['train']['stopping_loss'])
             metrics_valid.append(fit_metrics['valid']['stopping_loss'])
 
-
             stopping_loss = fit_metrics['valid']['stopping_loss']
             if stopping_loss < self.best_cost:
                 self.best_cost = stopping_loss
@@ -228,14 +205,13 @@ class Model(object):
 
             if self.epoch % self.verbose == 0:
                 clear_output()
-                fig = plt.figure(figsize=(15, 5))
+                plt.figure(figsize=(15, 5))
                 plt.subplot(1, 2, 1)
                 plt.plot(range(len(losses_train)), losses_train, label='Train')
                 plt.plot(range(len(losses_valid)), losses_valid, label='Valid')
                 plt.grid()
                 plt.title('Losses')
                 plt.legend()
-                #plt.show()
 
                 plt.subplot(1, 2, 2)
                 plt.plot(range(len(metrics_train)), metrics_train, label='Train')
@@ -283,14 +259,14 @@ class Model(object):
             for data, targets in train_loader:
                 batch_outs = self.train_batch(data, targets)
                 if self.output_dim == 1:
-                    y_preds.append(batch_outs["y_preds"].cpu().detach().numpy())
+                    y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
                 elif self.output_dim == 2:
                     y_preds.append(batch_outs["y_preds"][:, 1].cpu().detach().numpy())
                 else:
                     values, indices = torch.max(batch_outs["y_preds"], dim=1)
                     y_preds.append(indices.cpu().detach().numpy())
                 ys.append(batch_outs["y"].cpu().detach().numpy())
-                total_loss+=batch_outs["loss"]
+                total_loss += batch_outs["loss"]
                 pbar.update(1)
 
         y_preds = np.hstack(y_preds)
@@ -328,7 +304,11 @@ class Model(object):
         """
         self.network.train()
         data = data.to(self.device).float()
-        targets = targets.to(self.device).long()
+
+        if self.output_dim == 1:
+            targets = targets.to(self.device).float()
+        else:
+            targets = targets.to(self.device).long()
         self.optimizer.zero_grad()
 
         output, M_loss, M_explain, _ = self.network(data)
@@ -343,8 +323,8 @@ class Model(object):
 
         loss_value = loss.item()
         batch_outs = {'loss': loss_value,
-                       'y_preds': output,
-                       'y': targets}
+                      'y_preds': output,
+                      'y': targets}
         return batch_outs
 
     def predict_epoch(self, loader):
@@ -365,7 +345,7 @@ class Model(object):
             batch_outs = self.predict_batch(data, targets)
             total_loss += batch_outs["loss"]
             if self.output_dim == 1:
-                y_preds.append(batch_outs["y_preds"].cpu().detach().numpy())
+                y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
             elif self.output_dim == 2:
                 y_preds.append(batch_outs["y_preds"][:, 1].cpu().detach().numpy())
             else:
@@ -409,7 +389,10 @@ class Model(object):
         """
         self.network.eval()
         data = data.to(self.device).float()
-        targets = targets.to(self.device).long()
+        if self.output_dim == 1:
+            targets = targets.to(self.device).float()
+        else:
+            targets = targets.to(self.device).long()
 
         output, M_loss, M_explain, _ = self.network(data)
 
@@ -427,7 +410,7 @@ class Model(object):
 
     def predict_proba(self, X):
         """
-        Make predictions on a batch (valid)
+        Make predictions for classification on a batch (valid)
 
         Parameters
         ----------
@@ -441,9 +424,95 @@ class Model(object):
             batch_outs: dict
         """
         self.network.eval()
-        data = torch.Tensor(X).to(self.device).float()
 
-        output, M_loss, M_explain, masks = self.network(data)
-        predictions = output.cpu().detach().numpy()
+        dataloader = DataLoader(PredictDataset(X),
+                                batch_size=self.batch_size, shuffle=False)
 
-        return predictions, M_explain, masks
+        for batch_nb, data in enumerate(dataloader):
+            data = data.to(self.device).float()
+
+            output, M_loss, M_explain, masks = self.network(data)
+            predictions = torch.nn.Softmax(dim=1)(output).cpu().detach().numpy()
+            if batch_nb == 0:
+                res = predictions
+            else:
+                res = np.vstack([res, predictions])
+        return res
+
+    def predict(self, X):
+        """
+        Make predictions on a batch (valid)
+
+        Parameters
+        ----------
+            data: a :tensor: `torch.Tensor`
+                Input data
+            target: a :tensor: `torch.Tensor`
+                Target data
+
+        Returns
+        -------
+            predictions: np.array
+                Predictions of the regression problem or the last class
+        """
+        self.network.eval()
+        dataloader = DataLoader(PredictDataset(X),
+                                batch_size=self.batch_size, shuffle=False)
+
+        for batch_nb, data in enumerate(dataloader):
+            data = data.to(self.device).float()
+
+            output, M_loss, M_explain, masks = self.network(data)
+            if self.output_dim == 1:
+                predictions = output.cpu().detach().numpy().reshape(-1)
+            else:
+                predictions = torch.argmax(torch.nn.Softmax(dim=1)(output),
+                                           dim=1)
+                predictions = predictions.cpu().detach().numpy().reshape(-1)
+
+            if batch_nb == 0:
+                res = predictions
+            else:
+                res = np.hstack([res, predictions])
+
+        return res
+
+    def explain(self, X):
+        """
+        Return local explanation
+
+        Parameters
+        ----------
+            data: a :tensor: `torch.Tensor`
+                Input data
+            target: a :tensor: `torch.Tensor`
+                Target data
+
+        Returns
+        -------
+            M_explain: matrix
+                Importance per sample, per columns.
+            masks: matrix
+                Sparse matrix showing attention masks used by network.
+        """
+        self.network.eval()
+
+        dataloader = DataLoader(PredictDataset(X),
+                                batch_size=self.batch_size, shuffle=False)
+
+        for batch_nb, data in enumerate(dataloader):
+            data = data.to(self.device).float()
+
+            output, M_loss, M_explain, masks = self.network(data)
+            for key, value in masks.items():
+                masks[key] = value.cpu().detach().numpy()
+
+            if batch_nb == 0:
+                res_explain = M_explain.cpu().detach().numpy()
+                res_masks = masks
+            else:
+                res_explain = np.vstack([res_explain,
+                                         M_explain.cpu().detach().numpy()])
+                for key, value in masks.items():
+                    res_masks[key] = np.vstack([res_masks[key], value])
+        return M_explain, res_masks

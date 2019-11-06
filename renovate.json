@@ -1,0 +1,52 @@
+{
+  "rebaseStalePrs": true,
+  "extends": [
+    "config:base",
+    ":pinAllExceptPeerDependencies",
+    "docker:enableMajor",
+    ":disableRateLimiting"
+  ],
+  "docker": {
+    "enabled": true
+  },
+  "poetry": {
+    "enabled": true
+  },
+  "pip_requirements": {
+    "enabled": false
+  },
+  "pipenv": {
+    "enabled": false
+  },
+  "pip_setup": {
+    "enabled": false
+  },
+  "pinDigests": true,
+  "semanticCommits": true,
+  "semanticCommitType": "fix",
+  "branchPrefix": "feature/renovate-",
+  "assignees": [
+    "Hartorn",
+    "j-abi",
+    "Optimox",
+    "eduardocarvp"
+  ],
+  "labels": [
+    "deps"
+  ],
+  "baseBranches": [
+    "develop"
+  ],
+  "major": {
+    "labels": [
+      "deps",
+      "dep:major"
+    ]
+  },
+  "minor": {
+    "labels": [
+      "deps",
+      "dep:minor"
+    ]
+  }
+}
