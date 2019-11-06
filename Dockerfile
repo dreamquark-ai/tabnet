@@ -1,5 +1,5 @@
 FROM python:3.7-slim-buster
-RUN apt update && apt install curl make git -y
+RUN apt update && apt install curl make git libopenblas-base -y
 RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
 ENV SHELL /bin/bash -l
 
