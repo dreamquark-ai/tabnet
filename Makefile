@@ -13,6 +13,17 @@ default: help;   # default target
 DOCKER_RUN = docker run  --rm  -v ${FOLDER}:/work -w /work --entrypoint bash -lc python-poetry:latest -c
 
 IMAGE_NAME=python-poetry:latest
+IMAGE_RELEASER_NAME=release-changelog:latest
+
+prepare-release: build build-releaser ## Prepare release branch with changelog for given version
+	./release-script/prepare-release.sh
+	#docker build -t ${IMAGE_RELEASER_NAME} .
+.PHONY: build
+
+build-releaser: ## Build docker image for releaser
+	echo "Building Dockerfile"
+	docker build -f ./release-script/Dockerfile_changelog -t ${IMAGE_RELEASER_NAME} .
+.PHONY: build
 
 build: ## Build docker image
 	echo "Building Dockerfile"
