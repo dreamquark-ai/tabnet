@@ -15,7 +15,7 @@ python = "^3.6.8"
 
 numpy="1.17.2"
 torch="1.0.1"
-tqdm="4.30.0"
+tqdm="4.37.0"
 scikit_learn="0.21.3"
 
 [tool.poetry.dev-dependencies]
