@@ -13,7 +13,7 @@ exclude = ["tabnet/*.ipynb"]
 [tool.poetry.dependencies]
 python = "^3.6.8"
 
-numpy="1.17.2"
+numpy="1.17.3"
 torch="1.0.1"
 tqdm="4.37.0"
 scikit_learn="0.21.3"
