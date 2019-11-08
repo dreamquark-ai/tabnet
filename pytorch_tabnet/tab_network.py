@@ -117,7 +117,7 @@ class TabNet(torch.nn.Module):
             self.embeddings.append(torch.nn.Embedding(cat_dim, emb_dim))
 
         # record continuous indices
-        self.continuous_idx = torch.ones(self.input_dim, dtype=torch.uint8)
+        self.continuous_idx = torch.ones(self.input_dim, dtype=torch.bool)
         self.continuous_idx[self.cat_idxs] = 0
         self.post_embed_dim = self.input_dim + (cat_emb_dim - 1)*len(self.cat_idxs)
         self.initial_bn = BatchNorm1d(self.post_embed_dim, momentum=0.01)
