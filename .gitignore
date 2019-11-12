@@ -1,3 +1,7 @@
+.doctrees
+docs-scripts/source
+objects.inv
+.buildinfo
 .cache/
 ../.history/
 .history/
