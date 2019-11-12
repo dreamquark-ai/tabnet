@@ -1,0 +1,467 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>README &mdash; pytorch_tabnet  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/./default.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="pytorch_tabnet package" href="pytorch_tabnet.html" />
+    <link rel="prev" title="Welcome to pytorch_tabnet’s documentation!" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> pytorch_tabnet
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#easy-installation">Easy installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-code">Source code</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#cpu-only">CPU only</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gpu">GPU</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#how-to-use-it">How to use it?</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#custom-early-stopping-metrics">Custom early_stopping_metrics</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="#useful-links">Useful links</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#model-parameters">Model parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fit-parameters">Fit parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pytorch_tabnet.html">pytorch_tabnet package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pytorch_tabnet</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>README</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/generated_docs/README.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="readme">
+<h1>README<a class="headerlink" href="#readme" title="Permalink to this headline">¶</a></h1>
+</div>
+<div class="section" id="tabnet-attentive-interpretable-tabular-learning">
+<h1>TabNet : Attentive Interpretable Tabular Learning<a class="headerlink" href="#tabnet-attentive-interpretable-tabular-learning" title="Permalink to this headline">¶</a></h1>
+<p>This is a pyTorch implementation of Tabnet (Arik, S. O., &amp; Pfister, T. (2019). TabNet: Attentive Interpretable Tabular Learning. arXiv preprint arXiv:1908.07442.) https://arxiv.org/pdf/1908.07442.pdf.</p>
+<p><a class="reference external" href="https://circleci.com/gh/dreamquark-ai/tabnet"><img alt="CircleCI" src="https://circleci.com/gh/dreamquark-ai/tabnet.svg?style=svg" /></a></p>
+<p><a class="reference external" href="https://badge.fury.io/py/pytorch-tabnet"><img alt="PyPI version" src="https://badge.fury.io/py/pytorch-tabnet.svg" /></a></p>
+<p><img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/pytorch-tabnet" /></p>
+<p>Any questions ? Want to contribute ? To talk with us ? You can join us on <a class="reference external" href="https://join.slack.com/t/mltooling/shared_invite/zt-fxaj0qk7-SWy2_~EWyhj4x9SD6gbRvg">Slack</a></p>
+</div>
+<div class="section" id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="easy-installation">
+<h2>Easy installation<a class="headerlink" href="#easy-installation" title="Permalink to this headline">¶</a></h2>
+<p>You can install using pip by running:
+<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pytorch-tabnet</span></code></p>
+</div>
+<div class="section" id="source-code">
+<h2>Source code<a class="headerlink" href="#source-code" title="Permalink to this headline">¶</a></h2>
+<p>If you wan to use it locally within a docker container:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">git&#64;github.com:dreamquark-ai/tabnet.git</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">tabnet</span></code> to get inside the repository</p></li>
+</ul>
+<hr class="docutils" />
+<div class="section" id="cpu-only">
+<h3>CPU only<a class="headerlink" href="#cpu-only" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">start</span></code> to build and get inside the container</p></li>
+</ul>
+</div>
+<div class="section" id="gpu">
+<h3>GPU<a class="headerlink" href="#gpu" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">start-gpu</span></code> to build and get inside the GPU container</p></li>
+</ul>
+<hr class="docutils" />
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">poetry</span> <span class="pre">install</span></code> to install all the dependencies, including jupyter</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">notebook</span></code> inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.</p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section" id="what-problems-does-pytorch-tabnet-handles">
+<h1>What problems does pytorch-tabnet handles?<a class="headerlink" href="#what-problems-does-pytorch-tabnet-handles" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p>TabNetClassifier : binary classification and multi-class classification problems</p></li>
+<li><p>TabNetRegressor : simple and multi-task regression problems</p></li>
+<li><p>TabNetMultiTaskClassifier:  multi-task multi-classification problems</p></li>
+</ul>
+</div>
+<div class="section" id="how-to-use-it">
+<h1>How to use it?<a class="headerlink" href="#how-to-use-it" title="Permalink to this headline">¶</a></h1>
+<p>TabNet is now scikit-compatible, training a TabNetClassifier or TabNetRegressor is really easy.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.tab_model</span> <span class="kn">import</span> <span class="n">TabNetClassifier</span><span class="p">,</span> <span class="n">TabNetRegressor</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">TabNetClassifier</span><span class="p">()</span>  <span class="c1">#TabNetRegressor()</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+  <span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span>
+  <span class="n">eval_set</span><span class="o">=</span><span class="p">[(</span><span class="n">X_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">)]</span>
+<span class="p">)</span>
+<span class="n">preds</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or for TabNetMultiTaskClassifier :</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.multitask</span> <span class="kn">import</span> <span class="n">TabNetMultiTaskClassifier</span>
+<span class="n">clf</span> <span class="o">=</span> <span class="n">TabNetMultiTaskClassifier</span><span class="p">()</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+  <span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span>
+  <span class="n">eval_set</span><span class="o">=</span><span class="p">[(</span><span class="n">X_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">)]</span>
+<span class="p">)</span>
+<span class="n">preds</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="section" id="custom-early-stopping-metrics">
+<h2>Custom early_stopping_metrics<a class="headerlink" href="#custom-early-stopping-metrics" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_auc_score</span>
+
+<span class="k">class</span> <span class="nc">Gini</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;gini&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
+        <span class="n">auc</span> <span class="o">=</span> <span class="n">roc_auc_score</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">auc</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">TabNetClassifier</span><span class="p">()</span>
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+  <span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span>
+  <span class="n">eval_set</span><span class="o">=</span><span class="p">[(</span><span class="n">X_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">)],</span>
+  <span class="n">eval_metric</span><span class="o">=</span><span class="p">[</span><span class="n">Gini</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>A specific customization example notebook is available here : https://github.com/dreamquark-ai/tabnet/blob/develop/customizing_example.ipynb</p>
+</div>
+</div>
+<div class="section" id="useful-links">
+<h1>Useful links<a class="headerlink" href="#useful-links" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference external" href="https://youtu.be/ysBaZO8YmX8">explanatory video</a></p></li>
+<li><p><a class="reference external" href="https://github.com/dreamquark-ai/tabnet/blob/develop/census_example.ipynb">binary classification examples</a></p></li>
+<li><p><a class="reference external" href="https://github.com/dreamquark-ai/tabnet/blob/develop/forest_example.ipynb">multi-class classification examples</a></p></li>
+<li><p><a class="reference external" href="https://github.com/dreamquark-ai/tabnet/blob/develop/regression_example.ipynb">regression examples</a></p></li>
+<li><p><a class="reference external" href="https://github.com/dreamquark-ai/tabnet/blob/develop/multi_regression_example.ipynb">multi-task regression examples</a></p></li>
+<li><p><a class="reference external" href="https://www.kaggle.com/optimo/tabnetmultitaskclassifier">multi-task multi-class classification examples</a></p></li>
+</ul>
+<div class="section" id="model-parameters">
+<h2>Model parameters<a class="headerlink" href="#model-parameters" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>n_d : int (default=8)</p>
+<p>Width of the decision prediction layer. Bigger values gives more capacity to the model with the risk of overfitting.
+Values typically range from 8 to 64.</p>
+</li>
+<li><p>n_a : int (default=8)</p>
+<p>Width of the attention embedding for each mask.
+According to the paper n_d=n_a is usually a good choice. (default=8)</p>
+</li>
+<li><p>n_steps : int (default=3)</p>
+<p>Number of steps in the architecture (usually between 3 and 10)</p>
+</li>
+<li><p>gamma : float  (default=1.3)</p>
+<p>This is the coefficient for feature reusage in the masks.
+A value close to 1 will make mask selection least correlated between layers.
+Values range from 1.0 to 2.0.</p>
+</li>
+<li><p>cat_idxs : list of int (default =[])</p>
+<p>List of categorical features indices.</p>
+</li>
+<li><p>cat_emb_dim : list of int</p>
+<p>List of embeddings size for each categorical features. (default =1)</p>
+</li>
+<li><p>n_independent : int  (default=2)</p>
+<p>Number of independent Gated Linear Units layers at each step.
+Usual values range from 1 to 5.</p>
+</li>
+<li><p>n_shared : int (default=2)</p>
+<p>Number of shared Gated Linear Units at each step
+Usual values range from 1 to 5</p>
+</li>
+<li><p>epsilon : float  (default 1e-15)</p>
+<p>Should be left untouched.</p>
+</li>
+<li><p>seed : int (default=0)</p>
+<p>Random seed for reproducibility</p>
+</li>
+<li><p>momentum : float</p>
+<p>Momentum for batch normalization, typically ranges from 0.01 to 0.4 (default=0.02)</p>
+</li>
+<li><p>clip_value : float (default None)</p>
+<p>If a float is given this will clip the gradient at clip_value.</p>
+</li>
+<li><p>lambda_sparse : float (default = 1e-3)</p>
+<p>This is the extra sparsity loss coefficient as proposed in the original paper. The bigger this coefficient is, the sparser your model will be in terms of feature selection. Depending on the difficulty of your problem, reducing this value could help.</p>
+</li>
+<li><p>optimizer_fn : torch.optim (default=torch.optim.Adam)</p>
+<p>Pytorch optimizer function</p>
+</li>
+<li><p>optimizer_params: dict (default=dict(lr=2e-2))</p>
+<p>Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning of <code class="docutils literal notranslate"><span class="pre">0.02</span> </code>  with decay is a good option.</p>
+</li>
+<li><p>scheduler_fn : torch.optim.lr_scheduler (default=None)</p>
+<p>Pytorch Scheduler to change learning rates during training.</p>
+</li>
+<li><p>scheduler_params : dict</p>
+<p>Dictionnary of parameters to apply to the scheduler_fn. Ex : {“gamma”: 0.95, “step_size”: 10}</p>
+</li>
+<li><p>model_name : str (default = ‘DreamQuarkTabNet’)</p>
+<p>Name of the model used for saving in disk, you can customize this to easily retrieve and reuse your trained models.</p>
+</li>
+<li><p>saving_path : str (default = ‘./’)</p>
+<p>Path defining where to save models.</p>
+</li>
+<li><p>verbose : int (default=1)</p>
+<p>Verbosity for notebooks plots, set to 1 to see every epoch, 0 to get None.</p>
+</li>
+<li><p>device_name : str (default=’auto’)
+‘cpu’ for cpu training, ‘gpu’ for gpu training, ‘auto’ to automatically detect gpu.</p></li>
+<li><p>mask_type: str (default=’sparsemax’)
+Either “sparsemax” or “entmax” : this is the masking function to use for selecting features</p></li>
+</ul>
+</div>
+<div class="section" id="fit-parameters">
+<h2>Fit parameters<a class="headerlink" href="#fit-parameters" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p>X_train : np.array</p>
+<p>Training features</p>
+</li>
+<li><p>y_train : np.array</p>
+<p>Training targets</p>
+</li>
+<li><p>eval_set: list of tuple</p>
+<p>List of eval tuple set (X, y).<br />The last one is used for early stopping</p>
+</li>
+<li><p>eval_name: list of str<br />List of eval set names.</p></li>
+<li><p>eval_metric : list of str<br />List of evaluation metrics.<br />The last metric is used for early stopping.</p></li>
+<li><p>max_epochs : int (default = 200)</p>
+<p>Maximum number of epochs for trainng.</p>
+</li>
+<li><p>patience : int (default = 15)</p>
+<p>Number of consecutive epochs without improvement before performing early stopping.</p>
+</li>
+<li><p>weights : int or dict (default=0)</p>
+<p>/!\ Only for TabNetClassifier
+Sampling parameter
+0 : no sampling
+1 : automated sampling with inverse class occurences
+dict : keys are classes, values are weights for each class</p>
+</li>
+<li><p>loss_fn : torch.loss or list of torch.loss</p>
+<p>Loss function for training (default to mse for regression and cross entropy for classification)
+When using TabNetMultiTaskClassifier you can set a list of same length as number of tasks,
+each task will be assigned its own loss function</p>
+</li>
+<li><p>batch_size : int (default=1024)</p>
+<p>Number of examples per batch, large batch sizes are recommended.</p>
+</li>
+<li><p>virtual_batch_size : int (default=128)</p>
+<p>Size of the mini batches used for “Ghost Batch Normalization”</p>
+</li>
+<li><p>num_workers : int (default=0)</p>
+<p>Number or workers used in torch.utils.data.Dataloader</p>
+</li>
+<li><p>drop_last : bool (default=False)</p>
+<p>Whether to drop last batch if not complete during training</p>
+</li>
+<li><p>callbacks : list of callback function<br />List of custom callbacks</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pytorch_tabnet.html" class="btn btn-neutral float-right" title="pytorch_tabnet package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to pytorch_tabnet’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Dreamquark
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
