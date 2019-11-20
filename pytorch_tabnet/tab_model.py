@@ -167,11 +167,9 @@ class Model(object):
             sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
             train_dataloader = DataLoader(TorchDataset(X_train, y_train),
                                           batch_size=self.batch_size, sampler=sampler)
-            valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
-                                          batch_size=self.batch_size, shuffle=False)
-
-        train_dataloader = DataLoader(TorchDataset(X_train, y_train),
-                                      batch_size=self.batch_size, shuffle=True)
+        else:
+            train_dataloader = DataLoader(TorchDataset(X_train, y_train),
+                                          batch_size=self.batch_size, shuffle=True)
         valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
                                       batch_size=self.batch_size, shuffle=False)
 
