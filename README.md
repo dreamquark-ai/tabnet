@@ -53,23 +53,25 @@ You can also get comfortable with the code works by playing with the **notebooks
     - 2 for binary classification
     -  N > 2 for multiclass classifcation
 
-- nd : int
+- n_d : int
 
     Width of the decision prediction layer. Bigger values gives more capacity to the model with the risk of overfitting.
-    Values typically range from 8 to 64.
+    Values typically range from 8 to 64. (default=8)
 
-- na : int
+- n_a : int
 
     Width of the attention embedding for each mask.
-    According to the paper nd=na is usually a good choice.
+    According to the paper n_d=n_a is usually a good choice. (default=8)
 
 - n_steps : int
-    Number of steps in the architecture (usually between 3 and 10)
+
+    Number of steps in the architecture (usually between 3 and 10)  (default=3)
 
 - gamma : float
+
     This is the coefficient for feature reusage in the masks.
     A value close to 1 will make mask selection least correlated between layers.
-    Values range from 1.0 to 2.0
+    Values range from 1.0 to 2.0. (default=1.3)
 - cat_idxs : list of int
 
     List of categorical features indices.

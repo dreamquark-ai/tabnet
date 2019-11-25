@@ -1,6 +1,7 @@
 import torch
 import numpy as np
 from tqdm import tqdm
+import pprint
 from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
 from IPython.display import clear_output
 from torch.nn.utils import clip_grad_norm_
@@ -35,6 +36,22 @@ class Model(object):
                 device_name = 'cpu'
         self.device = torch.device(device_name)
         print(f"Device used : {self.device}")
+
+    def __repr__(self):
+
+        render_params = ['model_name',
+                         'batch_size',
+                         'clip_value',
+                         'device',
+                         'lambda_sparse',
+                         'lr',
+                         'max_epochs',
+                         'patience',
+                         'output_dim',
+                         'verbose']
+        repr_ = [f"{key} : {value}" for key, value in self.__dict__.items()
+                 if key in render_params]
+        return f"TabNetModel({pprint.pformat(repr_)})"
 
     def def_network(self, network, **kwargs):
         """Defines network architecture and attributes **kwargs to network
@@ -101,7 +118,7 @@ class Model(object):
         self.saving_path = "./"
         self.verbose = 1
 
-        # Overrides parametersk
+        # Overrides parameters
         self.__dict__.update(kwargs)
 
         self.output_dim = self.network.output_dim

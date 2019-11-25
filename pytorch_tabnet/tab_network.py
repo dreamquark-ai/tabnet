@@ -44,8 +44,8 @@ class GBN(torch.nn.Module):
 
 
 class TabNet(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, n_d, n_a,
-                 n_steps, gamma, cat_idxs, cat_dims, cat_emb_dim=1,
+    def __init__(self, input_dim, output_dim, n_d=8, n_a=8,
+                 n_steps=3, gamma=1.3, cat_idxs=[], cat_dims=[], cat_emb_dim=1,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02, device_name='auto'):
         """
