@@ -153,9 +153,10 @@ class TabModel(object):
             if stopping_loss < self.best_cost:
                 self.best_cost = stopping_loss
                 self.patience_counter = 0
-
-                print("saving model")
+                # Saving model
                 torch.save(self.network, self.saving_path+f"{self.model_name}.pt")
+                # Updating feature_importances_
+                self.feature_importances_ = fit_metrics['train']['feature_importances_']
             else:
                 self.patience_counter += 1
 
@@ -435,7 +436,7 @@ class TabNetClassifier(TabModel):
         y_preds = []
         ys = []
         total_loss = 0
-
+        feature_importances_ = np.zeros((self.input_dim))
         with tqdm() as pbar:
             for data, targets in train_loader:
                 batch_outs = self.train_batch(data, targets)
@@ -446,7 +447,11 @@ class TabNetClassifier(TabModel):
                     y_preds.append(indices.cpu().detach().numpy())
                 ys.append(batch_outs["y"].cpu().detach().numpy())
                 total_loss += batch_outs["loss"]
+                feature_importances_ += batch_outs['batch_importance']
                 pbar.update(1)
+
+        # Normalize feature_importances_
+        feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
         y_preds = np.hstack(y_preds)
         ys = np.hstack(ys)
@@ -457,7 +462,8 @@ class TabNetClassifier(TabModel):
             stopping_loss = -accuracy_score(y_true=ys, y_pred=y_preds)
         total_loss = total_loss / len(train_loader)
         epoch_metrics = {'loss_avg': total_loss,
-                         'stopping_loss': stopping_loss
+                         'stopping_loss': stopping_loss,
+                         'feature_importances_': feature_importances_
                          }
 
         if self.scheduler is not None:
@@ -495,7 +501,8 @@ class TabNetClassifier(TabModel):
         loss_value = loss.item()
         batch_outs = {'loss': loss_value,
                       'y_preds': output,
-                      'y': targets}
+                      'y': targets,
+                      'batch_importance': M_explain.sum(dim=0).detach().numpy()}
         return batch_outs
 
     def predict_epoch(self, loader):
@@ -708,14 +715,18 @@ class TabNetRegressor(TabModel):
         y_preds = []
         ys = []
         total_loss = 0
-
+        feature_importances_ = np.zeros((self.input_dim))
         with tqdm() as pbar:
             for data, targets in train_loader:
                 batch_outs = self.train_batch(data, targets)
                 y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
                 ys.append(batch_outs["y"].cpu().detach().numpy())
                 total_loss += batch_outs["loss"]
+                feature_importances_ += batch_outs['batch_importance']
                 pbar.update(1)
+
+        # Normalize feature_importances_
+        feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
         y_preds = np.hstack(y_preds)
         ys = np.hstack(ys)
@@ -723,7 +734,8 @@ class TabNetRegressor(TabModel):
         stopping_loss = mean_squared_error(y_true=ys, y_pred=y_preds)
         total_loss = total_loss / len(train_loader)
         epoch_metrics = {'loss_avg': total_loss,
-                         'stopping_loss': stopping_loss
+                         'stopping_loss': stopping_loss,
+                         'feature_importances_': feature_importances_
                          }
 
         if self.scheduler is not None:
@@ -761,7 +773,8 @@ class TabNetRegressor(TabModel):
         loss_value = loss.item()
         batch_outs = {'loss': loss_value,
                       'y_preds': output,
-                      'y': targets}
+                      'y': targets,
+                      'batch_importance':  M_explain.sum(dim=0).detach().numpy()}
         return batch_outs
 
     def predict_epoch(self, loader):
