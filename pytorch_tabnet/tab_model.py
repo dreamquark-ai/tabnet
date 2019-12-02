@@ -16,7 +16,7 @@ class TabModel(object):
                  lambda_sparse=1e-3,
                  clip_value=1, verbose=1,
                  lr=2e-2, optimizer_fn=torch.optim.Adam,
-                 lr_params={}, scheduler=None, scheduler_fn=None,
+                 lr_params={}, scheduler_params=None, scheduler_fn=None,
                  device_name='auto', saving_path="./", model_name="DreamQuarkTabNet"):
         """ Class for TabNet model
 
@@ -43,11 +43,12 @@ class TabModel(object):
         self.lr = lr
         self.optimizer_fn = optimizer_fn
         self.lr_params = lr_params
-        self.scheduler = scheduler
-        self.scheduler_fn = scheduler_fn
         self.device_name = device_name
         self.saving_path = saving_path
         self.model_name = model_name
+
+        self.scheduler_params = scheduler_params
+        self.scheduler_fn = scheduler_fn
 
         self.opt_params = {}
         self.opt_params['lr'] = self.lr
@@ -128,6 +129,11 @@ class TabModel(object):
         self.optimizer = self.optimizer_fn(self.network.parameters(),
                                            **self.opt_params)
 
+        if self.scheduler_fn:
+            self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
+        else:
+            self.scheduler = None
+
         losses_train = []
         losses_valid = []
 
@@ -158,6 +164,9 @@ class TabModel(object):
 
             if self.epoch % self.verbose == 0:
                 plot_losses(losses_train, losses_valid, metrics_train, metrics_valid)
+
+        # load best models post training
+        self.load_best_model()
 
     def fit_epoch(self, train_dataloader, valid_dataloader):
         """
@@ -311,7 +320,7 @@ class TabNetClassifier(TabModel):
                  verbose={self.verbose}, device_name="{self.device_name}",
                  model_name="{self.model_name}", epsilon={self.epsilon},
                  optimizer_fn={str(self.optimizer_fn)},
-                 scheduler={self.scheduler},
+                 scheduler_params={self.scheduler_params},
                  scheduler_fn={self.scheduler_fn}, saving_path="{self.saving_path}")"""
         return repr_
 
@@ -635,8 +644,8 @@ class TabNetRegressor(TabModel):
                 verbose={self.verbose}, device_name="{self.device_name}",
                 model_name="{self.model_name}",
                 optimizer_fn={str(self.optimizer_fn)},
-                scheduler={self.scheduler}, epsilon={self.epsilon},
-                scheduler_fn={self.scheduler_fn}, saving_path="{self.saving_path}")"""
+                scheduler_params={self.scheduler_params}, scheduler_fn={self.scheduler_fn},
+                epsilon={self.epsilon}, saving_path="{self.saving_path}")"""
         return repr_
 
     def construct_loaders(self, X_train, y_train, X_valid, y_valid, weights, batch_size):
@@ -670,6 +679,11 @@ class TabNetRegressor(TabModel):
 
         self.weights = 0  # No weights for regression
         self.updated_weights = 0
+
+        if self.scheduler_fn:
+            self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
+        else:
+            self.scheduler = None
 
         self.max_epochs = max_epochs
         self.patience = patience
