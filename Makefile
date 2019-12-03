@@ -10,10 +10,11 @@ WARN_COLOR=\\e[33m
 PORT=8889
 .SILENT: ;
 default: help;   # default target
-DOCKER_RUN = docker run  --rm  -v ${FOLDER}:/work -w /work --entrypoint bash -lc python-poetry:latest -c
 
-IMAGE_NAME=python-poetry:latest
+IMAGE_NAME=tabnet:latest
 IMAGE_RELEASER_NAME=release-changelog:latest
+
+DOCKER_RUN = docker run  --rm  -v ${FOLDER}:/work -w /work --entrypoint bash -lc ${IMAGE_NAME} -c
 
 prepare-release: build build-releaser ## Prepare release branch with changelog for given version
 	./release-script/prepare-release.sh
@@ -33,10 +34,20 @@ build: ## Build docker image
 	docker build -t ${IMAGE_NAME} .
 .PHONY: build
 
+build-gpu: ## Build docker image
+	echo "Building Dockerfile"
+	docker build -t ${IMAGE_NAME} . -f Dockerfile_gpu
+.PHONY: build-gpu
+
 start: build ## Start docker container
 	echo "Starting container ${IMAGE_NAME}"
 	docker run --rm -it -v ${FOLDER}:/work -w /work -p ${PORT}:${PORT} -e "JUPYTER_PORT=${PORT}" ${IMAGE_NAME}
 .PHONY: start
+
+start-gpu: build-gpu ## Start docker container
+	echo "Starting container ${IMAGE_NAME}"
+	docker run --runtime nvidia --rm -it -v ${FOLDER}:/work -w /work -p ${PORT}:${PORT} -e "JUPYTER_PORT=${PORT}" ${IMAGE_NAME}
+.PHONY: start-gpu
 
 install: build ## Install dependencies
 	$(DOCKER_RUN) 'poetry install'
@@ -57,4 +68,3 @@ root_bash: ## Start a root bash inside the container
 help: ## Display help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help
-
