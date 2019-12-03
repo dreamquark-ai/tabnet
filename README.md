@@ -12,92 +12,94 @@ This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). T
 
 # Installation
 
+## Easy installation
 You can install using pip by running:
 `pip install pytorch-tabnet`
 
+## Source code
 If you wan to use it locally within a docker container:
 
-`git clone git@github.com:dreamquark-ai/tabnet.git`
+- `git clone git@github.com:dreamquark-ai/tabnet.git`
 
-`cd tabnet` to get inside the repository
+- `cd tabnet` to get inside the repository
 
-`make start` to build and get inside the container
+-----------------
+#### CPU only
+- `make start` to build and get inside the container
 
-`poetry install` to install all the dependencies, including jupyter
+#### GPU
+- `make start-gpu` to build and get inside the GPU container
 
-`make notebook` inside the same terminal
+-----------------
+- `poetry install` to install all the dependencies, including jupyter
 
-You can then follow the link to a jupyter notebook with tabnet installed.
+- `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
 
-
-
-GPU version is available and should be working but is not supported yet.
 
 # How to use it?
 
-The implementation makes it easy to try different architectures of TabNet.
-All you need is to change the  network parameters and training parameters. All parameters are quickly describe bellow, to get a better understanding of what each parameters do please refer to the orginal paper.
+TabNet is now scikit-compatible, training a TabNetClassifier or TabNetRegressor is really easy.
 
-You can also get comfortable with the code works by playing with the **notebooks tutorials** for adult census income dataset and forest cover type dataset.
+```
+from pytorch_tabnet.tab_model import TabNetClassifier, TabNetRegressor
 
-## Network parameters
+clf = TabNetClassfier()  #TabNetRegressor()
+clf.fit(X_train, Y_train, X_valid, y_valid)
+preds = clf.predict(X_test)
+```
 
-- input_dim : int
+You can also get comfortable with how the code works by playing with the **notebooks tutorials** for adult census income dataset and forest cover type dataset.
 
-    Number of initial features of the dataset
+## Model parameters
 
-- output_dim : int
-
-    Size of the desired output. Ex :
-    - 1 for regression task
-    - 2 for binary classification
-    -  N > 2 for multiclass classifcation
-
-- n_d : int
+- n_d : int (default=8)
 
     Width of the decision prediction layer. Bigger values gives more capacity to the model with the risk of overfitting.
-    Values typically range from 8 to 64. (default=8)
+    Values typically range from 8 to 64.
 
-- n_a : int
+- n_a : int (default=8)
 
     Width of the attention embedding for each mask.
     According to the paper n_d=n_a is usually a good choice. (default=8)
 
-- n_steps : int
+- n_steps : int (default=3)
 
-    Number of steps in the architecture (usually between 3 and 10)  (default=3)
+    Number of steps in the architecture (usually between 3 and 10)  
 
-- gamma : float
+- gamma : float  (default=1.3)
 
     This is the coefficient for feature reusage in the masks.
     A value close to 1 will make mask selection least correlated between layers.
-    Values range from 1.0 to 2.0. (default=1.3)
-- cat_idxs : list of int
+    Values range from 1.0 to 2.0.
+
+- cat_idxs : list of int (default =[])
 
     List of categorical features indices.
+
 - cat_emb_dim : list of int
 
-    List of embeddings size for each categorical features.
-- n_independent : int
+    List of embeddings size for each categorical features. (default =1)
+
+- n_independent : int  (default=2)
 
     Number of independent Gated Linear Units layers at each step.
-    Usual values range from 1 to 5 (default=2)
-- n_shared : int
+    Usual values range from 1 to 5.
+
+- n_shared : int (default=2)
 
     Number of shared Gated Linear Units at each step
-    Usual values range from 1 to 5 (default=2)
-- virtual_batch_size : int
+    Usual values range from 1 to 5
+- epsilon : float  (default 1e-15)
 
-    Size of the mini batches used for Ghost Batch Normalization
+    Should be left untouched.
 
-## Training parameters
+- seed : int (default=0)
 
-- max_epochs : int (default = 200)
+    Random seed for reproducibility
 
-    Maximum number of epochs for trainng.
-- patience : int (default = 15)
+- momentum : float
 
-    Number of consecutive epochs without improvement before performing early stopping.
+    Momentum for batch normalization, typically ranges from 0.01 to 0.4 (default=0.02)
 - lr : float (default = 0.02)
 
     Initial learning rate used for training. As mentionned in the original paper, a large initial learning of ```0.02 ```  with decay is a good option.
@@ -107,18 +109,74 @@ You can also get comfortable with the code works by playing with the **notebooks
 - lambda_sparse : float (default = 1e-3)
 
     This is the extra sparsity loss coefficient as proposed in the original paper. The bigger this coefficient is, the sparser your model will be in terms of feature selection. Depending on the difficulty of your problem, reducing this value could help.
-- model_name : str (default = 'DQTabNet')
+
+- optimizer_fn : torch.optim (default=torch.optim.Adam)
+
+    Pytorch optimizer function
+
+- scheduler_fn : torch.optim.lr_scheduler (default=None)
+
+    Pytorch Scheduler to change learning rates during training.
+
+- scheduler_params : dict
+
+    Dictionnary of parameters to apply to the scheduler_fn.
+
+- model_name : str (default = 'DreamQuarkTabNet')
 
     Name of the model used for saving in disk, you can customize this to easily retrieve and reuse your trained models.
+
 - saving_path : str (default = './')
 
     Path defining where to save models.
-- scheduler_fn : torch.optim.lr_scheduler (default = None)
-
-    Pytorch Scheduler to change learning rates during training.
 - scheduler_params: dict
 
     Parameters dictionnary for the scheduler_fn. Ex : {"gamma": 0.95,                    "step_size": 10}
-- verbose : int (default=-1)
+- verbose : int (default=1)
 
-    Verbosity for notebooks plots, set to 1 to see every epoch.
+    Verbosity for notebooks plots, set to 1 to see every epoch, 0 to get None.
+
+- device_name : str (default='auto')
+    'cpu' for cpu training, 'gpu' for gpu training, 'auto' to automatically detect gpu.
+## Fit parameters
+
+- X_train : np.array
+
+    Training features
+
+- y_train : np.array
+
+    Training targets
+
+- X_valid : np.array
+
+    Validation features for early stopping
+
+- y_valid : np.array for early stopping
+
+    Validation targets    
+- max_epochs : int (default = 200)
+
+    Maximum number of epochs for trainng.
+- patience : int (default = 15)
+
+    Number of consecutive epochs without improvement before performing early stopping.
+
+- weights : int or dict (default=0)
+
+    /!\ Only for TabNetClassifier
+    Sampling parameter
+    0 : no sampling
+    1 : automated sampling with inverse class occurences
+    dict : keys are classes, values are weights for each class
+
+- loss_fn : torch.loss
+
+    Loss function for training (default to mse for regression and cross entropy for classification)
+
+- batch_size : int (default=1024)
+
+    Number of examples per batch, large batch sizes are recommended .
+- virtual_batch_size : int (default=128)
+
+    Size of the mini batches used for "Ghost Batch Normalization"

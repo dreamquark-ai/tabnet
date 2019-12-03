@@ -16,7 +16,7 @@ class TabModel(object):
                  lambda_sparse=1e-3, seed=0,
                  clip_value=1, verbose=1,
                  lr=2e-2, optimizer_fn=torch.optim.Adam,
-                 lr_params={}, scheduler_params=None, scheduler_fn=None,
+                 scheduler_params=None, scheduler_fn=None,
                  device_name='auto', saving_path="./", model_name="DreamQuarkTabNet"):
         """ Class for TabNet model
 
@@ -42,7 +42,6 @@ class TabModel(object):
         self.verbose = verbose
         self.lr = lr
         self.optimizer_fn = optimizer_fn
-        self.lr_params = lr_params
         self.device_name = device_name
         self.saving_path = saving_path
         self.model_name = model_name
@@ -104,7 +103,6 @@ class TabModel(object):
                 Training batch size
             virtual_batch_size : int
                 Batch size for Ghost Batch Normalization (virtual_batch_size < batch_size)
-        TODO update docstring
         """
 
         self.update_fit_params(X_train, y_train, X_valid, y_valid, loss_fn,
@@ -313,7 +311,7 @@ class TabNetClassifier(TabModel):
 
     def __repr__(self):
         repr_ = f"""TabNetClassifier(n_d={self.n_d}, n_a={self.n_a}, n_steps={self.n_steps},
-                 lr={self.lr}, lr_params={self.lr_params}, seed={self.seed},
+                 lr={self.lr}, seed={self.seed},
                  gamma={self.gamma}, n_independent={self.n_independent}, n_shared={self.n_shared},
                  cat_idxs={self.cat_idxs},
                  cat_dims={self.cat_dims},
@@ -643,7 +641,7 @@ class TabNetRegressor(TabModel):
 
     def __repr__(self):
         repr_ = f"""TabNetRegressor(n_d={self.n_d}, n_a={self.n_a}, n_steps={self.n_steps},
-                lr={self.lr}, lr_params={self.lr_params}, seed={self.seed},
+                lr={self.lr}, seed={self.seed},
                 gamma={self.gamma}, n_independent={self.n_independent}, n_shared={self.n_shared},
                 cat_idxs={self.cat_idxs},
                 cat_dims={self.cat_dims},
