@@ -44,8 +44,8 @@ class GBN(torch.nn.Module):
 
 
 class TabNet(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, n_d, n_a,
-                 n_steps, gamma, cat_idxs, cat_dims, cat_emb_dim=1,
+    def __init__(self, input_dim, output_dim, n_d=8, n_a=8,
+                 n_steps=3, gamma=1.3, cat_idxs=[], cat_dims=[], cat_emb_dim=1,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02, device_name='auto'):
         """
@@ -117,7 +117,7 @@ class TabNet(torch.nn.Module):
             self.embeddings.append(torch.nn.Embedding(cat_dim, emb_dim))
 
         # record continuous indices
-        self.continuous_idx = torch.ones(self.input_dim, dtype=torch.uint8)
+        self.continuous_idx = torch.ones(self.input_dim, dtype=torch.bool)
         self.continuous_idx[self.cat_idxs] = 0
         self.post_embed_dim = self.input_dim + (cat_emb_dim - 1)*len(self.cat_idxs)
         self.initial_bn = BatchNorm1d(self.post_embed_dim, momentum=0.01)
