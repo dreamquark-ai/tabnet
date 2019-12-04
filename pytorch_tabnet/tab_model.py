@@ -502,7 +502,7 @@ class TabNetClassifier(TabModel):
         batch_outs = {'loss': loss_value,
                       'y_preds': output,
                       'y': targets,
-                      'batch_importance': M_explain.sum(dim=0).detach().numpy()}
+                      'batch_importance': M_explain.sum(dim=0).cpu().detach().numpy()}
         return batch_outs
 
     def predict_epoch(self, loader):
@@ -774,7 +774,7 @@ class TabNetRegressor(TabModel):
         batch_outs = {'loss': loss_value,
                       'y_preds': output,
                       'y': targets,
-                      'batch_importance':  M_explain.sum(dim=0).detach().numpy()}
+                      'batch_importance':  M_explain.sum(dim=0).cpu().detach().numpy()}
         return batch_outs
 
     def predict_epoch(self, loader):
