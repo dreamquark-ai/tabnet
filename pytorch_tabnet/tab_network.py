@@ -119,7 +119,11 @@ class TabNet(torch.nn.Module):
         # record continuous indices
         self.continuous_idx = torch.ones(self.input_dim, dtype=torch.bool)
         self.continuous_idx[self.cat_idxs] = 0
-        self.post_embed_dim = self.input_dim + (cat_emb_dim - 1)*len(self.cat_idxs)
+
+        if isinstance(cat_emb_dim, int):
+            self.post_embed_dim = self.input_dim + (cat_emb_dim - 1)*len(self.cat_idxs)
+        else:
+            self.post_embed_dim = self.input_dim + np.sum(cat_emb_dim) - len(cat_emb_dim)
         self.initial_bn = BatchNorm1d(self.post_embed_dim, momentum=0.01)
 
         if self.n_shared > 0:
