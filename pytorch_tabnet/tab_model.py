@@ -6,7 +6,8 @@ from pytorch_tabnet import tab_network
 from pytorch_tabnet.multiclass_utils import unique_labels
 from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
 from torch.nn.utils import clip_grad_norm_
-from pytorch_tabnet.utils import PredictDataset, plot_losses, create_dataloaders
+from pytorch_tabnet.utils import (PredictDataset, plot_losses,
+                                  create_dataloaders, create_explain_matrix)
 from torch.utils.data import DataLoader
 
 
@@ -125,6 +126,11 @@ class TabModel(object):
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=self.momentum,
                                           device_name=self.device_name).to(self.device)
+
+        self.reducing_matrix = create_explain_matrix(self.network.input_dim,
+                                                     self.network.cat_emb_dim,
+                                                     self.network.cat_idxs,
+                                                     self.network.post_embed_dim)
 
         self.optimizer = self.optimizer_fn(self.network.parameters(),
                                            **self.opt_params)
@@ -294,17 +300,20 @@ class TabModel(object):
 
             output, M_loss, M_explain, masks = self.network(data)
             for key, value in masks.items():
-                masks[key] = value.cpu().detach().numpy()
+                masks[key] = np.matmul(value.cpu().detach().numpy(),
+                                       self.reducing_matrix)
 
             if batch_nb == 0:
-                res_explain = M_explain.cpu().detach().numpy()
+                res_explain = np.matmul(M_explain.cpu().detach().numpy(),
+                                        self.reducing_matrix)
                 res_masks = masks
             else:
                 res_explain = np.vstack([res_explain,
-                                         M_explain.cpu().detach().numpy()])
+                                         np.matmul(M_explain.cpu().detach().numpy(),
+                                                   self.reducing_matrix)])
                 for key, value in masks.items():
                     res_masks[key] = np.vstack([res_masks[key], value])
-        return M_explain, res_masks
+        return res_explain, res_masks
 
 
 class TabNetClassifier(TabModel):
@@ -436,7 +445,7 @@ class TabNetClassifier(TabModel):
         y_preds = []
         ys = []
         total_loss = 0
-        feature_importances_ = np.zeros((self.input_dim))
+        feature_importances_ = np.zeros((self.network.post_embed_dim))
         with tqdm() as pbar:
             for data, targets in train_loader:
                 batch_outs = self.train_batch(data, targets)
@@ -450,6 +459,8 @@ class TabNetClassifier(TabModel):
                 feature_importances_ += batch_outs['batch_importance']
                 pbar.update(1)
 
+        # Reduce to initial input_dim
+        feature_importances_ = np.matmul(feature_importances_, self.reducing_matrix)
         # Normalize feature_importances_
         feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
@@ -725,6 +736,8 @@ class TabNetRegressor(TabModel):
                 feature_importances_ += batch_outs['batch_importance']
                 pbar.update(1)
 
+        # Reduce to initial input_dim
+        feature_importances_ = np.matmul(feature_importances_, self.reducing_matrix)
         # Normalize feature_importances_
         feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
