@@ -698,11 +698,6 @@ class TabNetRegressor(TabModel):
         self.weights = 0  # No weights for regression
         self.updated_weights = 0
 
-        if self.scheduler_fn:
-            self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
-        else:
-            self.scheduler = None
-
         self.max_epochs = max_epochs
         self.patience = patience
         self.batch_size = batch_size
