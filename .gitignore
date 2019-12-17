@@ -1,5 +1,6 @@
 .cache/
 ../.history/
+.history/
 data/
 .ipynb_checkpoints/
 *.pt
