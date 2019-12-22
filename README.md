@@ -43,7 +43,7 @@ TabNet is now scikit-compatible, training a TabNetClassifier or TabNetRegressor 
 ```
 from pytorch_tabnet.tab_model import TabNetClassifier, TabNetRegressor
 
-clf = TabNetClassfier()  #TabNetRegressor()
+clf = TabNetClassifier()  #TabNetRegressor()
 clf.fit(X_train, Y_train, X_valid, y_valid)
 preds = clf.predict(X_test)
 ```
