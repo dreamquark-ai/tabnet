@@ -8,7 +8,7 @@ ENV PIP_CACHE_DIR /work/.cache/pip
 ENV JUPYTER_RUNTIME_DIR /work/.cache/jupyter/runtime
 ENV JUPYTER_CONFIG_DIR /work/.cache/jupyter/config
 
-RUN $HOME/.poetry/bin/poetry config settings.virtualenvs.path $POETRY_CACHE
+RUN $HOME/.poetry/bin/poetry config virtualenvs.path $POETRY_CACHE
 
 ENV PATH /root/.poetry/bin:/bin:/usr/local/bin:/usr/bin
 
