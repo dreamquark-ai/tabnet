@@ -150,14 +150,14 @@ class TabModel(object):
         if self.verbose > 0:
             print("Will train until validation stopping metric",
                   f"hasn't improved in {self.patience} rounds.")
-            msg_epoch = f'| EPOCH |  train  |  valid  | total time (s)'
+            msg_epoch = f'| EPOCH |  train  |   valid  | total time (s)'
             print('---------------------------------------')
             print(msg_epoch)
 
-        starting_time = time.time()
         total_time = 0
         while (self.epoch < self.max_epochs and
                self.patience_counter < self.patience):
+            starting_time = time.time()
             fit_metrics = self.fit_epoch(train_dataloader, valid_dataloader)
 
             # leaving it here, may be used for callbacks later
@@ -181,9 +181,12 @@ class TabModel(object):
             total_time += time.time() - starting_time
             if self.verbose > 0:
                 if self.epoch % self.verbose == 0:
+                    separator = "|"
                     msg_epoch = f"| {self.epoch:<5} | "
-                    msg_epoch += f"{-np.round(fit_metrics['train']['stopping_loss'], 5):<5} | "
-                    msg_epoch += f"{-np.round(fit_metrics['valid']['stopping_loss'], 5):<5} | "
+                    msg_epoch += f"{-fit_metrics['train']['stopping_loss']:.5f}"
+                    msg_epoch += f' {separator:<2} '
+                    msg_epoch += f"{-fit_metrics['valid']['stopping_loss']:.5f}"
+                    msg_epoch += f' {separator:<2} '
                     msg_epoch += f" {np.round(total_time, 1):<10}"
                     print(msg_epoch)
 
