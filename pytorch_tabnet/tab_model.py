@@ -1,12 +1,14 @@
 import torch
 import numpy as np
-from tqdm import tqdm
+import time
 from abc import abstractmethod
 from pytorch_tabnet import tab_network
 from pytorch_tabnet.multiclass_utils import unique_labels
 from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
 from torch.nn.utils import clip_grad_norm_
-from pytorch_tabnet.utils import PredictDataset, plot_losses, create_dataloaders
+from pytorch_tabnet.utils import (PredictDataset,
+                                  create_dataloaders,
+                                  create_explain_matrix)
 from torch.utils.data import DataLoader
 
 
@@ -126,6 +128,11 @@ class TabModel(object):
                                           momentum=self.momentum,
                                           device_name=self.device_name).to(self.device)
 
+        self.reducing_matrix = create_explain_matrix(self.network.input_dim,
+                                                     self.network.cat_emb_dim,
+                                                     self.network.cat_idxs,
+                                                     self.network.post_embed_dim)
+
         self.optimizer = self.optimizer_fn(self.network.parameters(),
                                            **self.opt_params)
 
@@ -140,10 +147,20 @@ class TabModel(object):
         metrics_train = []
         metrics_valid = []
 
+        if self.verbose > 0:
+            print("Will train until validation stopping metric",
+                  f"hasn't improved in {self.patience} rounds.")
+            msg_epoch = f'| EPOCH |  train  |   valid  | total time (s)'
+            print('---------------------------------------')
+            print(msg_epoch)
+
+        total_time = 0
         while (self.epoch < self.max_epochs and
                self.patience_counter < self.patience):
-            print(f"EPOCH : {self.epoch}")
+            starting_time = time.time()
             fit_metrics = self.fit_epoch(train_dataloader, valid_dataloader)
+
+            # leaving it here, may be used for callbacks later
             losses_train.append(fit_metrics['train']['loss_avg'])
             losses_valid.append(fit_metrics['valid']['total_loss'])
             metrics_train.append(fit_metrics['train']['stopping_loss'])
@@ -160,12 +177,24 @@ class TabModel(object):
             else:
                 self.patience_counter += 1
 
-            print("Best metric valid: ", self.best_cost)
             self.epoch += 1
+            total_time += time.time() - starting_time
+            if self.verbose > 0:
+                if self.epoch % self.verbose == 0:
+                    separator = "|"
+                    msg_epoch = f"| {self.epoch:<5} | "
+                    msg_epoch += f"{-fit_metrics['train']['stopping_loss']:.5f}"
+                    msg_epoch += f' {separator:<2} '
+                    msg_epoch += f"{-fit_metrics['valid']['stopping_loss']:.5f}"
+                    msg_epoch += f' {separator:<2} '
+                    msg_epoch += f" {np.round(total_time, 1):<10}"
+                    print(msg_epoch)
 
-            if self.epoch % self.verbose == 0:
-                plot_losses(losses_train, losses_valid, metrics_train, metrics_valid)
-
+        if self.verbose > 0:
+            if self.patience_counter == self.patience:
+                print(f"Early stopping occured at epoch {self.epoch}")
+            print(f"Training done in {total_time:.3f} seconds.")
+            print('---------------------------------------')
         # load best models post training
         self.load_best_model()
 
@@ -294,17 +323,20 @@ class TabModel(object):
 
             output, M_loss, M_explain, masks = self.network(data)
             for key, value in masks.items():
-                masks[key] = value.cpu().detach().numpy()
+                masks[key] = np.matmul(value.cpu().detach().numpy(),
+                                       self.reducing_matrix)
 
             if batch_nb == 0:
-                res_explain = M_explain.cpu().detach().numpy()
+                res_explain = np.matmul(M_explain.cpu().detach().numpy(),
+                                        self.reducing_matrix)
                 res_masks = masks
             else:
                 res_explain = np.vstack([res_explain,
-                                         M_explain.cpu().detach().numpy()])
+                                         np.matmul(M_explain.cpu().detach().numpy(),
+                                                   self.reducing_matrix)])
                 for key, value in masks.items():
                     res_masks[key] = np.vstack([res_masks[key], value])
-        return M_explain, res_masks
+        return res_explain, res_masks
 
 
 class TabNetClassifier(TabModel):
@@ -436,20 +468,21 @@ class TabNetClassifier(TabModel):
         y_preds = []
         ys = []
         total_loss = 0
-        feature_importances_ = np.zeros((self.input_dim))
-        with tqdm() as pbar:
-            for data, targets in train_loader:
-                batch_outs = self.train_batch(data, targets)
-                if self.output_dim == 2:
-                    y_preds.append(batch_outs["y_preds"][:, 1].cpu().detach().numpy())
-                else:
-                    values, indices = torch.max(batch_outs["y_preds"], dim=1)
-                    y_preds.append(indices.cpu().detach().numpy())
-                ys.append(batch_outs["y"].cpu().detach().numpy())
-                total_loss += batch_outs["loss"]
-                feature_importances_ += batch_outs['batch_importance']
-                pbar.update(1)
+        feature_importances_ = np.zeros((self.network.post_embed_dim))
 
+        for data, targets in train_loader:
+            batch_outs = self.train_batch(data, targets)
+            if self.output_dim == 2:
+                y_preds.append(batch_outs["y_preds"][:, 1].cpu().detach().numpy())
+            else:
+                values, indices = torch.max(batch_outs["y_preds"], dim=1)
+                y_preds.append(indices.cpu().detach().numpy())
+            ys.append(batch_outs["y"].cpu().detach().numpy())
+            total_loss += batch_outs["loss"]
+            feature_importances_ += batch_outs['batch_importance']
+
+        # Reduce to initial input_dim
+        feature_importances_ = np.matmul(feature_importances_, self.reducing_matrix)
         # Normalize feature_importances_
         feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
@@ -502,7 +535,7 @@ class TabNetClassifier(TabModel):
         batch_outs = {'loss': loss_value,
                       'y_preds': output,
                       'y': targets,
-                      'batch_importance': M_explain.sum(dim=0).detach().numpy()}
+                      'batch_importance': M_explain.sum(dim=0).cpu().detach().numpy()}
         return batch_outs
 
     def predict_epoch(self, loader):
@@ -687,11 +720,6 @@ class TabNetRegressor(TabModel):
         self.weights = 0  # No weights for regression
         self.updated_weights = 0
 
-        if self.scheduler_fn:
-            self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
-        else:
-            self.scheduler = None
-
         self.max_epochs = max_epochs
         self.patience = patience
         self.batch_size = batch_size
@@ -716,15 +744,16 @@ class TabNetRegressor(TabModel):
         ys = []
         total_loss = 0
         feature_importances_ = np.zeros((self.input_dim))
-        with tqdm() as pbar:
-            for data, targets in train_loader:
-                batch_outs = self.train_batch(data, targets)
-                y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
-                ys.append(batch_outs["y"].cpu().detach().numpy())
-                total_loss += batch_outs["loss"]
-                feature_importances_ += batch_outs['batch_importance']
-                pbar.update(1)
 
+        for data, targets in train_loader:
+            batch_outs = self.train_batch(data, targets)
+            y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
+            ys.append(batch_outs["y"].cpu().detach().numpy())
+            total_loss += batch_outs["loss"]
+            feature_importances_ += batch_outs['batch_importance']
+
+        # Reduce to initial input_dim
+        feature_importances_ = np.matmul(feature_importances_, self.reducing_matrix)
         # Normalize feature_importances_
         feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
@@ -774,7 +803,7 @@ class TabNetRegressor(TabModel):
         batch_outs = {'loss': loss_value,
                       'y_preds': output,
                       'y': targets,
-                      'batch_importance':  M_explain.sum(dim=0).detach().numpy()}
+                      'batch_importance':  M_explain.sum(dim=0).cpu().detach().numpy()}
         return batch_outs
 
     def predict_epoch(self, loader):

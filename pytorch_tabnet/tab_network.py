@@ -119,7 +119,12 @@ class TabNet(torch.nn.Module):
         # record continuous indices
         self.continuous_idx = torch.ones(self.input_dim, dtype=torch.bool)
         self.continuous_idx[self.cat_idxs] = 0
-        self.post_embed_dim = self.input_dim + (cat_emb_dim - 1)*len(self.cat_idxs)
+
+        if isinstance(cat_emb_dim, int):
+            self.post_embed_dim = self.input_dim + (cat_emb_dim - 1)*len(self.cat_idxs)
+        else:
+            self.post_embed_dim = self.input_dim + np.sum(cat_emb_dim) - len(cat_emb_dim)
+        self.post_embed_dim = np.int(self.post_embed_dim)
         self.initial_bn = BatchNorm1d(self.post_embed_dim, momentum=0.01)
 
         if self.n_shared > 0:
@@ -132,7 +137,6 @@ class TabNet(torch.nn.Module):
                                               device=self.device)
         else:
             shared_feat_transform = None
-
         self.initial_splitter = FeatTransformer(self.post_embed_dim, n_d+n_a, shared_feat_transform,
                                                 n_glu=self.n_independent,
                                                 virtual_batch_size=self.virtual_batch_size,
@@ -162,14 +166,16 @@ class TabNet(torch.nn.Module):
 
     def apply_embeddings(self, x):
         """Apply embdeddings to raw inputs"""
-        # Getting categorical data
-        cat_cols = []
-        for icat, cat_idx in enumerate(self.cat_idxs):
-            cat_col = x[:, cat_idx].long()
-            cat_col = self.embeddings[icat](cat_col)
-            cat_cols.append(cat_col)
-        post_embeddings = torch.cat([x[:, self.continuous_idx].float()] + cat_cols, dim=1)
-        post_embeddings = post_embeddings.float()
+        cols = []
+        cat_feat_counter = 0
+        for feat_init_idx, is_continuous in enumerate(self.continuous_idx):
+            # Enumerate through continuous idx boolean mask to apply embeddings
+            if is_continuous:
+                cols.append(x[:, feat_init_idx].view(-1, 1))
+            else:
+                cols.append(self.embeddings[cat_feat_counter](x[:, feat_init_idx].long()))
+                cat_feat_counter += 1
+        post_embeddings = torch.cat(cols, dim=1).float()
         return post_embeddings
 
     def forward(self, x):
