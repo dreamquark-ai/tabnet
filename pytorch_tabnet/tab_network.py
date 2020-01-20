@@ -124,6 +124,7 @@ class TabNet(torch.nn.Module):
             self.post_embed_dim = self.input_dim + (cat_emb_dim - 1)*len(self.cat_idxs)
         else:
             self.post_embed_dim = self.input_dim + np.sum(cat_emb_dim) - len(cat_emb_dim)
+        self.post_embed_dim = np.int(self.post_embed_dim)
         self.initial_bn = BatchNorm1d(self.post_embed_dim, momentum=0.01)
 
         if self.n_shared > 0:
@@ -136,7 +137,6 @@ class TabNet(torch.nn.Module):
                                               device=self.device)
         else:
             shared_feat_transform = None
-
         self.initial_splitter = FeatTransformer(self.post_embed_dim, n_d+n_a, shared_feat_transform,
                                                 n_glu=self.n_independent,
                                                 virtual_batch_size=self.virtual_batch_size,
