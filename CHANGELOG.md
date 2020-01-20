@@ -1,4 +1,23 @@
 
+## [1.0.1](https://github.com/dreamquark-ai/tabnet/compare/v1.0.0...v1.0.1) (2020-01-20)
+
+
+### Bug Fixes
+
+* **regression:** fix scheduler ([01e46b7](https://github.com/dreamquark-ai/tabnet/commit/01e46b7b53aa5cb880cca5d1492ef67788c0075e))
+* fixing Dockerfile for poetry 1.0 ([6c5cdec](https://github.com/dreamquark-ai/tabnet/commit/6c5cdeca8f3c5a58e2f557f2d8bb5127d3d7f691))
+* importance indexing fixed ([a8382c3](https://github.com/dreamquark-ai/tabnet/commit/a8382c31099d59e03c432479b2798abc90f55a58))
+* local explain all batches ([91461fb](https://github.com/dreamquark-ai/tabnet/commit/91461fbcd4b8c806e920936e0154258b2dc02373))
+* regression gpu integration an typos ([269b4c5](https://github.com/dreamquark-ai/tabnet/commit/269b4c59fcb12d1c24fea7b9e15c7b63aa9939e0))
+* resolve timer issue and warnings ([ecd2cd9](https://github.com/dreamquark-ai/tabnet/commit/ecd2cd9c39c1f977868888d6b3abd719a7ee21f4))
+
+
+### Features
+
+* improve verbosity ([8a2cd87](https://github.com/dreamquark-ai/tabnet/commit/8a2cd8783b4d538648f435798a937a05262a76df))
+
+
+
 # [1.0.0](https://github.com/dreamquark-ai/tabnet/compare/v0.1.2...v1.0.0) (2019-12-03)
 
 
