@@ -441,7 +441,8 @@ class TabNetClassifier(TabModel):
         self.classes_ = train_labels
         self.target_mapper = {class_label: index
                               for index, class_label in enumerate(self.classes_)}
-
+        self.preds_mapper = {index: class_label
+                             for index, class_label in enumerate(self.classes_)}
         self.weights = weights
         self.updated_weights = self.weight_updater(self.weights)
 
@@ -619,7 +620,7 @@ class TabNetClassifier(TabModel):
         Returns
         -------
             predictions: np.array
-                Predictions of the regression problem or the last class
+                Predictions of the most probable class
         """
         self.network.eval()
         dataloader = DataLoader(PredictDataset(X),
@@ -636,7 +637,7 @@ class TabNetClassifier(TabModel):
             else:
                 res = np.hstack([res, predictions])
 
-        return res
+        return np.vectorize(self.preds_mapper.get)(res)
 
     def predict_proba(self, X):
         """
@@ -881,7 +882,7 @@ class TabNetRegressor(TabModel):
         Returns
         -------
             predictions: np.array
-                Predictions of the regression problem or the last class
+                Predictions of the regression problem
         """
         self.network.eval()
         dataloader = DataLoader(PredictDataset(X),

@@ -1,4 +1,14 @@
 
+## [1.0.2](https://github.com/dreamquark-ai/tabnet/compare/v1.0.1...v1.0.2) (2020-02-03)
+
+
+### Bug Fixes
+
+* multiclass prediction mapper ([2317c5c](https://github.com/dreamquark-ai/tabnet/commit/2317c5cc03c9c9af9e627503fb35934ea6194ce6))
+* remove deepcopy from shared blocks ([123932a](https://github.com/dreamquark-ai/tabnet/commit/123932ade14a61a466074269ce7bcf0e61a24613))
+
+
+
 ## [1.0.1](https://github.com/dreamquark-ai/tabnet/compare/v1.0.0...v1.0.1) (2020-01-20)
 
 
