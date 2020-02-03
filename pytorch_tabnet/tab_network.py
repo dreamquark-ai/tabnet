@@ -2,7 +2,6 @@ import torch
 from torch.nn import Linear, BatchNorm1d, ReLU
 import numpy as np
 from pytorch_tabnet import sparsemax
-from copy import deepcopy
 
 
 def initialize_non_glu(module, input_dim, output_dim):
@@ -263,7 +262,7 @@ class FeatTransformer(torch.nn.Module):
             Float value between 0 and 1 which will be used for momentum in batch norm
         """
 
-        self.shared = deepcopy(shared_blocks)
+        self.shared = shared_blocks
         if self.shared is not None:
             for l in self.shared.glu_layers:
                 l.bn = GBN(2*output_dim, virtual_batch_size=virtual_batch_size,
