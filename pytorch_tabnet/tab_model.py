@@ -200,6 +200,11 @@ class TabModel(object):
                 print(f"Early stopping occured at epoch {self.epoch}")
             print(f"Training done in {total_time:.3f} seconds.")
             print('---------------------------------------')
+
+        self.history = {"train": {"loss": losses_train,
+                                  "metric": metrics_train},
+                        "valid": {"loss": losses_valid,
+                                  "metric": metrics_valid}}
         # load best models post training
         self.load_best_model()
 
