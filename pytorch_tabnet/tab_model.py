@@ -502,7 +502,6 @@ class TabNetClassifier(TabModel):
 
         if self.scheduler is not None:
             self.scheduler.step()
-            print("Current learning rate: ", self.optimizer.param_groups[-1]["lr"])
         return epoch_metrics
 
     def train_batch(self, data, targets):
