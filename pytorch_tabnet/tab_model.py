@@ -10,6 +10,7 @@ from pytorch_tabnet.utils import (PredictDataset,
                                   create_dataloaders,
                                   create_explain_matrix)
 from torch.utils.data import DataLoader
+from datetime import datetime
 
 
 class TabModel(object):
@@ -106,6 +107,10 @@ class TabModel(object):
             virtual_batch_size : int
                 Batch size for Ghost Batch Normalization (virtual_batch_size < batch_size)
         """
+        # update model name
+        now = datetime.now()
+        dt_string = now.strftime("_%d-%m-%Y_%H:%M:%S")
+        self.model_name += dt_string
 
         self.update_fit_params(X_train, y_train, X_valid, y_valid, loss_fn,
                                weights, max_epochs, patience, batch_size, virtual_batch_size)
