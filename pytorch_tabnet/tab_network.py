@@ -130,7 +130,9 @@ class TabNet(torch.nn.Module):
             shared_feat_transform = torch.nn.ModuleList()
             for i in range(self.n_shared):
                 if i == 0:
-                    shared_feat_transform.append(Linear(self.post_embed_dim, 2*(n_d + n_a), bias=False))
+                    shared_feat_transform.append(Linear(self.post_embed_dim,
+                                                        2*(n_d + n_a),
+                                                        bias=False))
                 else:
                     shared_feat_transform.append(Linear(n_d + n_a, 2*(n_d + n_a), bias=False))
 
