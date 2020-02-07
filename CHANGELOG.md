@@ -1,4 +1,18 @@
 
+## [1.0.3](https://github.com/dreamquark-ai/tabnet/compare/v1.0.2...v1.0.3) (2020-02-07)
+
+
+### Bug Fixes
+
+* map class predictions for XGB results ([3747e2f](https://github.com/dreamquark-ai/tabnet/commit/3747e2f8362174fbf49b7e4890e04427cc4d5fdd))
+
+
+### Features
+
+* fix shared layers with independent batchnorm ([5f0e43f](https://github.com/dreamquark-ai/tabnet/commit/5f0e43fb961431437d33abe5d70251cf8067d14d))
+
+
+
 ## [1.0.2](https://github.com/dreamquark-ai/tabnet/compare/v1.0.1...v1.0.2) (2020-02-03)
 
 
