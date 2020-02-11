@@ -3,6 +3,7 @@ from torch.nn import Linear, BatchNorm1d, ReLU
 import numpy as np
 from pytorch_tabnet import sparsemax
 
+
 def initialize_non_glu(module, input_dim, output_dim):
     gain_value = np.sqrt((input_dim+output_dim)/np.sqrt(4*input_dim))
     torch.nn.init.xavier_normal_(module.weight, gain=gain_value)
@@ -22,6 +23,7 @@ class GBN(torch.nn.Module):
         Ghost Batch Normalization
         https://arxiv.org/abs/1705.08741
     """
+
     def __init__(self, input_dim, virtual_batch_size=128, momentum=0.01):
         super(GBN, self).__init__()
 
@@ -39,10 +41,11 @@ class GBN(torch.nn.Module):
 
         return res
 
+
 class DryTabNet(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, 
+    def __init__(self, input_dim, output_dim,
                  n_d=8, n_a=8,
-                 n_steps=3, gamma=1.3, 
+                 n_steps=3, gamma=1.3,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02):
         """
@@ -83,7 +86,7 @@ class DryTabNet(torch.nn.Module):
         self.n_independent = n_independent
         self.n_shared = n_shared
         self.virtual_batch_size = virtual_batch_size
-        
+
         if self.n_shared > 0:
             shared_feat_transform = torch.nn.ModuleList()
             for i in range(self.n_shared):
@@ -194,7 +197,7 @@ class TabNet(torch.nn.Module):
         self.cat_idxs = cat_idxs or []
         self.cat_dims = cat_dims or []
         self.cat_emb_dim = cat_emb_dim
-        
+
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.n_d = n_d
@@ -225,7 +228,8 @@ class TabNet(torch.nn.Module):
         else:
             self.post_embed_dim = self.input_dim + np.sum(cat_emb_dim) - len(cat_emb_dim)
         self.post_embed_dim = np.int(self.post_embed_dim)
-        self.tabnet = DryTabNet(self.post_embed_dim, output_dim, n_d, n_a, n_steps, gamma, n_independent, n_shared, epsilon, virtual_batch_size, momentum)
+        self.tabnet = DryTabNet(self.post_embed_dim, output_dim, n_d, n_a, n_steps, gamma,
+                                n_independent, n_shared, epsilon, virtual_batch_size, momentum)
         self.initial_bn = BatchNorm1d(self.post_embed_dim, momentum=0.01)
 
         # Defining device
@@ -255,6 +259,7 @@ class TabNet(torch.nn.Module):
         x = self.apply_embeddings(x)
         x = self.initial_bn(x)
         return self.tabnet(x)
+
 
 class AttentiveTransformer(torch.nn.Module):
     def __init__(self, input_dim, output_dim, virtual_batch_size=128, momentum=0.02):
@@ -337,6 +342,7 @@ class GLU_Block(torch.nn.Module):
     """
         Independant GLU block, specific to each step
     """
+
     def __init__(self, input_dim, output_dim, n_glu=2, first=False, shared_layers=None,
                  virtual_batch_size=128, momentum=0.02):
         super(GLU_Block, self).__init__()
@@ -344,7 +350,6 @@ class GLU_Block(torch.nn.Module):
         self.shared_layers = shared_layers
         self.n_glu = n_glu
         self.glu_layers = torch.nn.ModuleList()
-        
 
         params = {
             'virtual_batch_size': virtual_batch_size,
