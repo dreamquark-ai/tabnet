@@ -42,14 +42,14 @@ class GBN(torch.nn.Module):
         return res
 
 
-class DryTabNet(torch.nn.Module):
+class TabNetNoEmbeddings(torch.nn.Module):
     def __init__(self, input_dim, output_dim,
                  n_d=8, n_a=8,
                  n_steps=3, gamma=1.3,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02):
         """
-        Defines the essence of TabNet network
+        Defines main part of the TabNet network without the embedding layers.
 
         Parameters
         ----------
@@ -75,7 +75,7 @@ class DryTabNet(torch.nn.Module):
         - epsilon: float
             Avoid log(0), this should be kept very low
         """
-        super(DryTabNet, self).__init__()
+        super(TabNetNoEmbeddings, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.n_d = n_d
@@ -228,8 +228,9 @@ class TabNet(torch.nn.Module):
         else:
             self.post_embed_dim = self.input_dim + np.sum(cat_emb_dim) - len(cat_emb_dim)
         self.post_embed_dim = np.int(self.post_embed_dim)
-        self.tabnet = DryTabNet(self.post_embed_dim, output_dim, n_d, n_a, n_steps, gamma,
-                                n_independent, n_shared, epsilon, virtual_batch_size, momentum)
+        self.tabnet = TabNetNoEmbeddings(self.post_embed_dim, output_dim, n_d, n_a, n_steps,
+                                         gamma, n_independent, n_shared, epsilon,
+                                         virtual_batch_size, momentum)
         self.initial_bn = BatchNorm1d(self.post_embed_dim, momentum=0.01)
 
         # Defining device
