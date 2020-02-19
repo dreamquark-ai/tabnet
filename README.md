@@ -120,7 +120,7 @@ You can also get comfortable with how the code works by playing with the **noteb
 
 - scheduler_params : dict
 
-    Dictionnary of parameters to apply to the scheduler_fn.
+    Dictionnary of parameters to apply to the scheduler_fn. Ex : {"gamma": 0.95, "step_size": 10}
 
 - model_name : str (default = 'DreamQuarkTabNet')
 
@@ -129,9 +129,7 @@ You can also get comfortable with how the code works by playing with the **noteb
 - saving_path : str (default = './')
 
     Path defining where to save models.
-- scheduler_params: dict
 
-    Parameters dictionnary for the scheduler_fn. Ex : {"gamma": 0.95,                    "step_size": 10}
 - verbose : int (default=1)
 
     Verbosity for notebooks plots, set to 1 to see every epoch, 0 to get None.
