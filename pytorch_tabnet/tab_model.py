@@ -484,7 +484,8 @@ class TabNetClassifier(TabModel):
         for data, targets in train_loader:
             batch_outs = self.train_batch(data, targets)
             if self.output_dim == 2:
-                y_preds.append(batch_outs["y_preds"][:, 1].cpu().detach().numpy())
+                y_preds.append(torch.nn.Softmax(dim=1)(batch_outs["y_preds"])[:, 1]
+                               .cpu().detach().numpy())
             else:
                 values, indices = torch.max(batch_outs["y_preds"], dim=1)
                 y_preds.append(indices.cpu().detach().numpy())
@@ -566,7 +567,8 @@ class TabNetClassifier(TabModel):
             batch_outs = self.predict_batch(data, targets)
             total_loss += batch_outs["loss"]
             if self.output_dim == 2:
-                y_preds.append(batch_outs["y_preds"][:, 1].cpu().detach().numpy())
+                y_preds.append(torch.nn.Softmax(dim=1)(batch_outs["y_preds"])[:, 1]
+                               .cpu().detach().numpy())
             else:
                 values, indices = torch.max(batch_outs["y_preds"], dim=1)
                 y_preds.append(indices.cpu().detach().numpy())
