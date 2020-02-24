@@ -9,11 +9,12 @@ from torch.nn.utils import clip_grad_norm_
 from pytorch_tabnet.utils import (PredictDataset,
                                   create_dataloaders,
                                   create_explain_matrix)
+from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
 from datetime import datetime
 
 
-class TabModel(object):
+class TabModel(BaseEstimator):
     def __init__(self, n_d=8, n_a=8, n_steps=3, gamma=1.3, cat_idxs=[], cat_dims=[], cat_emb_dim=1,
                  n_independent=2, n_shared=2, epsilon=1e-15,  momentum=0.02,
                  lambda_sparse=1e-3, seed=0,
@@ -48,12 +49,9 @@ class TabModel(object):
         self.device_name = device_name
         self.saving_path = saving_path
         self.model_name = model_name
-
+        
         self.scheduler_params = scheduler_params
         self.scheduler_fn = scheduler_fn
-
-        self.opt_params = {}
-        self.opt_params['lr'] = self.lr
 
         self.seed = seed
         torch.manual_seed(self.seed)
@@ -139,7 +137,7 @@ class TabModel(object):
                                                      self.network.post_embed_dim)
 
         self.optimizer = self.optimizer_fn(self.network.parameters(),
-                                           **self.opt_params)
+                                           lr=self.lr)
 
         if self.scheduler_fn:
             self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
@@ -283,8 +281,11 @@ class TabModel(object):
         """
         raise NotImplementedError('users must define predict_batch to use this base class')
 
-    def load_best_model(self):
-        self.network = torch.load(self.saving_path+f"{self.model_name}.pt")
+    def load_best_model(self, saving_path=None, model_name=None):
+        if saving_path is None:
+            saving_path = self.saving_path
+            model_name = self.model_name
+        self.network = torch.load(saving_path+f"{self.model_name}.pt")
 
     @abstractmethod
     def predict(self, X):
@@ -350,22 +351,6 @@ class TabModel(object):
 
 
 class TabNetClassifier(TabModel):
-
-    def __repr__(self):
-        repr_ = f"""TabNetClassifier(n_d={self.n_d}, n_a={self.n_a}, n_steps={self.n_steps},
-                 lr={self.lr}, seed={self.seed},
-                 gamma={self.gamma}, n_independent={self.n_independent}, n_shared={self.n_shared},
-                 cat_idxs={self.cat_idxs},
-                 cat_dims={self.cat_dims},
-                 cat_emb_dim={self.cat_emb_dim},
-                 lambda_sparse={self.lambda_sparse}, momentum={self.momentum},
-                 clip_value={self.clip_value},
-                 verbose={self.verbose}, device_name="{self.device_name}",
-                 model_name="{self.model_name}", epsilon={self.epsilon},
-                 optimizer_fn={str(self.optimizer_fn)},
-                 scheduler_params={self.scheduler_params},
-                 scheduler_fn={self.scheduler_fn}, saving_path="{self.saving_path}")"""
-        return repr_
 
     def infer_output_dim(self, y_train, y_valid):
         """
@@ -683,22 +668,6 @@ class TabNetClassifier(TabModel):
 
 
 class TabNetRegressor(TabModel):
-
-    def __repr__(self):
-        repr_ = f"""TabNetRegressor(n_d={self.n_d}, n_a={self.n_a}, n_steps={self.n_steps},
-                lr={self.lr}, seed={self.seed},
-                gamma={self.gamma}, n_independent={self.n_independent}, n_shared={self.n_shared},
-                cat_idxs={self.cat_idxs},
-                cat_dims={self.cat_dims},
-                cat_emb_dim={self.cat_emb_dim},
-                lambda_sparse={self.lambda_sparse}, momentum={self.momentum},
-                clip_value={self.clip_value},
-                verbose={self.verbose}, device_name="{self.device_name}",
-                model_name="{self.model_name}",
-                optimizer_fn={str(self.optimizer_fn)},
-                scheduler_params={self.scheduler_params}, scheduler_fn={self.scheduler_fn},
-                epsilon={self.epsilon}, saving_path="{self.saving_path}")"""
-        return repr_
 
     def construct_loaders(self, X_train, y_train, X_valid, y_valid, weights, batch_size):
         """

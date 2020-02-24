@@ -101,7 +101,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
             shared_feat_transform = None
 
         self.initial_splitter = FeatTransformer(self.input_dim, n_d+n_a, shared_feat_transform,
-                                                n_glu=self.n_independent,
+                                                n_glu_independent=self.n_independent,
                                                 virtual_batch_size=self.virtual_batch_size,
                                                 momentum=momentum)
 
@@ -110,7 +110,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
 
         for step in range(n_steps):
             transformer = FeatTransformer(self.input_dim, n_d+n_a, shared_feat_transform,
-                                          n_glu=self.n_independent,
+                                          n_glu_independent=self.n_independent,
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=momentum)
             attention = AttentiveTransformer(n_a, self.input_dim,
@@ -296,7 +296,7 @@ class AttentiveTransformer(torch.nn.Module):
 
 
 class FeatTransformer(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, shared_layers, n_glu,
+    def __init__(self, input_dim, output_dim, shared_layers, n_glu_independent,
                  virtual_batch_size=128, momentum=0.02):
         super(FeatTransformer, self).__init__()
         """
@@ -308,6 +308,7 @@ class FeatTransformer(torch.nn.Module):
             Input size
         - output_dim : int
             Outpu_size
+        - n_glu_independant 
         - shared_blocks : torch.nn.ModuleList
             The shared block that should be common to every step
         - momentum : float
@@ -315,7 +316,7 @@ class FeatTransformer(torch.nn.Module):
         """
 
         params = {
-            'n_glu': n_glu,
+            'n_glu': n_glu_independent,
             'virtual_batch_size': virtual_batch_size,
             'momentum': momentum
         }
@@ -329,7 +330,9 @@ class FeatTransformer(torch.nn.Module):
             self.shared = GLU_Block(input_dim, output_dim,
                                     first=True,
                                     shared_layers=shared_layers,
-                                    **params)
+                                    n_glu=len(shared_layers),
+                                    virtual_batch_size=virtual_batch_size,
+                                    momentum=momentum)
             self.specifics = GLU_Block(output_dim, output_dim,
                                        **params)
 
