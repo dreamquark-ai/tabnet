@@ -308,7 +308,7 @@ class FeatTransformer(torch.nn.Module):
             Input size
         - output_dim : int
             Outpu_size
-        - n_glu_independant 
+        - n_glu_independant
         - shared_blocks : torch.nn.ModuleList
             The shared block that should be common to every step
         - momentum : float
