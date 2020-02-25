@@ -11,7 +11,7 @@ from pytorch_tabnet.utils import (PredictDataset,
                                   create_explain_matrix)
 from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
-from datetime import datetime
+import copy
 
 
 class TabModel(BaseEstimator):
@@ -21,7 +21,7 @@ class TabModel(BaseEstimator):
                  clip_value=1, verbose=1,
                  lr=2e-2, optimizer_fn=torch.optim.Adam,
                  scheduler_params=None, scheduler_fn=None,
-                 device_name='auto', saving_path="./", model_name="DreamQuarkTabNet"):
+                 device_name='auto'):
         """ Class for TabNet model
 
         Parameters
@@ -47,9 +47,6 @@ class TabModel(BaseEstimator):
         self.lr = lr
         self.optimizer_fn = optimizer_fn
         self.device_name = device_name
-        self.saving_path = saving_path
-        self.model_name = model_name
-        
         self.scheduler_params = scheduler_params
         self.scheduler_fn = scheduler_fn
 
@@ -106,9 +103,6 @@ class TabModel(BaseEstimator):
                 Batch size for Ghost Batch Normalization (virtual_batch_size < batch_size)
         """
         # update model name
-        now = datetime.now()
-        dt_string = now.strftime("_%d-%m-%Y_%H:%M:%S")
-        self.model_name += dt_string
 
         self.update_fit_params(X_train, y_train, X_valid, y_valid, loss_fn,
                                weights, max_epochs, patience, batch_size, virtual_batch_size)
@@ -174,7 +168,7 @@ class TabModel(BaseEstimator):
                 self.best_cost = stopping_loss
                 self.patience_counter = 0
                 # Saving model
-                torch.save(self.network, self.saving_path+f"{self.model_name}.pt")
+                self.best_network = copy.deepcopy(self.network)
                 # Updating feature_importances_
                 self.feature_importances_ = fit_metrics['train']['feature_importances_']
             else:
@@ -281,11 +275,9 @@ class TabModel(BaseEstimator):
         """
         raise NotImplementedError('users must define predict_batch to use this base class')
 
-    def load_best_model(self, saving_path=None, model_name=None):
-        if saving_path is None:
-            saving_path = self.saving_path
-            model_name = self.model_name
-        self.network = torch.load(saving_path+f"{self.model_name}.pt")
+    def load_best_model(self):
+        if self.best_network is not None:
+            self.network = self.best_network
 
     @abstractmethod
     def predict(self, X):
