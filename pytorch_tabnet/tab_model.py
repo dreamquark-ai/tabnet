@@ -4,6 +4,7 @@ import time
 from abc import abstractmethod
 from pytorch_tabnet import tab_network
 from pytorch_tabnet.multiclass_utils import unique_labels
+from sklearn.base import BaseEstimator
 from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
 from torch.nn.utils import clip_grad_norm_
 from pytorch_tabnet.utils import (PredictDataset,
@@ -13,7 +14,7 @@ from torch.utils.data import DataLoader
 from datetime import datetime
 
 
-class TabModel(object):
+class TabModel(BaseEstimator):
     def __init__(self, n_d=8, n_a=8, n_steps=3, gamma=1.3, cat_idxs=[], cat_dims=[], cat_emb_dim=1,
                  n_independent=2, n_shared=2, epsilon=1e-15,  momentum=0.02,
                  lambda_sparse=1e-3, seed=0,
