@@ -321,6 +321,7 @@ class FeatTransformer(torch.nn.Module):
         }
 
         if shared_layers is None:
+            self.shared = None
             self.specifics = GLU_Block(input_dim, output_dim,
                                        first=True,
                                        **params)
