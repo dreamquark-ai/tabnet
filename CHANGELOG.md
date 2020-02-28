@@ -1,4 +1,14 @@
 
+## [1.0.4](https://github.com/dreamquark-ai/tabnet/compare/v1.0.3...v1.0.4) (2020-02-28)
+
+
+### Bug Fixes
+
+* allow smaller different nshared and nindependent ([4b365a7](https://github.com/dreamquark-ai/tabnet/commit/4b365a739d5786c562854eff70042ecc6964bf1a))
+* sparsemax on train and predict epoch ([6f7c0e0](https://github.com/dreamquark-ai/tabnet/commit/6f7c0e0211d933d84eeff3e735acad31f0fd70d1))
+
+
+
 ## [1.0.3](https://github.com/dreamquark-ai/tabnet/compare/v1.0.2...v1.0.3) (2020-02-07)
 
 
