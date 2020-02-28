@@ -23,7 +23,7 @@ jupyter="1.0.0"
 xgboost="0.90"
 matplotlib="3.1.1"
 wget="3.2"
-pandas="0.25.3"
+pandas="1.0.1"
 flake8="3.7.9"
 
 [build-system]
