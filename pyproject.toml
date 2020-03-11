@@ -17,6 +17,7 @@ numpy="^1.17"
 torch="^1.2"
 tqdm="^4.36"
 scikit_learn=">0.21"
+scipy=">1.4"
 
 [tool.poetry.dev-dependencies]
 jupyter="1.0.0"

@@ -2,6 +2,7 @@ from torch.utils.data import Dataset
 from torch.utils.data import DataLoader, WeightedRandomSampler
 import torch
 import numpy as np
+import scipy
 
 
 class TorchDataset(Dataset):
@@ -143,4 +144,4 @@ def create_explain_matrix(input_dim, cat_emb_dim, cat_idxs, post_embed_dim):
     for i, cols in enumerate(indices_trick):
         reducing_matrix[cols, i] = 1
 
-    return reducing_matrix
+    return scipy.sparse.csc_matrix(reducing_matrix)
