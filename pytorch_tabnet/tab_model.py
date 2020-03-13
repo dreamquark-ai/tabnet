@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+from scipy.sparse import csc_matrix
 import time
 from abc import abstractmethod
 from pytorch_tabnet import tab_network
@@ -326,17 +327,17 @@ class TabModel(BaseEstimator):
 
             output, M_loss, M_explain, masks = self.network(data)
             for key, value in masks.items():
-                masks[key] = np.matmul(value.cpu().detach().numpy(),
-                                       self.reducing_matrix)
+                masks[key] = csc_matrix.dot(value.cpu().detach().numpy(),
+                                            self.reducing_matrix)
 
             if batch_nb == 0:
-                res_explain = np.matmul(M_explain.cpu().detach().numpy(),
-                                        self.reducing_matrix)
+                res_explain = csc_matrix.dot(M_explain.cpu().detach().numpy(),
+                                             self.reducing_matrix)
                 res_masks = masks
             else:
                 res_explain = np.vstack([res_explain,
-                                         np.matmul(M_explain.cpu().detach().numpy(),
-                                                   self.reducing_matrix)])
+                                         csc_matrix.dot(M_explain.cpu().detach().numpy(),
+                                                        self.reducing_matrix)])
                 for key, value in masks.items():
                     res_masks[key] = np.vstack([res_masks[key], value])
         return res_explain, res_masks
@@ -471,7 +472,8 @@ class TabNetClassifier(TabModel):
             feature_importances_ += batch_outs['batch_importance']
 
         # Reduce to initial input_dim
-        feature_importances_ = np.matmul(feature_importances_, self.reducing_matrix)
+        feature_importances_ = csc_matrix.dot(feature_importances_,
+                                              self.reducing_matrix)
         # Normalize feature_importances_
         feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
@@ -726,7 +728,8 @@ class TabNetRegressor(TabModel):
             feature_importances_ += batch_outs['batch_importance']
 
         # Reduce to initial input_dim
-        feature_importances_ = np.matmul(feature_importances_, self.reducing_matrix)
+        feature_importances_ = csc_matrix.dot(feature_importances_,
+                                              self.reducing_matrix)
         # Normalize feature_importances_
         feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 

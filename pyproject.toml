@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytorch_tabnet"
-version = "1.0.4"
+version = "1.0.5"
 description = "PyTorch implementation of TabNet"
 homepage = "https://github.com/dreamquark-ai/tabnet"
 repository = "https://github.com/dreamquark-ai/tabnet"
@@ -17,6 +17,7 @@ numpy="^1.17"
 torch="^1.2"
 tqdm="^4.36"
 scikit_learn=">0.21"
+scipy=">1.4"
 
 [tool.poetry.dev-dependencies]
 jupyter="1.0.0"
