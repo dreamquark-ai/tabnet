@@ -1,4 +1,18 @@
 
+## [1.0.5](https://github.com/dreamquark-ai/tabnet/compare/v1.0.4...v1.0.5) (2020-03-13)
+
+
+### Bug Fixes
+
+* remove dead code for plots ([f96795f](https://github.com/dreamquark-ai/tabnet/commit/f96795ff46e02af4ca7c0ed6648276f4e4b788b0))
+
+
+### Features
+
+* switch to sparse matrix trick ([98910bc](https://github.com/dreamquark-ai/tabnet/commit/98910bcd0424e87208e6520c08726224d214aa33))
+
+
+
 ## [1.0.4](https://github.com/dreamquark-ai/tabnet/compare/v1.0.3...v1.0.4) (2020-02-28)
 
 
