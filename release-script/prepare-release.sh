@@ -20,7 +20,7 @@ cd tabnet
 git checkout -b release/${version}
 
 # Change version of package
-docker run --rm -v ${PWD}:/work -w /work python-poetry:latest poetry version ${version}
+docker run --rm -v ${PWD}:/work -w /work tabnet:latest poetry version ${version}
 # Add modified file
 git add pyproject.toml
 # Commit release
