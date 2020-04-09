@@ -718,7 +718,7 @@ class TabNetRegressor(TabModel):
         y_preds = []
         ys = []
         total_loss = 0
-        feature_importances_ = np.zeros((self.input_dim))
+        feature_importances_ = np.zeros((self.network.post_embed_dim))
 
         for data, targets in train_loader:
             batch_outs = self.train_batch(data, targets)
