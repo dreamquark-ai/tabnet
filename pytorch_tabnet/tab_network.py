@@ -2,6 +2,7 @@ import torch
 from torch.nn import Linear, BatchNorm1d, ReLU
 import numpy as np
 from pytorch_tabnet import sparsemax
+from torch_scatter import scatter_max, scatter_mean
 
 
 def initialize_non_glu(module, input_dim, output_dim):
@@ -47,7 +48,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
                  n_d=8, n_a=8,
                  n_steps=3, gamma=1.3,
                  n_independent=2, n_shared=2, epsilon=1e-15,
-                 virtual_batch_size=128, momentum=0.02):
+                 virtual_batch_size=128, momentum=0.02, embedding_groups=None):
         """
         Defines main part of the TabNet network without the embedding layers.
 
@@ -74,6 +75,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
             Number of independent GLU layer in each GLU block (default 2)
         - epsilon: float
             Avoid log(0), this should be kept very low
+        - embedding_groups : list of int
+            List of int to group post embedding feature to their original column
         """
         super(TabNetNoEmbeddings, self).__init__()
         self.input_dim = input_dim
@@ -86,6 +89,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         self.n_independent = n_independent
         self.n_shared = n_shared
         self.virtual_batch_size = virtual_batch_size
+        self.embedding_groups = embedding_groups
 
         if self.n_shared > 0:
             shared_feat_transform = torch.nn.ModuleList()
@@ -115,7 +119,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
                                           momentum=momentum)
             attention = AttentiveTransformer(n_a, self.input_dim,
                                              virtual_batch_size=self.virtual_batch_size,
-                                             momentum=momentum)
+                                             momentum=momentum,
+                                             embedding_groups=self.embedding_groups)
             self.feat_transformers.append(transformer)
             self.att_transformers.append(attention)
 
@@ -228,9 +233,20 @@ class TabNet(torch.nn.Module):
         else:
             self.post_embed_dim = self.input_dim + np.sum(cat_emb_dim) - len(cat_emb_dim)
         self.post_embed_dim = np.int(self.post_embed_dim)
+
+        # creates embedding groups
+        dict_emb = {idx: dim for idx, dim in zip(cat_idxs, self.cat_emb_dims)}
+        embedding_groups = []
+        for i in range(input_dim):
+            emb_size = dict_emb.get(i, None)
+            if emb_size:
+                embedding_groups.extend([i]*emb_size)
+            else:
+                embedding_groups.append(i)
+
         self.tabnet = TabNetNoEmbeddings(self.post_embed_dim, output_dim, n_d, n_a, n_steps,
                                          gamma, n_independent, n_shared, epsilon,
-                                         virtual_batch_size, momentum)
+                                         virtual_batch_size, momentum, embedding_groups)
         self.initial_bn = BatchNorm1d(self.post_embed_dim, momentum=0.01)
 
         # Defining device
@@ -263,7 +279,8 @@ class TabNet(torch.nn.Module):
 
 
 class AttentiveTransformer(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, virtual_batch_size=128, momentum=0.02):
+    def __init__(self, input_dim, output_dim, virtual_batch_size=128, momentum=0.02,
+                 embedding_groups=None):
         """
         Initialize an attention transformer.
 
@@ -281,9 +298,12 @@ class AttentiveTransformer(torch.nn.Module):
         initialize_non_glu(self.fc, input_dim, output_dim)
         self.bn = GBN(output_dim, virtual_batch_size=virtual_batch_size,
                       momentum=momentum)
+        self.embedding_groups = embedding_groups
 
         # Sparsemax
         self.sp_max = sparsemax.Sparsemax(dim=-1)
+        if embedding_groups is not None:
+            self.group_tensor = torch.LongTensor(embedding_groups)
         # Entmax
         # self.sp_max = sparsemax.Entmax15(dim=-1)
 
@@ -292,7 +312,21 @@ class AttentiveTransformer(torch.nn.Module):
         x = self.bn(x)
         x = torch.mul(x, priors)
         x = self.sp_max(x)
-        return x
+
+        # group embedding so that attention over same column embeddings is consistant
+        if self.embedding_groups is not None:
+            # max
+            # vals, _ = scatter_max(x, self.group_tensor.to(x.device), out=None)
+            # out = vals[:, self.group_tensor]
+            # out = 1/torch.sum(out, dim=1)[:,None]*out 
+            # mean
+            vals = scatter_mean(x, self.group_tensor.to(x.device), out=None)
+            out = vals[:, self.group_tensor]
+            # normalize output
+            
+            return out
+        else:
+            return x
 
 
 class FeatTransformer(torch.nn.Module):

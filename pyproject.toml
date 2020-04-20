@@ -18,6 +18,7 @@ torch="^1.2"
 tqdm="^4.36"
 scikit_learn=">0.21"
 scipy=">1.4"
+torch-scatter="2.0.4"
 
 [tool.poetry.dev-dependencies]
 jupyter="1.0.0"

@@ -75,7 +75,7 @@ def create_dataloaders(X_train, y_train, X_valid, y_valid, weights, batch_size):
     """
     if weights == 0:
         train_dataloader = DataLoader(TorchDataset(X_train, y_train),
-                                      batch_size=batch_size, shuffle=True)
+                                      batch_size=batch_size, shuffle=True, drop_last=True)
     else:
         if weights == 1:
             class_sample_count = np.array(
@@ -92,7 +92,7 @@ def create_dataloaders(X_train, y_train, X_valid, y_valid, weights, batch_size):
             samples_weight = np.array([weights[t] for t in y_train])
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
         train_dataloader = DataLoader(TorchDataset(X_train, y_train),
-                                      batch_size=batch_size, sampler=sampler)
+                                      batch_size=batch_size, sampler=sampler, drop_last=True)
 
     valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
                                   batch_size=batch_size, shuffle=False)
