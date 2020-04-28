@@ -63,7 +63,8 @@ class TabModel(BaseEstimator):
         print(f"Device used : {self.device}")
 
     @abstractmethod
-    def construct_loaders(self, X_train, y_train, X_valid, y_valid, weights, batch_size):
+    def construct_loaders(self, X_train, y_train, X_valid, y_valid,
+                          weights, batch_size, num_workers, drop_last):
         """
         Returns
         -------
@@ -73,9 +74,9 @@ class TabModel(BaseEstimator):
         """
         raise NotImplementedError('users must define construct_loaders to use this base class')
 
-    def fit(self, X_train, y_train, X_valid=None, y_valid=None,
-            loss_fn=None,
-            weights=0, max_epochs=100, patience=10, batch_size=1024, virtual_batch_size=128):
+    def fit(self, X_train, y_train, X_valid=None, y_valid=None, loss_fn=None,
+            weights=0, max_epochs=100, patience=10, batch_size=1024,
+            virtual_batch_size=128, num_workers=0, drop_last=False):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
         valid_dataloader for validation.
@@ -102,18 +103,25 @@ class TabModel(BaseEstimator):
                 Training batch size
             virtual_batch_size : int
                 Batch size for Ghost Batch Normalization (virtual_batch_size < batch_size)
+            num_workers : int
+                Number of workers used in torch.utils.data.DataLoader
+            drop_last : bool
+                Whether to drop last batch during training
         """
         # update model name
 
         self.update_fit_params(X_train, y_train, X_valid, y_valid, loss_fn,
-                               weights, max_epochs, patience, batch_size, virtual_batch_size)
+                               weights, max_epochs, patience, batch_size,
+                               virtual_batch_size, num_workers, drop_last)
 
         train_dataloader, valid_dataloader = self.construct_loaders(X_train,
                                                                     y_train,
                                                                     X_valid,
                                                                     y_valid,
                                                                     self.updated_weights,
-                                                                    self.batch_size)
+                                                                    self.batch_size,
+                                                                    self.num_workers,
+                                                                    self.drop_last)
 
         self.network = tab_network.TabNet(self.input_dim, self.output_dim,
                                           n_d=self.n_d, n_a=self.n_d,
@@ -397,7 +405,8 @@ class TabNetClassifier(TabModel):
             print("Unknown type for weights, please provide 0, 1 or dictionnary")
             raise
 
-    def construct_loaders(self, X_train, y_train, X_valid, y_valid, weights, batch_size):
+    def construct_loaders(self, X_train, y_train, X_valid, y_valid,
+                          weights, batch_size, num_workers, drop_last):
         """
         Returns
         -------
@@ -412,11 +421,14 @@ class TabNetClassifier(TabModel):
                                                                 X_valid,
                                                                 y_valid_mapped,
                                                                 weights,
-                                                                batch_size)
+                                                                batch_size,
+                                                                num_workers,
+                                                                drop_last)
         return train_dataloader, valid_dataloader
 
     def update_fit_params(self, X_train, y_train, X_valid, y_valid, loss_fn,
-                          weights, max_epochs, patience, batch_size, virtual_batch_size):
+                          weights, max_epochs, patience,
+                          batch_size, virtual_batch_size, num_workers, drop_last):
         if loss_fn is None:
             self.loss_fn = torch.nn.functional.cross_entropy
         else:
@@ -442,6 +454,8 @@ class TabNetClassifier(TabModel):
         self.patience_counter = 0
         self.epoch = 0
         self.best_cost = np.inf
+        self.num_workers = num_workers
+        self.drop_last = drop_last
 
     def train_epoch(self, train_loader):
         """
@@ -663,7 +677,8 @@ class TabNetClassifier(TabModel):
 
 class TabNetRegressor(TabModel):
 
-    def construct_loaders(self, X_train, y_train, X_valid, y_valid, weights, batch_size):
+    def construct_loaders(self, X_train, y_train, X_valid, y_valid, weights,
+                          batch_size, num_workers, drop_last):
         """
         Returns
         -------
@@ -676,11 +691,14 @@ class TabNetRegressor(TabModel):
                                                                 X_valid,
                                                                 y_valid,
                                                                 0,
-                                                                batch_size)
+                                                                batch_size,
+                                                                num_workers,
+                                                                drop_last)
         return train_dataloader, valid_dataloader
 
     def update_fit_params(self, X_train, y_train, X_valid, y_valid, loss_fn,
-                          weights, max_epochs, patience, batch_size, virtual_batch_size):
+                          weights, max_epochs, patience,
+                          batch_size, virtual_batch_size, num_workers, drop_last):
 
         if loss_fn is None:
             self.loss_fn = torch.nn.functional.mse_loss
@@ -703,6 +721,8 @@ class TabNetRegressor(TabModel):
         self.patience_counter = 0
         self.epoch = 0
         self.best_cost = np.inf
+        self.num_workers = num_workers
+        self.drop_last = drop_last
 
     def train_epoch(self, train_loader):
         """
