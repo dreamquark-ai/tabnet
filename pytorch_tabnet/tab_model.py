@@ -178,8 +178,6 @@ class TabModel(BaseEstimator):
                 self.patience_counter = 0
                 # Saving model
                 self.best_network = copy.deepcopy(self.network)
-                # Updating feature_importances_
-                self.feature_importances_ = fit_metrics['train']['feature_importances_']
             else:
                 self.patience_counter += 1
 
@@ -208,6 +206,9 @@ class TabModel(BaseEstimator):
                                   "metric": metrics_valid}}
         # load best models post training
         self.load_best_model()
+
+        # compute feature importance once the best model is defined
+        self._compute_feature_importances(train_dataloader)
 
     def fit_epoch(self, train_dataloader, valid_dataloader):
         """
@@ -333,7 +334,7 @@ class TabModel(BaseEstimator):
         for batch_nb, data in enumerate(dataloader):
             data = data.to(self.device).float()
 
-            output, M_loss, M_explain, masks = self.network(data)
+            M_explain, masks = self.network.forward_masks(data)
             for key, value in masks.items():
                 masks[key] = csc_matrix.dot(value.cpu().detach().numpy(),
                                             self.reducing_matrix)
@@ -349,6 +350,18 @@ class TabModel(BaseEstimator):
                 for key, value in masks.items():
                     res_masks[key] = np.vstack([res_masks[key], value])
         return res_explain, res_masks
+
+    def _compute_feature_importances(self, loader):
+        self.network.eval()
+        feature_importances_ = np.zeros((self.network.post_embed_dim))
+        for data, targets in loader:
+            data = data.to(self.device).float()
+            M_explain, masks = self.network.forward_masks(data)
+            feature_importances_ += M_explain.sum(dim=0).cpu().detach().numpy()
+
+        feature_importances_ = csc_matrix.dot(feature_importances_,
+                                              self.reducing_matrix)
+        self.feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
 
 class TabNetClassifier(TabModel):
@@ -471,7 +484,6 @@ class TabNetClassifier(TabModel):
         y_preds = []
         ys = []
         total_loss = 0
-        feature_importances_ = np.zeros((self.network.post_embed_dim))
 
         for data, targets in train_loader:
             batch_outs = self.train_batch(data, targets)
@@ -483,13 +495,6 @@ class TabNetClassifier(TabModel):
                 y_preds.append(indices.cpu().detach().numpy())
             ys.append(batch_outs["y"].cpu().detach().numpy())
             total_loss += batch_outs["loss"]
-            feature_importances_ += batch_outs['batch_importance']
-
-        # Reduce to initial input_dim
-        feature_importances_ = csc_matrix.dot(feature_importances_,
-                                              self.reducing_matrix)
-        # Normalize feature_importances_
-        feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
         y_preds = np.hstack(y_preds)
         ys = np.hstack(ys)
@@ -501,7 +506,6 @@ class TabNetClassifier(TabModel):
         total_loss = total_loss / len(train_loader)
         epoch_metrics = {'loss_avg': total_loss,
                          'stopping_loss': stopping_loss,
-                         'feature_importances_': feature_importances_
                          }
 
         if self.scheduler is not None:
@@ -525,7 +529,7 @@ class TabNetClassifier(TabModel):
         targets = targets.to(self.device).long()
         self.optimizer.zero_grad()
 
-        output, M_loss, M_explain, _ = self.network(data)
+        output, M_loss = self.network(data)
 
         loss = self.loss_fn(output, targets)
         loss -= self.lambda_sparse*M_loss
@@ -538,8 +542,7 @@ class TabNetClassifier(TabModel):
         loss_value = loss.item()
         batch_outs = {'loss': loss_value,
                       'y_preds': output,
-                      'y': targets,
-                      'batch_importance': M_explain.sum(dim=0).cpu().detach().numpy()}
+                      'y': targets}
         return batch_outs
 
     def predict_epoch(self, loader):
@@ -599,7 +602,7 @@ class TabNetClassifier(TabModel):
         self.network.eval()
         data = data.to(self.device).float()
         targets = targets.to(self.device).long()
-        output, M_loss, M_explain, _ = self.network(data)
+        output, M_loss = self.network(data)
 
         loss = self.loss_fn(output, targets)
         loss -= self.lambda_sparse*M_loss
@@ -632,7 +635,7 @@ class TabNetClassifier(TabModel):
 
         for batch_nb, data in enumerate(dataloader):
             data = data.to(self.device).float()
-            output, M_loss, M_explain, masks = self.network(data)
+            output, M_loss = self.network(data)
             predictions = torch.argmax(torch.nn.Softmax(dim=1)(output),
                                        dim=1)
             predictions = predictions.cpu().detach().numpy().reshape(-1)
@@ -667,7 +670,7 @@ class TabNetClassifier(TabModel):
         for batch_nb, data in enumerate(dataloader):
             data = data.to(self.device).float()
 
-            output, M_loss, M_explain, masks = self.network(data)
+            output, M_loss = self.network(data)
             predictions = torch.nn.Softmax(dim=1)(output).cpu().detach().numpy()
             results.append(predictions)
         res = np.vstack(results)
@@ -741,20 +744,12 @@ class TabNetRegressor(TabModel):
         y_preds = []
         ys = []
         total_loss = 0
-        feature_importances_ = np.zeros((self.network.post_embed_dim))
 
         for data, targets in train_loader:
             batch_outs = self.train_batch(data, targets)
             y_preds.append(batch_outs["y_preds"].cpu().detach().numpy())
             ys.append(batch_outs["y"].cpu().detach().numpy())
             total_loss += batch_outs["loss"]
-            feature_importances_ += batch_outs['batch_importance']
-
-        # Reduce to initial input_dim
-        feature_importances_ = csc_matrix.dot(feature_importances_,
-                                              self.reducing_matrix)
-        # Normalize feature_importances_
-        feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
         y_preds = np.vstack(y_preds)
         ys = np.vstack(ys)
@@ -763,7 +758,6 @@ class TabNetRegressor(TabModel):
         total_loss = total_loss / len(train_loader)
         epoch_metrics = {'loss_avg': total_loss,
                          'stopping_loss': stopping_loss,
-                         'feature_importances_': feature_importances_
                          }
 
         if self.scheduler is not None:
@@ -788,7 +782,7 @@ class TabNetRegressor(TabModel):
         targets = targets.to(self.device).float()
         self.optimizer.zero_grad()
 
-        output, M_loss, M_explain, _ = self.network(data)
+        output, M_loss = self.network(data)
 
         loss = self.loss_fn(output, targets)
         loss -= self.lambda_sparse*M_loss
@@ -801,8 +795,7 @@ class TabNetRegressor(TabModel):
         loss_value = loss.item()
         batch_outs = {'loss': loss_value,
                       'y_preds': output,
-                      'y': targets,
-                      'batch_importance':  M_explain.sum(dim=0).cpu().detach().numpy()}
+                      'y': targets}
         return batch_outs
 
     def predict_epoch(self, loader):
@@ -855,7 +848,7 @@ class TabNetRegressor(TabModel):
         data = data.to(self.device).float()
         targets = targets.to(self.device).float()
 
-        output, M_loss, M_explain, _ = self.network(data)
+        output, M_loss = self.network(data)
 
         loss = self.loss_fn(output, targets)
         loss -= self.lambda_sparse*M_loss
@@ -890,7 +883,7 @@ class TabNetRegressor(TabModel):
         for batch_nb, data in enumerate(dataloader):
             data = data.to(self.device).float()
 
-            output, M_loss, M_explain, masks = self.network(data)
+            output, M_loss = self.network(data)
             predictions = output.cpu().detach().numpy()
             results.append(predictions)
         res = np.vstack(results)
