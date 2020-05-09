@@ -30,9 +30,10 @@ class TabModel(BaseEstimator):
             device_name: str
                 'cuda' if running on GPU, 'cpu' if not, 'auto' to autodetect
         """
-
         self.n_d = n_d
         self.n_a = n_a
+        if n_a == "n_d":
+            self.n_a = n_d
         self.n_steps = n_steps
         self.gamma = gamma
         self.cat_idxs = cat_idxs
