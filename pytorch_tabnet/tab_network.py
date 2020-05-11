@@ -32,14 +32,10 @@ class GBN(torch.nn.Module):
         self.bn = BatchNorm1d(self.input_dim, momentum=momentum)
 
     def forward(self, x):
-        chunks = x.chunk(x.shape[0] // self.virtual_batch_size +
-                         ((x.shape[0] % self.virtual_batch_size) > 0))
-        res = torch.Tensor([]).to(x.device)
-        for x_ in chunks:
-            y = self.bn(x_)
-            res = torch.cat([res, y], dim=0)
+        chunks = x.chunk(int(np.ceil(x.shape[0] / self.virtual_batch_size)), 0)
+        res = [self.bn(x_) for x_ in chunks]
 
-        return res
+        return torch.cat(res, dim=0)
 
 
 class TabNetNoEmbeddings(torch.nn.Module):
