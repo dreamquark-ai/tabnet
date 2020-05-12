@@ -10,6 +10,8 @@ This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). T
 
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pytorch-tabnet)
 
+Any questions ? Want to contribute ? To talk with us ? You can join us on [Slack](https://join.slack.com/t/mltooling/shared_invite/zt-e4y14rbp-IReRxmjoNy27XQFQgh~4ZQ)
+
 # Installation
 
 ## Easy installation
