@@ -663,15 +663,14 @@ class TabNetClassifier(TabModel):
         dataloader = DataLoader(PredictDataset(X),
                                 batch_size=self.batch_size, shuffle=False)
 
+        results = []
         for batch_nb, data in enumerate(dataloader):
             data = data.to(self.device).float()
 
             output, M_loss, M_explain, masks = self.network(data)
             predictions = torch.nn.Softmax(dim=1)(output).cpu().detach().numpy()
-            if batch_nb == 0:
-                res = predictions
-            else:
-                res = np.vstack([res, predictions])
+            results.append(predictions)
+        res = np.vstack(results)
         return res
 
 
@@ -708,7 +707,11 @@ class TabNetRegressor(TabModel):
         assert X_train.shape[1] == X_valid.shape[1], "Dimension mismatch X_train X_valid"
         self.input_dim = X_train.shape[1]
 
-        self.output_dim = 1
+        if len(y_train.shape) == 1:
+            raise ValueError("""Please apply reshape(-1, 1) to your targets
+                                if doing single regression.""")
+        assert y_train.shape[1] == y_valid.shape[1], "Dimension mismatch y_train y_valid"
+        self.output_dim = y_train.shape[1]
 
         self.weights = 0  # No weights for regression
         self.updated_weights = 0
@@ -742,7 +745,7 @@ class TabNetRegressor(TabModel):
 
         for data, targets in train_loader:
             batch_outs = self.train_batch(data, targets)
-            y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
+            y_preds.append(batch_outs["y_preds"].cpu().detach().numpy())
             ys.append(batch_outs["y"].cpu().detach().numpy())
             total_loss += batch_outs["loss"]
             feature_importances_ += batch_outs['batch_importance']
@@ -753,8 +756,8 @@ class TabNetRegressor(TabModel):
         # Normalize feature_importances_
         feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
-        y_preds = np.hstack(y_preds)
-        ys = np.hstack(ys)
+        y_preds = np.vstack(y_preds)
+        ys = np.vstack(ys)
 
         stopping_loss = mean_squared_error(y_true=ys, y_pred=y_preds)
         total_loss = total_loss / len(train_loader)
@@ -787,7 +790,7 @@ class TabNetRegressor(TabModel):
 
         output, M_loss, M_explain, _ = self.network(data)
 
-        loss = self.loss_fn(output.view(-1), targets)
+        loss = self.loss_fn(output, targets)
         loss -= self.lambda_sparse*M_loss
 
         loss.backward()
@@ -819,11 +822,11 @@ class TabNetRegressor(TabModel):
         for data, targets in loader:
             batch_outs = self.predict_batch(data, targets)
             total_loss += batch_outs["loss"]
-            y_preds.append(batch_outs["y_preds"].cpu().detach().numpy().flatten())
+            y_preds.append(batch_outs["y_preds"].cpu().detach().numpy())
             ys.append(batch_outs["y"].cpu().detach().numpy())
 
-        y_preds = np.hstack(y_preds)
-        ys = np.hstack(ys)
+        y_preds = np.vstack(y_preds)
+        ys = np.vstack(ys)
 
         stopping_loss = mean_squared_error(y_true=ys, y_pred=y_preds)
 
@@ -854,7 +857,7 @@ class TabNetRegressor(TabModel):
 
         output, M_loss, M_explain, _ = self.network(data)
 
-        loss = self.loss_fn(output.view(-1), targets)
+        loss = self.loss_fn(output, targets)
         loss -= self.lambda_sparse*M_loss
 
         loss_value = loss.item()
@@ -883,14 +886,12 @@ class TabNetRegressor(TabModel):
         dataloader = DataLoader(PredictDataset(X),
                                 batch_size=self.batch_size, shuffle=False)
 
+        results = []
         for batch_nb, data in enumerate(dataloader):
             data = data.to(self.device).float()
 
             output, M_loss, M_explain, masks = self.network(data)
-            predictions = output.cpu().detach().numpy().reshape(-1)
-            if batch_nb == 0:
-                res = predictions
-            else:
-                res = np.hstack([res, predictions])
-
+            predictions = output.cpu().detach().numpy()
+            results.append(predictions)
+        res = np.vstack(results)
         return res
