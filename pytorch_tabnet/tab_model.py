@@ -20,7 +20,8 @@ class TabModel(BaseEstimator):
                  n_independent=2, n_shared=2, epsilon=1e-15,  momentum=0.02,
                  lambda_sparse=1e-3, seed=0,
                  clip_value=1, verbose=1,
-                 lr=2e-2, optimizer_fn=torch.optim.Adam,
+                 optimizer_fn=torch.optim.Adam,
+                 optimizer_params=dict(lr=2e-2),
                  scheduler_params=None, scheduler_fn=None,
                  device_name='auto'):
         """ Class for TabNet model
@@ -45,8 +46,8 @@ class TabModel(BaseEstimator):
         self.lambda_sparse = lambda_sparse
         self.clip_value = clip_value
         self.verbose = verbose
-        self.lr = lr
         self.optimizer_fn = optimizer_fn
+        self.optimizer_params = optimizer_params
         self.device_name = device_name
         self.scheduler_params = scheduler_params
         self.scheduler_fn = scheduler_fn
@@ -140,7 +141,7 @@ class TabModel(BaseEstimator):
                                                      self.network.post_embed_dim)
 
         self.optimizer = self.optimizer_fn(self.network.parameters(),
-                                           lr=self.lr)
+                                           **self.optimizer_params)
 
         if self.scheduler_fn:
             self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
