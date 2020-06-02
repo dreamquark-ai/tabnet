@@ -41,12 +41,12 @@ build-gpu: ## Build docker image
 
 start: build ## Start docker container
 	echo "Starting container ${IMAGE_NAME}"
-	docker run --rm -it -v ${FOLDER}:/work -w /work -p ${PORT}:${PORT} -e "JUPYTER_PORT=${PORT}" ${IMAGE_NAME}
+	docker run --shm-size="32gb" --rm -it -v ${FOLDER}:/work -w /work -p ${PORT}:${PORT} -e "JUPYTER_PORT=${PORT}" ${IMAGE_NAME}
 .PHONY: start
 
 start-gpu: build-gpu ## Start docker container
 	echo "Starting container ${IMAGE_NAME}"
-	docker run --runtime nvidia --rm -it -v ${FOLDER}:/work -w /work -p ${PORT}:${PORT} -e "JUPYTER_PORT=${PORT}" ${IMAGE_NAME}
+	docker run --runtime nvidia --shm-size="32gb" --rm -it -v ${FOLDER}:/work -w /work -p ${PORT}:${PORT} -e "JUPYTER_PORT=${PORT}" ${IMAGE_NAME}
 .PHONY: start-gpu
 
 install: build ## Install dependencies

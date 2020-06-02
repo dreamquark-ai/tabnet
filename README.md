@@ -10,6 +10,8 @@ This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). T
 
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pytorch-tabnet)
 
+Any questions ? Want to contribute ? To talk with us ? You can join us on [Slack](https://join.slack.com/t/mltooling/shared_invite/zt-e4y14rbp-IReRxmjoNy27XQFQgh~4ZQ)
+
 # Installation
 
 ## Easy installation
@@ -136,6 +138,7 @@ You can also get comfortable with how the code works by playing with the **noteb
 
 - device_name : str (default='auto')
     'cpu' for cpu training, 'gpu' for gpu training, 'auto' to automatically detect gpu.
+
 ## Fit parameters
 
 - X_train : np.array
@@ -174,7 +177,16 @@ You can also get comfortable with how the code works by playing with the **noteb
 
 - batch_size : int (default=1024)
 
-    Number of examples per batch, large batch sizes are recommended .
+    Number of examples per batch, large batch sizes are recommended.
+
 - virtual_batch_size : int (default=128)
 
     Size of the mini batches used for "Ghost Batch Normalization"
+
+- num_workers : int (default=0)
+
+    Number or workers used in torch.utils.data.Dataloader
+
+- drop_last : bool (default=False)
+
+    Whether to drop last batch if not complete during training
