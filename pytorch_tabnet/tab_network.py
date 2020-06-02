@@ -424,6 +424,12 @@ class EmbeddingGenerator(torch.nn.Module):
         self.post_embed_dim = int(input_dim + np.sum(self.cat_emb_dims) - len(self.cat_emb_dims))
 
         self.embeddings = torch.nn.ModuleList()
+
+        # Sort dims by cat_idx
+        sorted_idxs = np.argsort(cat_idxs)
+        cat_dims = [cat_dims[i] for i in sorted_idxs]
+        self.cat_emb_dims = [self.cat_emb_dims[i] for i in sorted_idxs]
+
         for cat_dim, emb_dim in zip(cat_dims, self.cat_emb_dims):
             self.embeddings.append(torch.nn.Embedding(cat_dim, emb_dim))
 
