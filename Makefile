@@ -13,6 +13,7 @@ default: help;   # default target
 
 IMAGE_NAME=tabnet:latest
 IMAGE_RELEASER_NAME=release-changelog:latest
+NOTEBOOKS_DIR=/work
 
 DOCKER_RUN = docker run  --rm  -v ${FOLDER}:/work -w /work --entrypoint bash -lc ${IMAGE_NAME} -c
 
@@ -65,6 +66,30 @@ root_bash: ## Start a root bash inside the container
 	docker exec -it --user root $$(docker ps --filter ancestor=${IMAGE_NAME} --filter expose=${PORT} -q) bash
 .PHONY: root_bash
 
+_run_notebook:
+	set -e
+	echo "$(NB_FILE)" | xargs -n1 -I {} echo "poetry run jupyter nbconvert --to=script $(NOTEBOOKS_DIR)/{} || exit 1"  | sh
+	echo "$(NB_FILE)" | xargs -n1 -I {} echo "echo 'Running {}' && poetry run ipython $(NOTEBOOKS_DIR)/{} && echo 'Notebook $(NOTEBOOKS_DIR)/{} OK' || exit 1"  | sed 's/.ipynb/.py/' | sh
+	echo "$(NB_FILE)" | sed 's/.ipynb/.py/' | xargs -n1 -I {} echo "echo 'Cleaning up $(NOTEBOOKS_DIR)/{}' && rm $(NOTEBOOKS_DIR)/{} || exit 1"  | sh
+.PHONY: _run_notebook
+
+test-nb-census: ## run census income tests using notebooks
+	$(MAKE) _run_notebook NB_FILE="./census_example.ipynb"
+.PHONY: test-obfuscator
+
+test-nb-forest: ## run census income tests using notebooks
+	$(MAKE) _run_notebook NB_FILE="./forest_example.ipynb"
+.PHONY: test-obfuscator
+
+test-nb-regression: ## run regression example tests using notebooks
+	$(MAKE) _run_notebook NB_FILE="./regression_example.ipynb"
+.PHONY: test-obfuscator
+
+test-nb-multi-regression: ## run multi regression example tests using notebooks
+	$(MAKE) _run_notebook NB_FILE="./multi_regression_example.ipynb"
+.PHONY: test-obfuscator
+
 help: ## Display help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help
+

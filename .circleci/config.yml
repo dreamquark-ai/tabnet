@@ -1,22 +1,176 @@
+# Python CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-python/ for more details
+#
 ---
-version: 2
+version: 2.1
+executors:
+    # here we can define an executor that will be shared across different jobs
+    python-executor:
+        docker:
+            - image: python:3.7-slim-buster
+              environment:
+                  POETRY_CACHE: /work/.cache/poetry
+                  PIP_CACHE_DIR: /work/.cache/pip
+                  JUPYTER_RUNTIME_DIR: /work/.cache/jupyter/runtime
+                  JUPYTER_CONFIG_DIR: /work/.cache/jupyter/config
+                  SHELL: bash -l
+        working_directory: /work
+        resource_class: large
+    docker-executor:
+        docker:
+            - image: dreamquark/docker:latest
+        working_directory: /work
+        resource_class: small
+    
+commands:
+    # here we can define steps that will be shared across different jobs
+    install_poetry:
+        description: Install poetry
+        steps:
+            - run:
+                  name: Install prerequisites and poetry
+                  command: |
+                      apt update && apt install curl make git libopenblas-base build-essential -y
+                      curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
+                      source $HOME/.poetry/env
+                      poetry config virtualenvs.path $POETRY_CACHE
+                      poetry run pip install --upgrade --no-cache-dir pip==20.1;
+
 jobs:
-    lint-code:
-        machine:
-            image: circleci/classic:latest
-        working_directory: ~/tabnet
-        resource_class: medium
+    test-build-docker:
+        executor: docker-executor
         steps:
             - checkout
+            - setup_remote_docker
             - run:
-                name: LintCode
-                command: |
-                    make build
-                    make install
-                    make lint
+                  name: build docker
+                  command: |
+                      make build
+    test-build-docker-gpu:
+        executor: docker-executor
+        steps:
+            - checkout
+            - setup_remote_docker
+            - run:
+                  name: build docker gpu
+                  command: |
+                      make build-gpu
+    lint-code:
+        executor: python-executor
+        resource_class: small
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            - run:
+                  name: LintCode
+                  shell: bash -leo pipefail
+                  command: |
+                      poetry run flake8
+    install:
+        executor: python-executor
+        resource_class: small
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+                      # fallback to using the latest cache if no exact match is found
+                      - v1-dependencies-
+            - install_poetry
+            - run:
+                  name: Install dependencies
+                  shell: bash -leo pipefail
+                  command: |
+                      source $HOME/.poetry/env
+                      poetry config virtualenvs.path $POETRY_CACHE
+                      poetry run pip install torch==1.4.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
+                      poetry install
+            - save_cache:
+                  paths:
+                      - /work/.cache/poetry
+                  key: v1-dependencies-{{ checksum "poetry.lock" }}
+    test-nb-census:
+        executor: python-executor
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            - run:
+                  name: run test-nb-census
+                  shell: bash -leo pipefail
+                  command: |
+                      make test-nb-census
+    test-nb-multi-regression:
+        executor: python-executor
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            - run:
+                  name: run test-nb-multi-regression
+                  shell: bash -leo pipefail
+                  command: |
+                      make test-nb-multi-regression
+    test-nb-forest:
+        executor: python-executor
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            - run:
+                  name: run test-nb-forest
+                  shell: bash -leo pipefail
+                  command: |
+                      make test-nb-forest
+    test-nb-regression:
+        executor: python-executor
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            - run:
+                  name: run test-nb-regression
+                  shell: bash -leo pipefail
+                  command: |
+                      make test-nb-regression
 
 workflows:
     version: 2
     CI-tabnet:
         jobs:
-            - lint-code
+            - test-build-docker
+            - test-build-docker-gpu
+            - install
+            - test-nb-census:
+                  requires:
+                      - install
+            - test-nb-multi-regression:
+                  requires:
+                      - install
+            - test-nb-regression:
+                  requires:
+                      - install
+            - test-nb-forest:
+                  requires:
+                      - install
+            - lint-code:
+                  requires:
+                      - install
