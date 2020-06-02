@@ -1,4 +1,23 @@
 
+# [1.1.0](https://github.com/dreamquark-ai/tabnet/compare/v1.0.6...v1.1.0) (2020-06-02)
+
+
+### Bug Fixes
+
+* allow zero layer ([e3b5a04](https://github.com/dreamquark-ai/tabnet/commit/e3b5a04edb1aff25683ce5457f9b4fd57b4c1bf6))
+* sort by cat_idx into embedding generator ([9ab3ad5](https://github.com/dreamquark-ai/tabnet/commit/9ab3ad542941ad3ff535f974ad93dc2b950d4559))
+* update forest_example notebook ([8092324](https://github.com/dreamquark-ai/tabnet/commit/809232452d5d860036b8e867dfa17701bb2e1c88))
+
+
+### Features
+
+* add multi output regression ([ffd7c28](https://github.com/dreamquark-ai/tabnet/commit/ffd7c284682f03c1b5a6ce25f910f2d65b78029f))
+* add num_workers and drop_last to fit parameters ([313d074](https://github.com/dreamquark-ai/tabnet/commit/313d07481361c87c39df470ee23850757c8b1c85))
+* remove mask computations from forward ([44d1a47](https://github.com/dreamquark-ai/tabnet/commit/44d1a47f34c0b9d636279ef3897a02e489471738))
+* speed boost and code simplification for GBN ([1642909](https://github.com/dreamquark-ai/tabnet/commit/1642909bd305d40f828be6e0c0484c8f72fd213a))
+
+
+
 ## [1.0.6](https://github.com/dreamquark-ai/tabnet/compare/v1.0.5...v1.0.6) (2020-04-20)
 
 
