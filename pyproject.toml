@@ -26,6 +26,7 @@ matplotlib="3.1.1"
 wget="3.2"
 pandas="0.25.3"
 flake8="3.7.9"
+hyperopt="0.2.4" 
 
 [build-system]
 requires = ["poetry>=0.12"]

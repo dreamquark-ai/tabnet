@@ -5,7 +5,7 @@ import time
 from abc import abstractmethod
 from pytorch_tabnet import tab_network
 from pytorch_tabnet.multiclass_utils import unique_labels
-from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
+from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score, log_loss
 from torch.nn.utils import clip_grad_norm_
 from pytorch_tabnet.utils import (PredictDataset,
                                   create_dataloaders,
@@ -187,9 +187,9 @@ class TabModel(BaseEstimator):
                 if self.epoch % self.verbose == 0:
                     separator = "|"
                     msg_epoch = f"| {self.epoch:<5} | "
-                    msg_epoch += f"{-fit_metrics['train']['stopping_loss']:.5f}"
+                    msg_epoch += f"{fit_metrics['train']['stopping_loss']:.5f}"
                     msg_epoch += f' {separator:<2} '
-                    msg_epoch += f"{-fit_metrics['valid']['stopping_loss']:.5f}"
+                    msg_epoch += f"{fit_metrics['valid']['stopping_loss']:.5f}"
                     msg_epoch += f' {separator:<2} '
                     msg_epoch += f" {np.round(total_time, 1):<10}"
                     print(msg_epoch)
@@ -209,6 +209,8 @@ class TabModel(BaseEstimator):
 
         # compute feature importance once the best model is defined
         self._compute_feature_importances(train_dataloader)
+
+        return self.best_cost
 
     def fit_epoch(self, train_dataloader, valid_dataloader):
         """
@@ -500,7 +502,7 @@ class TabNetClassifier(TabModel):
         ys = np.hstack(ys)
 
         if self.output_dim == 2:
-            stopping_loss = -roc_auc_score(y_true=ys, y_score=y_preds)
+            stopping_loss = log_loss(y_true=ys, y_pred=y_preds, eps=1e-7)  # -roc_auc_score(y_true=ys, y_score=y_preds)
         else:
             stopping_loss = -accuracy_score(y_true=ys, y_pred=y_preds)
         total_loss = total_loss / len(train_loader)
@@ -574,7 +576,7 @@ class TabNetClassifier(TabModel):
         ys = np.hstack(ys)
 
         if self.output_dim == 2:
-            stopping_loss = -roc_auc_score(y_true=ys, y_score=y_preds)
+            stopping_loss = log_loss(y_true=ys, y_pred=y_preds, eps=1e-7)
         else:
             stopping_loss = -accuracy_score(y_true=ys, y_pred=y_preds)
 
