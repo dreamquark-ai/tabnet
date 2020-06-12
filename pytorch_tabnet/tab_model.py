@@ -148,11 +148,11 @@ class TabModel(BaseEstimator):
         else:
             self.scheduler = None
 
-        losses_train = []
-        losses_valid = []
-
-        metrics_train = []
-        metrics_valid = []
+        self.losses_train = []
+        self.losses_valid = []
+        self.learning_rates = []
+        self.metrics_train = []
+        self.metrics_valid = []
 
         if self.verbose > 0:
             print("Will train until validation stopping metric",
@@ -165,13 +165,16 @@ class TabModel(BaseEstimator):
         while (self.epoch < self.max_epochs and
                self.patience_counter < self.patience):
             starting_time = time.time()
+            # updates learning rate history
+            self.learning_rates.append(self.optimizer.param_groups[-1]["lr"])
+
             fit_metrics = self.fit_epoch(train_dataloader, valid_dataloader)
 
             # leaving it here, may be used for callbacks later
-            losses_train.append(fit_metrics['train']['loss_avg'])
-            losses_valid.append(fit_metrics['valid']['total_loss'])
-            metrics_train.append(fit_metrics['train']['stopping_loss'])
-            metrics_valid.append(fit_metrics['valid']['stopping_loss'])
+            self.losses_train.append(fit_metrics['train']['loss_avg'])
+            self.losses_valid.append(fit_metrics['valid']['total_loss'])
+            self.metrics_train.append(fit_metrics['train']['stopping_loss'])
+            self.metrics_valid.append(fit_metrics['valid']['stopping_loss'])
 
             stopping_loss = fit_metrics['valid']['stopping_loss']
             if stopping_loss < self.best_cost:
@@ -201,10 +204,11 @@ class TabModel(BaseEstimator):
             print(f"Training done in {total_time:.3f} seconds.")
             print('---------------------------------------')
 
-        self.history = {"train": {"loss": losses_train,
-                                  "metric": metrics_train},
-                        "valid": {"loss": losses_valid,
-                                  "metric": metrics_valid}}
+        self.history = {"train": {"loss": self.losses_train,
+                                  "metric": self.metrics_train,
+                                  "lr": self.learning_rates},
+                        "valid": {"loss": self.losses_valid,
+                                  "metric": self.metrics_valid}}
         # load best models post training
         self.load_best_model()
 
@@ -763,7 +767,6 @@ class TabNetRegressor(TabModel):
 
         if self.scheduler is not None:
             self.scheduler.step()
-            print("Current learning rate: ", self.optimizer.param_groups[-1]["lr"])
         return epoch_metrics
 
     def train_batch(self, data, targets):
