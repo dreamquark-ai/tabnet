@@ -65,22 +65,24 @@ def create_dataloaders(X_train, y_train, X_valid, y_valid, weights,
             Validation data
         y_valid: np.array
             Mapped Validation targets
-        weights : dictionnary or bool
-            Weight for each mapped target class
-            0 for no sampling
-            1 for balanced sampling
+        weights : either 0, 1, dict or iterable
+            if 0 (default) : no weights will be applied
+            if 1 : classification only, will balanced class with inverse frequency
+            if dict : keys are corresponding class values are sample weights
+            if iterable : list or np array must be of length equal to nb elements
+                          in the training set
     Returns
     -------
         train_dataloader, valid_dataloader : torch.DataLoader, torch.DataLoader
             Training and validation dataloaders
     """
-    if weights == 0:
-        train_dataloader = DataLoader(TorchDataset(X_train, y_train),
-                                      batch_size=batch_size, shuffle=True,
-                                      num_workers=num_workers,
-                                      drop_last=drop_last)
-    else:
-        if weights == 1:
+
+    if isinstance(weights, int):
+        if weights == 0:
+            need_shuffle = True
+            sampler = None
+        elif weights == 1:
+            need_shuffle = False
             class_sample_count = np.array(
                 [len(np.where(y_train == t)[0]) for t in np.unique(y_train)])
 
@@ -90,18 +92,32 @@ def create_dataloaders(X_train, y_train, X_valid, y_valid, weights,
 
             samples_weight = torch.from_numpy(samples_weight)
             samples_weight = samples_weight.double()
+            sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
         else:
-            # custom weights
-            samples_weight = np.array([weights[t] for t in y_train])
+            raise ValueError('Weights should be either 0, 1, dictionnary or list.')
+    elif isinstance(weights, dict):
+        # custom weights per class
+        need_shuffle = False
+        samples_weight = np.array([weights[t] for t in y_train])
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
-        train_dataloader = DataLoader(TorchDataset(X_train, y_train),
-                                      batch_size=batch_size, sampler=sampler,
-                                      num_workers=num_workers,
-                                      drop_last=drop_last
-                                      )
+    else:
+        # custom weights
+        if len(weights) != len(y_train):
+            raise ValueError('Custom weights should match number of train samples.')
+        need_shuffle = False
+        samples_weight = np.array(weights)
+        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+
+    train_dataloader = DataLoader(TorchDataset(X_train, y_train),
+                                  batch_size=batch_size,
+                                  sampler=sampler,
+                                  shuffle=need_shuffle,
+                                  num_workers=num_workers,
+                                  drop_last=drop_last)
 
     valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
-                                  batch_size=batch_size, shuffle=False,
+                                  batch_size=batch_size,
+                                  shuffle=False,
                                   num_workers=num_workers)
 
     return train_dataloader, valid_dataloader
