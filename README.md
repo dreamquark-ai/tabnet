@@ -141,6 +141,9 @@ You can also get comfortable with how the code works by playing with the **noteb
 - device_name : str (default='auto')
     'cpu' for cpu training, 'gpu' for gpu training, 'auto' to automatically detect gpu.
 
+- mask_type: str (default='sparsemax')
+    Either "sparsemax" or "entmax" : this is the masking function to use for selecting features
+
 ## Fit parameters
 
 - X_train : np.array

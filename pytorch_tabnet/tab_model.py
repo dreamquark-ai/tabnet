@@ -23,7 +23,8 @@ class TabModel(BaseEstimator):
                  optimizer_fn=torch.optim.Adam,
                  optimizer_params=dict(lr=2e-2),
                  scheduler_params=None, scheduler_fn=None,
-                 device_name='auto'):
+                 device_name='auto',
+                 mask_type="sparsemax"):
         """ Class for TabNet model
 
         Parameters
@@ -51,7 +52,7 @@ class TabModel(BaseEstimator):
         self.device_name = device_name
         self.scheduler_params = scheduler_params
         self.scheduler_fn = scheduler_fn
-
+        self.mask_type = mask_type
         self.seed = seed
         torch.manual_seed(self.seed)
         # Defining device
@@ -133,7 +134,8 @@ class TabModel(BaseEstimator):
                                           epsilon=self.epsilon,
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=self.momentum,
-                                          device_name=self.device_name).to(self.device)
+                                          device_name=self.device_name,
+                                          mask_type=self.mask_type).to(self.device)
 
         self.reducing_matrix = create_explain_matrix(self.network.input_dim,
                                                      self.network.cat_emb_dim,
