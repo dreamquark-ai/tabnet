@@ -395,9 +395,9 @@ class TabNetClassifier(TabModel):
         if y_valid is not None:
             valid_labels = unique_labels(y_train)
             if not set(valid_labels).issubset(set(train_labels)):
-                print(f"""Valid set -- {set(valid_labels)} --
-                        contains unkown targets from training -- {set(train_labels)}""")
-                raise
+                raise ValueError(f"""Valid set -- {set(valid_labels)} --
+                                 contains unkown targets from training --
+                                 {set(train_labels)}""")
         return output_dim, train_labels
 
     def weight_updater(self, weights):
@@ -420,8 +420,7 @@ class TabNetClassifier(TabModel):
             return {self.target_mapper[key]: value
                     for key, value in weights.items()}
         else:
-            print("Unknown type for weights, please provide 0, 1 or dictionnary")
-            raise
+            return weights
 
     def construct_loaders(self, X_train, y_train, X_valid, y_valid,
                           weights, batch_size, num_workers, drop_last):
@@ -693,11 +692,17 @@ class TabNetRegressor(TabModel):
             Training and validation dataloaders
         -------
         """
+        if isinstance(weights, int):
+            if weights == 1:
+                raise ValueError("Please provide a list of weights for regression.")
+        if isinstance(weights, dict):
+            raise ValueError("Please provide a list of weights for regression.")
+
         train_dataloader, valid_dataloader = create_dataloaders(X_train,
                                                                 y_train,
                                                                 X_valid,
                                                                 y_valid,
-                                                                0,
+                                                                weights,
                                                                 batch_size,
                                                                 num_workers,
                                                                 drop_last)
@@ -721,8 +726,7 @@ class TabNetRegressor(TabModel):
         assert y_train.shape[1] == y_valid.shape[1], "Dimension mismatch y_train y_valid"
         self.output_dim = y_train.shape[1]
 
-        self.weights = 0  # No weights for regression
-        self.updated_weights = 0
+        self.updated_weights = weights
 
         self.max_epochs = max_epochs
         self.patience = patience
