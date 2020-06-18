@@ -12,7 +12,7 @@ from pytorch_tabnet.utils import (PredictDataset,
                                   create_explain_matrix)
 from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
-import copy
+from copy import deepcopy
 
 
 class TabModel(BaseEstimator):
@@ -23,8 +23,9 @@ class TabModel(BaseEstimator):
                  optimizer_fn=torch.optim.Adam,
                  optimizer_params=dict(lr=2e-2),
                  scheduler_params=None, scheduler_fn=None,
-                 device_name='auto',
-                 mask_type="sparsemax"):
+                 mask_type="sparsemax",
+                 input_dim=None, output_dim=None,
+                 device_name='auto'):
         """ Class for TabNet model
 
         Parameters
@@ -53,6 +54,11 @@ class TabModel(BaseEstimator):
         self.scheduler_params = scheduler_params
         self.scheduler_fn = scheduler_fn
         self.mask_type = mask_type
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        self.batch_size = 1024
+
         self.seed = seed
         torch.manual_seed(self.seed)
         # Defining device
@@ -75,6 +81,49 @@ class TabModel(BaseEstimator):
         -------
         """
         raise NotImplementedError('users must define construct_loaders to use this base class')
+
+    def init_network(
+        self,
+        input_dim,
+        output_dim,
+        n_d,
+        n_a,
+        n_steps,
+        gamma,
+        cat_idxs,
+        cat_dims,
+        cat_emb_dim,
+        n_independent,
+        n_shared,
+        epsilon,
+        virtual_batch_size,
+        momentum,
+        device_name,
+        mask_type
+    ):
+        self.network = tab_network.TabNet(
+            input_dim,
+            output_dim,
+            n_d=n_d,
+            n_a=n_a,
+            n_steps=n_steps,
+            gamma=gamma,
+            cat_idxs=cat_idxs,
+            cat_dims=cat_dims,
+            cat_emb_dim=cat_emb_dim,
+            n_independent=n_independent,
+            n_shared=n_shared,
+            epsilon=epsilon,
+            virtual_batch_size=virtual_batch_size,
+            momentum=momentum,
+            device_name=device_name,
+            mask_type=mask_type).to(self.device)
+
+        self.reducing_matrix = create_explain_matrix(
+            self.network.input_dim,
+            self.network.cat_emb_dim,
+            self.network.cat_idxs,
+            self.network.post_embed_dim)
 
     def fit(self, X_train, y_train, X_valid=None, y_valid=None, loss_fn=None,
             weights=0, max_epochs=100, patience=10, batch_size=1024,
@@ -125,22 +174,24 @@ class TabModel(BaseEstimator):
                                                                     self.num_workers,
                                                                     self.drop_last)
 
-        self.network = tab_network.TabNet(self.input_dim, self.output_dim,
-                                          n_d=self.n_d, n_a=self.n_d,
-                                          n_steps=self.n_steps, gamma=self.gamma,
-                                          cat_idxs=self.cat_idxs, cat_dims=self.cat_dims,
-                                          cat_emb_dim=self.cat_emb_dim,
-                                          n_independent=self.n_independent, n_shared=self.n_shared,
-                                          epsilon=self.epsilon,
-                                          virtual_batch_size=self.virtual_batch_size,
-                                          momentum=self.momentum,
-                                          device_name=self.device_name,
-                                          mask_type=self.mask_type).to(self.device)
-
-        self.reducing_matrix = create_explain_matrix(self.network.input_dim,
-                                                     self.network.cat_emb_dim,
-                                                     self.network.cat_idxs,
-                                                     self.network.post_embed_dim)
+        self.init_network(
+            input_dim=self.input_dim,
+            output_dim=self.output_dim,
+            n_d=self.n_d,
+            n_a=self.n_a,
+            n_steps=self.n_steps,
+            gamma=self.gamma,
+            cat_idxs=self.cat_idxs,
+            cat_dims=self.cat_dims,
+            cat_emb_dim=self.cat_emb_dim,
+            n_independent=self.n_independent,
+            n_shared=self.n_shared,
+            epsilon=self.epsilon,
+            virtual_batch_size=self.virtual_batch_size,
+            momentum=self.momentum,
+            device_name=self.device_name,
+            mask_type=self.mask_type
+        )
 
         self.optimizer = self.optimizer_fn(self.network.parameters(),
                                            **self.optimizer_params)
@@ -183,7 +234,7 @@ class TabModel(BaseEstimator):
                 self.best_cost = stopping_loss
                 self.patience_counter = 0
                 # Saving model
-                self.best_network = copy.deepcopy(self.network)
+                self.best_network = deepcopy(self.network)
             else:
                 self.patience_counter += 1
 
@@ -216,6 +267,31 @@ class TabModel(BaseEstimator):
 
         # compute feature importance once the best model is defined
         self._compute_feature_importances(train_dataloader)
+
+    def save_model(self, path):
+        torch.save(self.network.state_dict(), path)
+
+    def load_model(self, path):
+        self.init_network(
+            input_dim=self.input_dim,
+            output_dim=self.output_dim,
+            n_d=self.n_d,
+            n_a=self.n_a,
+            n_steps=self.n_steps,
+            gamma=self.gamma,
+            cat_idxs=self.cat_idxs,
+            cat_dims=self.cat_dims,
+            cat_emb_dim=self.cat_emb_dim,
+            n_independent=self.n_independent,
+            n_shared=self.n_shared,
+            epsilon=self.epsilon,
+            virtual_batch_size=1024,
+            momentum=self.momentum,
+            device_name=self.device_name,
+            mask_type=self.mask_type
+        )
+        self.network.load_state_dict(torch.load(path))
+        self.network.eval()
 
     def fit_epoch(self, train_dataloader, valid_dataloader):
         """
