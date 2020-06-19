@@ -13,6 +13,10 @@ from pytorch_tabnet.utils import (PredictDataset,
 from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
 from copy import deepcopy
+import json
+from pathlib import Path
+import shutil
+import zipfile
 
 
 class TabModel(BaseEstimator):
@@ -83,24 +87,24 @@ class TabModel(BaseEstimator):
         raise NotImplementedError('users must define construct_loaders to use this base class')
 
     def init_network(
-        self,
-        input_dim,
-        output_dim,
-        n_d,
-        n_a,
-        n_steps,
-        gamma,
-        cat_idxs,
-        cat_dims,
-        cat_emb_dim,
-        n_independent,
-        n_shared,
-        epsilon,
-        virtual_batch_size,
-        momentum,
-        device_name,
-        mask_type
-    ):
+                     self,
+                     input_dim,
+                     output_dim,
+                     n_d,
+                     n_a,
+                     n_steps,
+                     gamma,
+                     cat_idxs,
+                     cat_dims,
+                     cat_emb_dim,
+                     n_independent,
+                     n_shared,
+                     epsilon,
+                     virtual_batch_size,
+                     momentum,
+                     device_name,
+                     mask_type,
+                     ):
         self.network = tab_network.TabNet(
             input_dim,
             output_dim,
@@ -269,9 +273,44 @@ class TabModel(BaseEstimator):
         self._compute_feature_importances(train_dataloader)
 
     def save_model(self, path):
-        torch.save(self.network.state_dict(), path)
+        """
+        Saving model with two distinct files.
+        """
+        saved_params = {}
+        for key, val in self.get_params().items():
+            if isinstance(val, type):
+                # Don't save torch specific params
+                continue
+            else:
+                saved_params[key] = val
 
-    def load_model(self, path):
+        # Create folder
+        Path(path).mkdir(parents=True, exist_ok=True)
+
+        # Save models params
+        with open(Path(path).joinpath("model_params.json"), "w", encoding="utf8") as f:
+            json.dump(saved_params, f)
+
+        # Save state_dict
+        torch.save(self.network.state_dict(), Path(path).joinpath("network.pt"))
+        shutil.make_archive(path, 'zip', path)
+        shutil.rmtree(path)
+        print(f"Successfully saved model at {path}.zip")
+        return f"{path}.zip"
+
+    def load_model(self, filepath):
+
+        try:
+            with zipfile.ZipFile(filepath) as z:
+                with z.open("model_params.json") as f:
+                    loaded_params = json.load(f)
+                with z.open("network.pt") as f:
+                    saved_state_dict = torch.load(f)
+        except KeyError:
+            raise KeyError("Your zip file is missing at least one component")
+
+        self.__init__(**loaded_params)
+
         self.init_network(
             input_dim=self.input_dim,
             output_dim=self.output_dim,
@@ -290,8 +329,9 @@ class TabModel(BaseEstimator):
             device_name=self.device_name,
             mask_type=self.mask_type
         )
-        self.network.load_state_dict(torch.load(path))
+        self.network.load_state_dict(saved_state_dict)
         self.network.eval()
+        return
 
     def fit_epoch(self, train_dataloader, valid_dataloader):
         """
