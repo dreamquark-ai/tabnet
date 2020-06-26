@@ -388,7 +388,7 @@ class TabNetClassifier(TabModel):
         output_dim = len(train_labels)
 
         if y_valid is not None:
-            valid_labels = unique_labels(y_train)
+            valid_labels = unique_labels(y_valid)
             if not set(valid_labels).issubset(set(train_labels)):
                 print(f"""Valid set -- {set(valid_labels)} --
                         contains unkown targets from training -- {set(train_labels)}""")
