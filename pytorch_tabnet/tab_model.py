@@ -12,7 +12,11 @@ from pytorch_tabnet.utils import (PredictDataset,
                                   create_explain_matrix)
 from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
-import copy
+from copy import deepcopy
+import json
+from pathlib import Path
+import shutil
+import zipfile
 
 
 class TabModel(BaseEstimator):
@@ -20,8 +24,11 @@ class TabModel(BaseEstimator):
                  n_independent=2, n_shared=2, epsilon=1e-15,  momentum=0.02,
                  lambda_sparse=1e-3, seed=0,
                  clip_value=1, verbose=1,
-                 lr=2e-2, optimizer_fn=torch.optim.Adam,
+                 optimizer_fn=torch.optim.Adam,
+                 optimizer_params=dict(lr=2e-2),
                  scheduler_params=None, scheduler_fn=None,
+                 mask_type="sparsemax",
+                 input_dim=None, output_dim=None,
                  device_name='auto'):
         """ Class for TabNet model
 
@@ -45,11 +52,16 @@ class TabModel(BaseEstimator):
         self.lambda_sparse = lambda_sparse
         self.clip_value = clip_value
         self.verbose = verbose
-        self.lr = lr
         self.optimizer_fn = optimizer_fn
+        self.optimizer_params = optimizer_params
         self.device_name = device_name
         self.scheduler_params = scheduler_params
         self.scheduler_fn = scheduler_fn
+        self.mask_type = mask_type
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+
+        self.batch_size = 1024
 
         self.seed = seed
         torch.manual_seed(self.seed)
@@ -73,6 +85,49 @@ class TabModel(BaseEstimator):
         -------
         """
         raise NotImplementedError('users must define construct_loaders to use this base class')
+
+    def init_network(
+                     self,
+                     input_dim,
+                     output_dim,
+                     n_d,
+                     n_a,
+                     n_steps,
+                     gamma,
+                     cat_idxs,
+                     cat_dims,
+                     cat_emb_dim,
+                     n_independent,
+                     n_shared,
+                     epsilon,
+                     virtual_batch_size,
+                     momentum,
+                     device_name,
+                     mask_type,
+                     ):
+        self.network = tab_network.TabNet(
+            input_dim,
+            output_dim,
+            n_d=n_d,
+            n_a=n_a,
+            n_steps=n_steps,
+            gamma=gamma,
+            cat_idxs=cat_idxs,
+            cat_dims=cat_dims,
+            cat_emb_dim=cat_emb_dim,
+            n_independent=n_independent,
+            n_shared=n_shared,
+            epsilon=epsilon,
+            virtual_batch_size=virtual_batch_size,
+            momentum=momentum,
+            device_name=device_name,
+            mask_type=mask_type).to(self.device)
+
+        self.reducing_matrix = create_explain_matrix(
+            self.network.input_dim,
+            self.network.cat_emb_dim,
+            self.network.cat_idxs,
+            self.network.post_embed_dim)
 
     def fit(self, X_train, y_train, X_valid=None, y_valid=None, loss_fn=None,
             weights=0, max_epochs=100, patience=10, batch_size=1024,
@@ -123,35 +178,38 @@ class TabModel(BaseEstimator):
                                                                     self.num_workers,
                                                                     self.drop_last)
 
-        self.network = tab_network.TabNet(self.input_dim, self.output_dim,
-                                          n_d=self.n_d, n_a=self.n_d,
-                                          n_steps=self.n_steps, gamma=self.gamma,
-                                          cat_idxs=self.cat_idxs, cat_dims=self.cat_dims,
-                                          cat_emb_dim=self.cat_emb_dim,
-                                          n_independent=self.n_independent, n_shared=self.n_shared,
-                                          epsilon=self.epsilon,
-                                          virtual_batch_size=self.virtual_batch_size,
-                                          momentum=self.momentum,
-                                          device_name=self.device_name).to(self.device)
-
-        self.reducing_matrix = create_explain_matrix(self.network.input_dim,
-                                                     self.network.cat_emb_dim,
-                                                     self.network.cat_idxs,
-                                                     self.network.post_embed_dim)
+        self.init_network(
+            input_dim=self.input_dim,
+            output_dim=self.output_dim,
+            n_d=self.n_d,
+            n_a=self.n_a,
+            n_steps=self.n_steps,
+            gamma=self.gamma,
+            cat_idxs=self.cat_idxs,
+            cat_dims=self.cat_dims,
+            cat_emb_dim=self.cat_emb_dim,
+            n_independent=self.n_independent,
+            n_shared=self.n_shared,
+            epsilon=self.epsilon,
+            virtual_batch_size=self.virtual_batch_size,
+            momentum=self.momentum,
+            device_name=self.device_name,
+            mask_type=self.mask_type
+        )
 
         self.optimizer = self.optimizer_fn(self.network.parameters(),
-                                           lr=self.lr)
+                                           **self.optimizer_params)
 
         if self.scheduler_fn:
             self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
         else:
             self.scheduler = None
 
-        losses_train = []
-        losses_valid = []
-
-        metrics_train = []
-        metrics_valid = []
+        self.losses_train = []
+        self.losses_valid = []
+        self.learning_rates = []
+        self.metrics_train = []
+        self.metrics_valid = []
 
         if self.verbose > 0:
             print("Will train until validation stopping metric",
@@ -164,20 +222,23 @@ class TabModel(BaseEstimator):
         while (self.epoch < self.max_epochs and
                self.patience_counter < self.patience):
             starting_time = time.time()
+            # updates learning rate history
+            self.learning_rates.append(self.optimizer.param_groups[-1]["lr"])
+
             fit_metrics = self.fit_epoch(train_dataloader, valid_dataloader)
 
             # leaving it here, may be used for callbacks later
-            losses_train.append(fit_metrics['train']['loss_avg'])
-            losses_valid.append(fit_metrics['valid']['total_loss'])
-            metrics_train.append(fit_metrics['train']['stopping_loss'])
-            metrics_valid.append(fit_metrics['valid']['stopping_loss'])
+            self.losses_train.append(fit_metrics['train']['loss_avg'])
+            self.losses_valid.append(fit_metrics['valid']['total_loss'])
+            self.metrics_train.append(fit_metrics['train']['stopping_loss'])
+            self.metrics_valid.append(fit_metrics['valid']['stopping_loss'])
 
             stopping_loss = fit_metrics['valid']['stopping_loss']
             if stopping_loss < self.best_cost:
                 self.best_cost = stopping_loss
                 self.patience_counter = 0
                 # Saving model
-                self.best_network = copy.deepcopy(self.network)
+                self.best_network = deepcopy(self.network)
             else:
                 self.patience_counter += 1
 
@@ -200,15 +261,77 @@ class TabModel(BaseEstimator):
             print(f"Training done in {total_time:.3f} seconds.")
             print('---------------------------------------')
 
-        self.history = {"train": {"loss": losses_train,
-                                  "metric": metrics_train},
-                        "valid": {"loss": losses_valid,
-                                  "metric": metrics_valid}}
+        self.history = {"train": {"loss": self.losses_train,
+                                  "metric": self.metrics_train,
+                                  "lr": self.learning_rates},
+                        "valid": {"loss": self.losses_valid,
+                                  "metric": self.metrics_valid}}
         # load best models post training
         self.load_best_model()
 
         # compute feature importance once the best model is defined
         self._compute_feature_importances(train_dataloader)
+
+    def save_model(self, path):
+        """
+        Saving model with two distinct files.
+        """
+        saved_params = {}
+        for key, val in self.get_params().items():
+            if isinstance(val, type):
+                # Don't save torch specific params
+                continue
+            else:
+                saved_params[key] = val
+
+        # Create folder
+        Path(path).mkdir(parents=True, exist_ok=True)
+
+        # Save models params
+        with open(Path(path).joinpath("model_params.json"), "w", encoding="utf8") as f:
+            json.dump(saved_params, f)
+
+        # Save state_dict
+        torch.save(self.network.state_dict(), Path(path).joinpath("network.pt"))
+        shutil.make_archive(path, 'zip', path)
+        shutil.rmtree(path)
+        print(f"Successfully saved model at {path}.zip")
+        return f"{path}.zip"
+
+    def load_model(self, filepath):
+
+        try:
+            with zipfile.ZipFile(filepath) as z:
+                with z.open("model_params.json") as f:
+                    loaded_params = json.load(f)
+                with z.open("network.pt") as f:
+                    saved_state_dict = torch.load(f)
+        except KeyError:
+            raise KeyError("Your zip file is missing at least one component")
+
+        self.__init__(**loaded_params)
+
+        self.init_network(
+            input_dim=self.input_dim,
+            output_dim=self.output_dim,
+            n_d=self.n_d,
+            n_a=self.n_a,
+            n_steps=self.n_steps,
+            gamma=self.gamma,
+            cat_idxs=self.cat_idxs,
+            cat_dims=self.cat_dims,
+            cat_emb_dim=self.cat_emb_dim,
+            n_independent=self.n_independent,
+            n_shared=self.n_shared,
+            epsilon=self.epsilon,
+            virtual_batch_size=1024,
+            momentum=self.momentum,
+            device_name=self.device_name,
+            mask_type=self.mask_type
+        )
+        self.network.load_state_dict(saved_state_dict)
+        self.network.eval()
+        return
 
     def fit_epoch(self, train_dataloader, valid_dataloader):
         """
@@ -388,11 +511,11 @@ class TabNetClassifier(TabModel):
         output_dim = len(train_labels)
 
         if y_valid is not None:
-            valid_labels = unique_labels(y_train)
+            valid_labels = unique_labels(y_valid)
             if not set(valid_labels).issubset(set(train_labels)):
-                print(f"""Valid set -- {set(valid_labels)} --
-                        contains unkown targets from training -- {set(train_labels)}""")
-                raise
+                raise ValueError(f"""Valid set -- {set(valid_labels)} --
+                                 contains unkown targets from training --
+                                 {set(train_labels)}""")
         return output_dim, train_labels
 
     def weight_updater(self, weights):
@@ -415,8 +538,7 @@ class TabNetClassifier(TabModel):
             return {self.target_mapper[key]: value
                     for key, value in weights.items()}
         else:
-            print("Unknown type for weights, please provide 0, 1 or dictionnary")
-            raise
+            return weights
 
     def construct_loaders(self, X_train, y_train, X_valid, y_valid,
                           weights, batch_size, num_workers, drop_last):
@@ -688,11 +810,17 @@ class TabNetRegressor(TabModel):
             Training and validation dataloaders
         -------
         """
+        if isinstance(weights, int):
+            if weights == 1:
+                raise ValueError("Please provide a list of weights for regression.")
+        if isinstance(weights, dict):
+            raise ValueError("Please provide a list of weights for regression.")
+
         train_dataloader, valid_dataloader = create_dataloaders(X_train,
                                                                 y_train,
                                                                 X_valid,
                                                                 y_valid,
-                                                                0,
+                                                                weights,
                                                                 batch_size,
                                                                 num_workers,
                                                                 drop_last)
@@ -716,8 +844,7 @@ class TabNetRegressor(TabModel):
         assert y_train.shape[1] == y_valid.shape[1], "Dimension mismatch y_train y_valid"
         self.output_dim = y_train.shape[1]
 
-        self.weights = 0  # No weights for regression
-        self.updated_weights = 0
+        self.updated_weights = weights
 
         self.max_epochs = max_epochs
         self.patience = patience
@@ -762,7 +889,6 @@ class TabNetRegressor(TabModel):
 
         if self.scheduler is not None:
             self.scheduler.step()
-            print("Current learning rate: ", self.optimizer.param_groups[-1]["lr"])
         return epoch_metrics
 
     def train_batch(self, data, targets):

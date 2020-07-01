@@ -6,6 +6,12 @@ data/
 *.pt
 *~
 
+# Notebook to python
+forest_example.py
+regression_example.py
+census_example.py
+multi_regression_example.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

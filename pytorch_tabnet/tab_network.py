@@ -43,7 +43,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
                  n_d=8, n_a=8,
                  n_steps=3, gamma=1.3,
                  n_independent=2, n_shared=2, epsilon=1e-15,
-                 virtual_batch_size=128, momentum=0.02):
+                 virtual_batch_size=128, momentum=0.02,
+                 mask_type="sparsemax"):
         """
         Defines main part of the TabNet network without the embedding layers.
 
@@ -70,6 +71,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
             Number of independent GLU layer in each GLU block (default 2)
         - epsilon: float
             Avoid log(0), this should be kept very low
+        - mask_type: str
+            Either "sparsemax" or "entmax" : this is the masking function to use
         """
         super(TabNetNoEmbeddings, self).__init__()
         self.input_dim = input_dim
@@ -82,7 +85,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         self.n_independent = n_independent
         self.n_shared = n_shared
         self.virtual_batch_size = virtual_batch_size
-
+        self.mask_type = mask_type
         self.initial_bn = BatchNorm1d(self.input_dim, momentum=0.01)
 
         if self.n_shared > 0:
@@ -113,7 +116,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
                                           momentum=momentum)
             attention = AttentiveTransformer(n_a, self.input_dim,
                                              virtual_batch_size=self.virtual_batch_size,
-                                             momentum=momentum)
+                                             momentum=momentum,
+                                             mask_type=self.mask_type)
             self.feat_transformers.append(transformer)
             self.att_transformers.append(attention)
 
@@ -179,7 +183,8 @@ class TabNet(torch.nn.Module):
     def __init__(self, input_dim, output_dim, n_d=8, n_a=8,
                  n_steps=3, gamma=1.3, cat_idxs=[], cat_dims=[], cat_emb_dim=1,
                  n_independent=2, n_shared=2, epsilon=1e-15,
-                 virtual_batch_size=128, momentum=0.02, device_name='auto'):
+                 virtual_batch_size=128, momentum=0.02, device_name='auto',
+                 mask_type="sparsemax"):
         """
         Defines TabNet network
 
@@ -212,6 +217,8 @@ class TabNet(torch.nn.Module):
             Number of independent GLU layer in each GLU block (default 2)
         - n_shared : int
             Number of independent GLU layer in each GLU block (default 2)
+        - mask_type: str
+            Either "sparsemax" or "entmax" : this is the masking function to use
         - epsilon: float
             Avoid log(0), this should be kept very low
         """
@@ -229,6 +236,7 @@ class TabNet(torch.nn.Module):
         self.epsilon = epsilon
         self.n_independent = n_independent
         self.n_shared = n_shared
+        self.mask_type = mask_type
 
         if self.n_steps <= 0:
             raise ValueError("n_steps should be a positive integer.")
@@ -240,7 +248,7 @@ class TabNet(torch.nn.Module):
         self.post_embed_dim = self.embedder.post_embed_dim
         self.tabnet = TabNetNoEmbeddings(self.post_embed_dim, output_dim, n_d, n_a, n_steps,
                                          gamma, n_independent, n_shared, epsilon,
-                                         virtual_batch_size, momentum)
+                                         virtual_batch_size, momentum, mask_type)
 
         # Defining device
         if device_name == 'auto':
@@ -261,7 +269,10 @@ class TabNet(torch.nn.Module):
 
 
 class AttentiveTransformer(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, virtual_batch_size=128, momentum=0.02):
+    def __init__(self, input_dim, output_dim,
+                 virtual_batch_size=128,
+                 momentum=0.02,
+                 mask_type="sparsemax"):
         """
         Initialize an attention transformer.
 
@@ -273,6 +284,8 @@ class AttentiveTransformer(torch.nn.Module):
             Outpu_size
         - momentum : float
             Float value between 0 and 1 which will be used for momentum in batch norm
+        - mask_type: str
+            Either "sparsemax" or "entmax" : this is the masking function to use
         """
         super(AttentiveTransformer, self).__init__()
         self.fc = Linear(input_dim, output_dim, bias=False)
@@ -280,16 +293,21 @@ class AttentiveTransformer(torch.nn.Module):
         self.bn = GBN(output_dim, virtual_batch_size=virtual_batch_size,
                       momentum=momentum)
 
-        # Sparsemax
-        self.sp_max = sparsemax.Sparsemax(dim=-1)
-        # Entmax
-        # self.sp_max = sparsemax.Entmax15(dim=-1)
+        if mask_type == "sparsemax":
+            # Sparsemax
+            self.selector = sparsemax.Sparsemax(dim=-1)
+        elif mask_type == "entmax":
+            # Entmax
+            self.selector = sparsemax.Entmax15(dim=-1)
+        else:
+            raise NotImplementedError("Please choose either sparsemax" +
+                                      "or entmax as masktype")
 
     def forward(self, priors, processed_feat):
         x = self.fc(processed_feat)
         x = self.bn(x)
         x = torch.mul(x, priors)
-        x = self.sp_max(x)
+        x = self.selector(x)
         return x
 
 

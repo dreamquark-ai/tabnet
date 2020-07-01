@@ -10,6 +10,6 @@ ENV JUPYTER_CONFIG_DIR /work/.cache/jupyter/config
 
 RUN $HOME/.poetry/bin/poetry config virtualenvs.path $POETRY_CACHE
 
-ENV PATH /root/.poetry/bin:/bin:/usr/local/bin:/usr/bin
+ENV PATH ${PATH}:/root/.poetry/bin:/bin:/usr/local/bin:/usr/bin
 
 CMD ["bash", "-l"]

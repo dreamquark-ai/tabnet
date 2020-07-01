@@ -1,4 +1,22 @@
 
+# [1.2.0](https://github.com/dreamquark-ai/tabnet/compare/v1.1.0...v1.2.0) (2020-07-01)
+
+
+### Bug Fixes
+
+* verbosity with schedulers ([d6fbf90](https://github.com/dreamquark-ai/tabnet/commit/d6fbf9012ad2a60f0ac4e2b801d258a16250d74c))
+
+
+### Features
+
+* add entmax as parameter ([96c8a74](https://github.com/dreamquark-ai/tabnet/commit/96c8a74d44abfc7318f06fdd56f7d77ec1974e96))
+* allow other optimizer parameters ([16d92d5](https://github.com/dreamquark-ai/tabnet/commit/16d92d5513de36892f859935d36c3bac398ed035))
+* allow weights sample for regression ([d40b02f](https://github.com/dreamquark-ai/tabnet/commit/d40b02f5e1cb8ca8c28c398cb0e26cba5cec3445))
+* save and load tabnet models ([9d2d8ae](https://github.com/dreamquark-ai/tabnet/commit/9d2d8ae8c724901eb062e4340dad06c364c88fa5))
+* save params and easy loading ([6e22393](https://github.com/dreamquark-ai/tabnet/commit/6e22393b9d1206ba1aca8af2645c5de6fe24a6db))
+
+
+
 # [1.1.0](https://github.com/dreamquark-ai/tabnet/compare/v1.0.6...v1.1.0) (2020-06-02)
 
 

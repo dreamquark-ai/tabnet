@@ -102,9 +102,7 @@ You can also get comfortable with how the code works by playing with the **noteb
 - momentum : float
 
     Momentum for batch normalization, typically ranges from 0.01 to 0.4 (default=0.02)
-- lr : float (default = 0.02)
 
-    Initial learning rate used for training. As mentionned in the original paper, a large initial learning of ```0.02 ```  with decay is a good option.
 - clip_value : float (default None)
 
     If a float is given this will clip the gradient at clip_value.
@@ -115,6 +113,10 @@ You can also get comfortable with how the code works by playing with the **noteb
 - optimizer_fn : torch.optim (default=torch.optim.Adam)
 
     Pytorch optimizer function
+
+- optimizer_params: dict (default=dict(lr=2e-2))
+
+    Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning of ```0.02 ```  with decay is a good option.
 
 - scheduler_fn : torch.optim.lr_scheduler (default=None)
 
@@ -138,6 +140,9 @@ You can also get comfortable with how the code works by playing with the **noteb
 
 - device_name : str (default='auto')
     'cpu' for cpu training, 'gpu' for gpu training, 'auto' to automatically detect gpu.
+
+- mask_type: str (default='sparsemax')
+    Either "sparsemax" or "entmax" : this is the masking function to use for selecting features
 
 ## Fit parameters
 
