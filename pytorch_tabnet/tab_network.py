@@ -128,7 +128,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         res = 0
         x = self.initial_bn(x)
 
-        prior = 1.0
+        prior = torch.ones(x.shape).to(x.device)
         M_loss = 0
         att = self.initial_splitter(x)[:, self.n_d:]
 
@@ -153,8 +153,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
     def forward_masks(self, x):
         x = self.initial_bn(x)
 
-        prior = 1.0
-        M_explain = 0.0
+        prior = torch.ones(x.shape).to(x.device)
+        M_explain = torch.zeros(x.shape).to(x.device)
         att = self.initial_splitter(x)[:, self.n_d:]
         masks = {}
 
