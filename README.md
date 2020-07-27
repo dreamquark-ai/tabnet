@@ -37,6 +37,19 @@ If you wan to use it locally within a docker container:
 
 - `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
 
+# Examples
+
+see `/examples` folder
+
+
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dreamquark-ai/tabnet/blob/master/examples/TabNet_binary_classification__adult_census_income.ipynb.ipynb) Census dataset, binary classification
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dreamquark-ai/tabnet/blob/master/examples/TabNet_multiclass_classification__forest_cover.ipynb) Forest Cover dataset, multi class classification
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dreamquark-ai/tabnet/blob/master/examples/TabNet_regression_time_series__metro_interstate_traffic_volume.ipynb) Metro Interstate Traffic Volume dataset, time series regression
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dreamquark-ai/tabnet/blob/master/examples/TabNet_binary_classification__adult_census_income.ipynb) Census dataset, regression
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dreamquark-ai/tabnet/blob/master/examples/TabNet_multi_regression__adult_census_income.ipynb) Census dataset, multi regression
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/dreamquark-ai/tabnet/blob/master/examples/TabNet_regression__online_news_popularity.ipynb) Online News Popularity, regression
+
+
 
 # How to use it?
 
@@ -50,7 +63,7 @@ clf.fit(X_train, Y_train, X_valid, y_valid)
 preds = clf.predict(X_test)
 ```
 
-You can also get comfortable with how the code works by playing with the **notebooks tutorials** for adult census income dataset and forest cover type dataset.
+You can also get comfortable with how the code works by playing with the **notebooks tutorials** for different datasets.
 
 ## Model parameters
 
