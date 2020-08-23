@@ -246,7 +246,7 @@ class TabModel(BaseEstimator):
 				if self.scheduler_fn == torch.optim.lr_scheduler.ReduceLROnPlateau:
                 	self.scheduler.step(stopping_loss)
 				else:
-					self/scheduler.step()
+					self.scheduler.step()
 
             self.epoch += 1
             total_time += time.time() - starting_time
