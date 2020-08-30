@@ -13,7 +13,6 @@ from pytorch_tabnet.utils import (PredictDataset,
 from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
 from copy import deepcopy
-import io
 import json
 from pathlib import Path
 import shutil
@@ -244,10 +243,10 @@ class TabModel(BaseEstimator):
                 self.patience_counter += 1
 
             if self.scheduler is not None:
-				if self.scheduler_fn == torch.optim.lr_scheduler.ReduceLROnPlateau:
-                	self.scheduler.step(stopping_loss)
-				else:
-					self/scheduler.step()
+                if self.scheduler_fn.isinstance(torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    self.scheduler.step(stopping_loss)
+                else:
+                    self.scheduler.step()
 
             self.epoch += 1
             total_time += time.time() - starting_time
@@ -312,13 +311,7 @@ class TabModel(BaseEstimator):
                 with z.open("model_params.json") as f:
                     loaded_params = json.load(f)
                 with z.open("network.pt") as f:
-                    try:
-                        saved_state_dict = torch.load(f)
-                    except io.UnsupportedOperation:
-                        # In Python <3.7, the returned file object is not seekable (which at least
-                        # some versions of PyTorch require) - so we'll try buffering it in to a
-                        # BytesIO instead:
-                        saved_state_dict = torch.load(io.BytesIO(f.read()))
+                    saved_state_dict = torch.load(f)
         except KeyError:
             raise KeyError("Your zip file is missing at least one component")
 
