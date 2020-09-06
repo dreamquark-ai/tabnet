@@ -243,7 +243,7 @@ class TabModel(BaseEstimator):
                 self.patience_counter += 1
 
             if self.scheduler is not None:
-                if self.scheduler_fn.isinstance(torch.optim.lr_scheduler.ReduceLROnPlateau):
+                if isinstance(self.scheduler_fn, torch.optim.lr_scheduler.ReduceLROnPlateau):
                     self.scheduler.step(stopping_loss)
                 else:
                     self.scheduler.step()
