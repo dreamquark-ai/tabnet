@@ -1,24 +1,13 @@
 import torch
 import numpy as np
-from scipy.sparse import csc_matrix
-import time
-from abc import abstractmethod
-from pytorch_tabnet import tab_network
 from pytorch_tabnet.multiclass_utils import unique_labels
 from sklearn.metrics import roc_auc_score, mean_squared_error, accuracy_score
 from torch.nn.utils import clip_grad_norm_
 from pytorch_tabnet.utils import (PredictDataset,
                                   create_dataloaders,
-                                  create_explain_matrix)
+                                  filter_weights)
 from pytorch_tabnet.abstract_model import TabModel
-from sklearn.base import BaseEstimator
 from torch.utils.data import DataLoader
-from copy import deepcopy
-import io
-import json
-from pathlib import Path
-import shutil
-import zipfile
 
 
 class TabNetClassifier(TabModel):
@@ -342,12 +331,8 @@ class TabNetRegressor(TabModel):
             Training and validation dataloaders
         -------
         """
-        if isinstance(weights, int):
-            if weights == 1:
-                raise ValueError("Please provide a list of weights for regression.")
-        if isinstance(weights, dict):
-            raise ValueError("Please provide a list of weights for regression.")
-
+        # all weights are not allowed for this type of model
+        filter_weights(weights)
         train_dataloader, valid_dataloader = create_dataloaders(X_train,
                                                                 y_train,
                                                                 X_valid,

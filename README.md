@@ -10,7 +10,7 @@ This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). T
 
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pytorch-tabnet)
 
-Any questions ? Want to contribute ? To talk with us ? You can join us on [Slack](https://join.slack.com/t/mltooling/shared_invite/zt-e4y14rbp-IReRxmjoNy27XQFQgh~4ZQ)
+Any questions ? Want to contribute ? To talk with us ? You can join us on [Slack](https://join.slack.com/t/mltooling/shared_invite/zt-fxaj0qk7-SWy2_~EWyhj4x9SD6gbRvg)
 
 # Installation
 
@@ -37,6 +37,11 @@ If you wan to use it locally within a docker container:
 
 - `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
 
+# What problems does pytorch-tabnet handles?
+
+- TabNetClassifier : binary classification and multi-class classification problems
+- TabNetRegressor : simple and multi-task regression problems
+- TabNetMultiTaskClassifier:  multi-task multi-classification problems
 
 # How to use it?
 
@@ -50,7 +55,23 @@ clf.fit(X_train, Y_train, X_valid, y_valid)
 preds = clf.predict(X_test)
 ```
 
-You can also get comfortable with how the code works by playing with the **notebooks tutorials** for adult census income dataset and forest cover type dataset.
+or for TabNetMultiTaskClassifier :
+
+```
+from pytorch_tabnet.multitask import TabNetMultiTaskClassifier
+clf = TabNetMultiTaskClassifier()
+clf.fit(X_train, Y_train, X_valid, y_valid)
+preds = clf.predict(X_test)
+```
+
+# Useful links
+
+- explanatory video : https://youtu.be/ysBaZO8YmX8
+- binary classification examples : https://github.com/dreamquark-ai/tabnet/blob/develop/census_example.ipynb
+- multi-class classification examples : https://github.com/dreamquark-ai/tabnet/blob/develop/forest_example.ipynb
+- regression examples : https://github.com/dreamquark-ai/tabnet/blob/develop/regression_example.ipynb
+- multi-task regression examples : https://github.com/dreamquark-ai/tabnet/blob/develop/multi_regression_example.ipynb
+- multi-task multi-class classification examples : https://www.kaggle.com/optimo/tabnetmultitaskclassifier
 
 ## Model parameters
 
@@ -176,9 +197,11 @@ You can also get comfortable with how the code works by playing with the **noteb
     1 : automated sampling with inverse class occurences
     dict : keys are classes, values are weights for each class
 
-- loss_fn : torch.loss
+- loss_fn : torch.loss or list of torch.loss
 
     Loss function for training (default to mse for regression and cross entropy for classification)
+    When using TabNetMultiTaskClassifier you can set a list of same length as number of tasks,
+    each task will be assigned its own loss function
 
 - batch_size : int (default=1024)
 
