@@ -52,7 +52,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         ----------
         - input_dim : int
             Number of features
-        - output_dim : int
+        - output_dim : int or list of int for multi task classification
             Dimension of network output
             examples : one for regression, 2 for binary classification etc...
         - n_d : int
@@ -77,6 +77,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         super(TabNetNoEmbeddings, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.is_multi_task = isinstance(output_dim, list)
         self.n_d = n_d
         self.n_a = n_a
         self.n_steps = n_steps
@@ -121,8 +122,15 @@ class TabNetNoEmbeddings(torch.nn.Module):
             self.feat_transformers.append(transformer)
             self.att_transformers.append(attention)
 
-        self.final_mapping = Linear(n_d, output_dim, bias=False)
-        initialize_non_glu(self.final_mapping, n_d, output_dim)
+        if self.is_multi_task:
+            self.multi_task_mappings = torch.nn.ModuleList()
+            for task_dim in output_dim:
+                task_mapping = Linear(n_d, task_dim, bias=False)
+                initialize_non_glu(task_mapping, n_d, task_dim)
+                self.multi_task_mappings.append(task_mapping)
+        else:
+            self.final_mapping = Linear(n_d, output_dim, bias=False)
+            initialize_non_glu(self.final_mapping, n_d, output_dim)
 
     def forward(self, x):
         res = 0
@@ -147,8 +155,15 @@ class TabNetNoEmbeddings(torch.nn.Module):
             att = out[:, self.n_d:]
 
         M_loss /= self.n_steps
-        res = self.final_mapping(res)
-        return res, M_loss
+
+        if self.is_multi_task:
+            # Result will be in list format
+            out = []
+            for task_mapping in self.multi_task_mappings:
+                out.append(task_mapping(res))
+        else:
+            out = self.final_mapping(res)
+        return out, M_loss
 
     def forward_masks(self, x):
         x = self.initial_bn(x)

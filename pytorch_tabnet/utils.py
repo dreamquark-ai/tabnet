@@ -168,3 +168,25 @@ def create_explain_matrix(input_dim, cat_emb_dim, cat_idxs, post_embed_dim):
         reducing_matrix[cols, i] = 1
 
     return scipy.sparse.csc_matrix(reducing_matrix)
+
+
+def filter_weights(weights):
+    """
+        This function makes sure that weights are in correct format for
+        regression and multitask TabNet
+
+    Parameters
+    ----------
+    weights: int, dict or list
+        Initial weights parameters given by user
+    Returns
+    -------
+    None : This function will only throw an error if format is wrong
+    """
+    err_msg = "Please provide a list of weights for regression or multitask : "
+    if isinstance(weights, int):
+        if weights == 1:
+            raise ValueError(err_msg + "1 given.")
+    if isinstance(weights, dict):
+        raise ValueError(err_msg + "Dict given.")
+    return
