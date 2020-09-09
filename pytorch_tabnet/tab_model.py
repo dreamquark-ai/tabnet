@@ -243,6 +243,12 @@ class TabModel(BaseEstimator):
             else:
                 self.patience_counter += 1
 
+            if self.scheduler is not None:
+                if isinstance(self.scheduler_fn, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    self.scheduler.step(stopping_loss)
+                else:
+                    self.scheduler.step()
+
             self.epoch += 1
             total_time += time.time() - starting_time
             if self.verbose > 0:
@@ -637,8 +643,6 @@ class TabNetClassifier(TabModel):
                          'stopping_loss': stopping_loss,
                          }
 
-        if self.scheduler is not None:
-            self.scheduler.step()
         return epoch_metrics
 
     def train_batch(self, data, targets):
@@ -894,8 +898,6 @@ class TabNetRegressor(TabModel):
                          'stopping_loss': stopping_loss,
                          }
 
-        if self.scheduler is not None:
-            self.scheduler.step()
         return epoch_metrics
 
     def train_batch(self, data, targets):
