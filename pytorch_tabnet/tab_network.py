@@ -103,7 +103,21 @@ class TabNetNoEmbeddings(torch.nn.Module):
         else:
             shared_feat_transform = None
 
-        self.initial_attention = AttentiveTransformer(self.input_dim, self.input_dim, dropout,
+        if self.n_shared > 0:
+            shared_att_transform = torch.nn.ModuleList()
+            for i in range(self.n_shared):
+                if i == 0:
+                    shared_att_transform.append(Linear(self.input_dim,
+                                                       2*(input_dim),
+                                                       bias=False))
+                else:
+                    shared_att_transform.append(Linear(input_dim, 2*(input_dim), bias=False))
+
+        else:
+            shared_att_transform = None
+
+        self.initial_attention = AttentiveTransformer(self.input_dim, self.input_dim, shared_att_transform,
+                                                      n_glu_independent=self.n_independent,
                                                       virtual_batch_size=self.virtual_batch_size,
                                                       momentum=momentum)
 
@@ -115,7 +129,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
                                           n_glu_independent=self.n_independent,
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=momentum)
-            attention = AttentiveTransformer(self.input_dim, self.input_dim, dropout,
+            attention = AttentiveTransformer(self.input_dim, self.input_dim, shared_att_transform,
+                                             n_glu_independent=self.n_independent,
                                              virtual_batch_size=self.virtual_batch_size,
                                              momentum=momentum)
             self.feat_transformers.append(transformer)
@@ -280,9 +295,8 @@ class TabNet(torch.nn.Module):
 
 
 class AttentiveTransformer(torch.nn.Module):
-    def __init__(self, input_dim, output_dim, dropout,
-                 virtual_batch_size=128,
-                 momentum=0.02,
+    def __init__(self, input_dim, output_dim, shared_layers, n_glu_independent,
+                 virtual_batch_size=128, momentum=0.02,
                  mask_type="sparsemax"):
         """
         Initialize an attention transformer.
@@ -299,20 +313,40 @@ class AttentiveTransformer(torch.nn.Module):
             Either "sparsemax" or "entmax" : this is the masking function to use
         """
         super(AttentiveTransformer, self).__init__()
-        self.fc = Linear(input_dim, output_dim, bias=False)
-        initialize_non_glu(self.fc, input_dim, output_dim)
-        self.bn = GBN(output_dim, virtual_batch_size=virtual_batch_size,
-                      momentum=momentum)
-        self.dropout_layer = Dropout(dropout)
+        params = {
+            'n_glu': n_glu_independent,
+            'virtual_batch_size': virtual_batch_size,
+            'momentum': momentum
+        }
+
+        if shared_layers is None:
+            # no shared layers
+            self.shared = torch.nn.Identity()
+            is_first = True
+        else:
+            self.shared = GLU_Block(input_dim, output_dim,
+                                    first=True,
+                                    shared_layers=shared_layers,
+                                    n_glu=len(shared_layers),
+                                    virtual_batch_size=virtual_batch_size,
+                                    momentum=momentum)
+            is_first = False
+
+        if n_glu_independent == 0:
+            # no independent layers
+            self.specifics = torch.nn.Identity()
+        else:
+            spec_input_dim = input_dim if is_first else output_dim
+            self.specifics = GLU_Block(spec_input_dim, output_dim,
+                                       first=is_first,
+                                       **params)
         self.selector = torch.sigmoid
 
-    def forward(self, priors, processed_feat):
-        x = self.bn(processed_feat)
-        x = self.fc(x)
-        x = self.dropout_layer(x)
+    def forward(self, priors, x):
+        x = self.shared(x)
+        x = self.specifics(x)
         x = torch.mul(x, priors)
-        x = self.selector(x)
-        return x
+        return self.selector(x)
 
 
 class FeatTransformer(torch.nn.Module):
