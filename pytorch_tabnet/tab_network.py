@@ -108,15 +108,16 @@ class TabNetNoEmbeddings(torch.nn.Module):
             for i in range(self.n_shared):
                 if i == 0:
                     shared_att_transform.append(Linear(self.input_dim,
-                                                       2*(input_dim),
+                                                       2*(n_a),
                                                        bias=False))
                 else:
-                    shared_att_transform.append(Linear(input_dim, 2*(input_dim), bias=False))
+                    shared_att_transform.append(Linear(n_a, 2*(n_a), bias=False))
 
         else:
             shared_att_transform = None
 
-        self.initial_attention = AttentiveTransformer(self.input_dim, self.input_dim, shared_att_transform,
+        self.initial_attention = AttentiveTransformer(self.input_dim, n_a,
+                                                      shared_att_transform,
                                                       n_glu_independent=self.n_independent,
                                                       virtual_batch_size=self.virtual_batch_size,
                                                       momentum=momentum)
@@ -129,7 +130,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
                                           n_glu_independent=self.n_independent,
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=momentum)
-            attention = AttentiveTransformer(self.input_dim, self.input_dim, shared_att_transform,
+            attention = AttentiveTransformer(self.input_dim, n_a, shared_att_transform,
                                              n_glu_independent=self.n_independent,
                                              virtual_batch_size=self.virtual_batch_size,
                                              momentum=momentum)
@@ -340,11 +341,13 @@ class AttentiveTransformer(torch.nn.Module):
             self.specifics = GLU_Block(spec_input_dim, output_dim,
                                        first=is_first,
                                        **params)
+        self.linear = Linear(output_dim, input_dim)
         self.selector = torch.sigmoid
 
     def forward(self, priors, x):
         x = self.shared(x)
         x = self.specifics(x)
+        x = self.linear(x)
         x = torch.mul(x, priors)
         return self.selector(x)
 
