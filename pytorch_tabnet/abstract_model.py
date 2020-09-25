@@ -26,7 +26,8 @@ class TabModel(BaseEstimator):
                  scheduler_params=None, scheduler_fn=None,
                  mask_type="sparsemax",
                  input_dim=None, output_dim=None,
-                 device_name='auto'):
+                 device_name='auto',
+                 dropout=0.):
         """ Class for TabNet model
 
         Parameters
@@ -57,7 +58,7 @@ class TabModel(BaseEstimator):
         self.mask_type = mask_type
         self.input_dim = input_dim
         self.output_dim = output_dim
-
+        self.dropout = dropout
         self.batch_size = 1024
 
         self.seed = seed
@@ -101,6 +102,7 @@ class TabModel(BaseEstimator):
                      momentum,
                      device_name,
                      mask_type,
+                     dropout
                      ):
         self.network = tab_network.TabNet(
             input_dim,
@@ -118,7 +120,8 @@ class TabModel(BaseEstimator):
             virtual_batch_size=virtual_batch_size,
             momentum=momentum,
             device_name=device_name,
-            mask_type=mask_type).to(self.device)
+            mask_type=mask_type,
+            dropout=dropout).to(self.device)
 
         self.reducing_matrix = create_explain_matrix(
             self.network.input_dim,
@@ -191,7 +194,8 @@ class TabModel(BaseEstimator):
             virtual_batch_size=self.virtual_batch_size,
             momentum=self.momentum,
             device_name=self.device_name,
-            mask_type=self.mask_type
+            mask_type=self.mask_type,
+            dropout=self.dropout
         )
 
         self.optimizer = self.optimizer_fn(self.network.parameters(),
@@ -336,7 +340,8 @@ class TabModel(BaseEstimator):
             virtual_batch_size=1024,
             momentum=self.momentum,
             device_name=self.device_name,
-            mask_type=self.mask_type
+            mask_type=self.mask_type,
+            dropout=self.dropout
         )
         self.network.load_state_dict(saved_state_dict)
         self.network.eval()

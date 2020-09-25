@@ -1,5 +1,5 @@
 import torch
-from torch.nn import Linear, BatchNorm1d, ReLU
+from torch.nn import Linear, BatchNorm1d, ReLU, Dropout
 import numpy as np
 from pytorch_tabnet import sparsemax
 
@@ -44,7 +44,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
                  n_steps=3, gamma=1.3,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02,
-                 mask_type="sparsemax"):
+                 mask_type="sparsemax",
+                 dropout=0.):
         """
         Defines main part of the TabNet network without the embedding layers.
 
@@ -102,7 +103,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         else:
             shared_feat_transform = None
 
-        self.initial_attention = AttentiveTransformer(self.input_dim, self.input_dim,
+        self.initial_attention = AttentiveTransformer(self.input_dim, self.input_dim, dropout,
                                                       virtual_batch_size=self.virtual_batch_size,
                                                       momentum=momentum)
 
@@ -114,7 +115,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
                                           n_glu_independent=self.n_independent,
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=momentum)
-            attention = AttentiveTransformer(self.input_dim, self.input_dim,
+            attention = AttentiveTransformer(self.input_dim, self.input_dim, dropout,
                                              virtual_batch_size=self.virtual_batch_size,
                                              momentum=momentum)
             self.feat_transformers.append(transformer)
@@ -193,7 +194,8 @@ class TabNet(torch.nn.Module):
                  n_steps=3, gamma=1.3, cat_idxs=[], cat_dims=[], cat_emb_dim=1,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02, device_name='auto',
-                 mask_type="sparsemax"):
+                 mask_type="sparsemax",
+                 dropout=0.):
         """
         Defines TabNet network
 
@@ -257,7 +259,7 @@ class TabNet(torch.nn.Module):
         self.post_embed_dim = self.embedder.post_embed_dim
         self.tabnet = TabNetNoEmbeddings(self.post_embed_dim, output_dim, n_d, n_a, n_steps,
                                          gamma, n_independent, n_shared, epsilon,
-                                         virtual_batch_size, momentum, mask_type)
+                                         virtual_batch_size, momentum, mask_type, dropout)
 
         # Defining device
         if device_name == 'auto':
@@ -278,7 +280,7 @@ class TabNet(torch.nn.Module):
 
 
 class AttentiveTransformer(torch.nn.Module):
-    def __init__(self, input_dim, output_dim,
+    def __init__(self, input_dim, output_dim, dropout,
                  virtual_batch_size=128,
                  momentum=0.02,
                  mask_type="sparsemax"):
@@ -301,12 +303,13 @@ class AttentiveTransformer(torch.nn.Module):
         initialize_non_glu(self.fc, input_dim, output_dim)
         self.bn = GBN(output_dim, virtual_batch_size=virtual_batch_size,
                       momentum=momentum)
-
+        self.dropout_layer = Dropout(dropout)
         self.selector = torch.sigmoid
 
     def forward(self, priors, processed_feat):
-        x = self.fc(processed_feat)
-        x = self.bn(x)
+        x = self.bn(processed_feat)
+        x = self.fc(x)
+        x = self.dropout_layer(x)
         x = torch.mul(x, priors)
         x = self.selector(x)
         return x
