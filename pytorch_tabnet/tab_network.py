@@ -147,6 +147,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
             self.final_mapping = Linear(n_d, output_dim, bias=False)
             initialize_non_glu(self.final_mapping, n_d, output_dim)
 
+        self.dropout_layer = Dropout(dropout)
+
     def forward(self, x):
         res = 0
         initial_x = self.initial_bn(x)
@@ -169,6 +171,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
             # update mask for next step
             M = self.att_transformers[step](prior, initial_x)
 
+        res = self.dropout_layer(res)
         M_loss /= self.n_steps
 
         if self.is_multi_task:
