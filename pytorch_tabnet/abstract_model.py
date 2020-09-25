@@ -466,7 +466,9 @@ class TabModel(BaseEstimator):
         self.network.eval()
 
         dataloader = DataLoader(PredictDataset(X),
-                                batch_size=self.batch_size, shuffle=False)
+                                batch_size=self.batch_size,
+                                shuffle=False,
+                                pin_memory=True)
 
         for batch_nb, data in enumerate(dataloader):
             data = data.to(self.device).float()

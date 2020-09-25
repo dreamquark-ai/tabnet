@@ -296,7 +296,9 @@ class TabNetMultiTaskClassifier(TabModel):
         """
         self.network.eval()
         dataloader = DataLoader(PredictDataset(X),
-                                batch_size=self.batch_size, shuffle=False)
+                                batch_size=self.batch_size,
+                                shuffle=False,
+                                pin_memory=True)
 
         results = {}
         for data in dataloader:
@@ -334,7 +336,8 @@ class TabNetMultiTaskClassifier(TabModel):
 
         dataloader = DataLoader(PredictDataset(X),
                                 batch_size=self.batch_size,
-                                shuffle=False)
+                                shuffle=False,
+                                pin_memory=True)
 
         results = {}
         for data in dataloader:

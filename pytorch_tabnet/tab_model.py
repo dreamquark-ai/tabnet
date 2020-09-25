@@ -274,7 +274,9 @@ class TabNetClassifier(TabModel):
         """
         self.network.eval()
         dataloader = DataLoader(PredictDataset(X),
-                                batch_size=self.batch_size, shuffle=False)
+                                batch_size=self.batch_size,
+                                shuffle=False,
+                                pin_memory=True)
 
         for batch_nb, data in enumerate(dataloader):
             data = data.to(self.device).float()
@@ -307,7 +309,9 @@ class TabNetClassifier(TabModel):
         self.network.eval()
 
         dataloader = DataLoader(PredictDataset(X),
-                                batch_size=self.batch_size, shuffle=False)
+                                batch_size=self.batch_size,
+                                shuffle=False,
+                                pin_memory=True)
 
         results = []
         for batch_nb, data in enumerate(dataloader):
@@ -518,7 +522,9 @@ class TabNetRegressor(TabModel):
         """
         self.network.eval()
         dataloader = DataLoader(PredictDataset(X),
-                                batch_size=self.batch_size, shuffle=False)
+                                batch_size=self.batch_size,
+                                shuffle=False,
+                                pin_memory=True)
 
         results = []
         for batch_nb, data in enumerate(dataloader):

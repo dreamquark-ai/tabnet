@@ -113,12 +113,14 @@ def create_dataloaders(X_train, y_train, X_valid, y_valid, weights,
                                   sampler=sampler,
                                   shuffle=need_shuffle,
                                   num_workers=num_workers,
-                                  drop_last=drop_last)
+                                  drop_last=drop_last,
+                                  pin_memory=True)
 
     valid_dataloader = DataLoader(TorchDataset(X_valid, y_valid),
                                   batch_size=batch_size,
                                   shuffle=False,
-                                  num_workers=num_workers)
+                                  num_workers=num_workers,
+                                  pin_memory=True)
 
     return train_dataloader, valid_dataloader
 
