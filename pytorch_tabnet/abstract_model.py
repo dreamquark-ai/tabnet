@@ -257,7 +257,7 @@ class TabModel(BaseEstimator):
                 for key, value in masks.items():
                     res_masks[key] = np.vstack([res_masks[key], value])
 
-            res_explain = np.vstack(res_explain)
+        res_explain = np.vstack(res_explain)
 
         return res_explain, res_masks
 
