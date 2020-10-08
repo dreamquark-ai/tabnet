@@ -51,7 +51,10 @@ TabNet is now scikit-compatible, training a TabNetClassifier or TabNetRegressor 
 from pytorch_tabnet.tab_model import TabNetClassifier, TabNetRegressor
 
 clf = TabNetClassifier()  #TabNetRegressor()
-clf.fit(X_train, Y_train, X_valid, y_valid)
+clf.fit(
+  X_train, Y_train,
+  eval_set=[(X_valid, y_valid)]
+)
 preds = clf.predict(X_test)
 ```
 
@@ -60,8 +63,35 @@ or for TabNetMultiTaskClassifier :
 ```
 from pytorch_tabnet.multitask import TabNetMultiTaskClassifier
 clf = TabNetMultiTaskClassifier()
-clf.fit(X_train, Y_train, X_valid, y_valid)
+clf.fit(
+  X_train, Y_train,
+  eval_set=[(X_valid, y_valid)]
+)
 preds = clf.predict(X_test)
+```
+
+### Custom early_stopping_metrics
+
+```
+from pytorch_tabnet.metrics import Metric
+from sklearn.metrics import roc_auc_score
+
+class Gini(Metric):
+    def __init__(self):
+        self._name = "gini"
+        self._maximize = True
+
+    def __call__(self, y_true, y_score):
+        auc = roc_auc_score(y_true, y_score[:, 1])
+        return max(2*auc - 1, 0.)
+
+clf = TabNetClassifier()
+clf.fit(
+  X_train, Y_train,
+  eval_set=[(X_valid, y_valid)],
+  eval_metric=[Gini]
+)
+
 ```
 
 # Useful links
@@ -175,13 +205,18 @@ preds = clf.predict(X_test)
 
     Training targets
 
-- X_valid : np.array
+- eval_set: list of tuple  
 
-    Validation features for early stopping
+    List of eval tuple set (X, y).  
+    The last one is used for early stopping  
 
-- y_valid : np.array for early stopping
+- eval_name: list of str  
+              List of eval set names.  
 
-    Validation targets    
+- eval_metric : list of str  
+              List of evaluation metrics.  
+              The last metric is used for early stopping.
+
 - max_epochs : int (default = 200)
 
     Maximum number of epochs for trainng.
@@ -218,3 +253,6 @@ preds = clf.predict(X_test)
 - drop_last : bool (default=False)
 
     Whether to drop last batch if not complete during training
+
+- callbacks : list of callback function  
+        List of custom callbacks
