@@ -237,6 +237,8 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
             len(elem) == 2 for elem in eval_set
         ), "Each tuple of eval_set need to have two elements"
     for name, (X, y) in zip(eval_name, eval_set):
+        check_nans(X)
+        check_nans(y)
         msg = (
             f"Number of columns is different between X_{name} "
             + f"({X.shape[1]}) and X_train ({X_train.shape[1]})"
@@ -255,3 +257,10 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
         assert X.shape[0] == y.shape[0], msg
 
     return eval_name, eval_set
+
+
+def check_nans(array):
+    if np.isnan(array).any():
+        raise ValueError("NaN were found, TabNet does not allow nans.")
+    if np.isinf(array).any():
+        raise ValueError("Infinite values were found, TabNet does not allow inf.")
