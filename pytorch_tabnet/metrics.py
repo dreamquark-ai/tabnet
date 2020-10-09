@@ -59,7 +59,7 @@ class MetricContainer:
         return logs
 
 
-class Metric:
+class Metric:        
     def __call__(self, y_true, y_pred):
         raise NotImplementedError("Custom Metrics must implement this function")
 

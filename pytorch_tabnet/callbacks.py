@@ -262,7 +262,11 @@ class LRSchedulerCallback(Callback):
         self.scheduler = self.scheduler_fn(self.optimizer,
                                            **self.scheduler_params)
         super().__init__()
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> feat: add easy schedulers
     def on_batch_end(self, batch, logs=None):
         if self.is_batch_level:
             self.scheduler.step()
@@ -276,7 +280,11 @@ class LRSchedulerCallback(Callback):
         if self.is_batch_level:
             pass
         else:
+<<<<<<< HEAD
             if self.is_metric_related:
+=======
+            if self.is_metric_related:                
+>>>>>>> feat: add easy schedulers
                 self.scheduler.step(current_loss)
             else:
                 self.scheduler.step()
