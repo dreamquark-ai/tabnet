@@ -94,6 +94,8 @@ clf.fit(
 
 ```
 
+A specific customization example notebook is available here : https://github.com/dreamquark-ai/tabnet/blob/develop/customizing_example.ipynb
+
 # Useful links
 
 - explanatory video : https://youtu.be/ysBaZO8YmX8

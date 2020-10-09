@@ -84,7 +84,7 @@ class Metric:
         available_names = [metric()._name for metric in available_metrics]
         metrics = []
         for name in names:
-            assert name in available_names, f"{name} is not available"
+            assert name in available_names, f"{name} is not available, choose in {available_names}"
             idx = available_names.index(name)
             metric = available_metrics[idx]()
             metrics.append(metric)

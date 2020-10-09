@@ -93,6 +93,10 @@ test-nb-multi-task: ## run multi task classification example tests using noteboo
 	        $(MAKE) _run_notebook NB_FILE="./multi_task_example.ipynb"
 .PHONY: test-obfuscator
 
+test-nb-customization: ## run customization example tests using notebooks
+	        $(MAKE) _run_notebook NB_FILE="./customizing_example.ipynb"
+.PHONY: test-obfuscator
+
 help: ## Display help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help

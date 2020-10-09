@@ -16,6 +16,7 @@ from pytorch_tabnet.callbacks import (
     CallbackContainer,
     History,
     EarlyStopping,
+    LRSchedulerCallback,
 )
 from pytorch_tabnet.metrics import MetricContainer, check_metrics
 from sklearn.base import BaseEstimator
@@ -72,7 +73,7 @@ class TabModel(BaseEstimator):
         self,
         X_train,
         y_train,
-        eval_set=None,
+        eval_set=[],
         eval_name=None,
         eval_metric=None,
         loss_fn=None,
@@ -133,9 +134,6 @@ class TabModel(BaseEstimator):
         self.input_dim = X_train.shape[1]
         self._stop_training = False
 
-        if eval_set is None:
-            eval_set = []
-
         if loss_fn is None:
             self.loss_fn = self._default_loss
         else:
@@ -154,9 +152,8 @@ class TabModel(BaseEstimator):
 
         self._set_network()
         self._set_metrics(eval_metric, eval_names)
-        self._set_callbacks(callbacks)
         self._set_optimizer()
-        self._set_scheduler()
+        self._set_callbacks(callbacks)
 
         # Call method on_train_begin for all callbacks
         self._callback_container.on_train_begin()
@@ -383,9 +380,6 @@ class TabModel(BaseEstimator):
 
         batch_logs["loss"] = loss.cpu().detach().numpy().item()
 
-        if self._scheduler is not None:
-            self._scheduler.step()
-
         return batch_logs
 
     def _predict_epoch(self, name, loader):
@@ -513,16 +507,33 @@ class TabModel(BaseEstimator):
             List of callback functions.
 
         """
-        # Setup default callbacks history and early stopping
+        # Setup default callbacks history, early stopping and scheduler
+        callbacks = []
         self.history = History(self, verbose=self.verbose)
-        early_stopping = EarlyStopping(
-            early_stopping_metric=self.early_stopping_metric,
-            is_maximize=(
-                self._metrics[-1]._maximize if len(self._metrics) > 0 else None
-            ),
-            patience=self.patience,
-        )
-        callbacks = [self.history, early_stopping]
+        callbacks.append(self.history)
+        if (self.early_stopping_metric is not None) and (self.patience > 0):
+            early_stopping = EarlyStopping(
+                early_stopping_metric=self.early_stopping_metric,
+                is_maximize=(
+                    self._metrics[-1]._maximize if len(self._metrics) > 0 else None
+                ),
+                patience=self.patience,
+            )
+            callbacks.append(early_stopping)
+        else:
+            print("No early stopping will be performed, last training weights will be used.")
+        if self.scheduler_fn is not None:
+            # Add LR Scheduler call_back
+            is_batch_level = self.scheduler_params.pop("is_batch_level", False)
+            scheduler = LRSchedulerCallback(
+                scheduler_fn=self.scheduler_fn,
+                scheduler_params=self.scheduler_params,
+                optimizer=self._optimizer,
+                early_stopping_metric=self.early_stopping_metric,
+                is_batch_level=is_batch_level,
+            )
+            callbacks.append(scheduler)
+
         if custom_callbacks:
             callbacks.extend(custom_callbacks)
         self._callback_container = CallbackContainer(callbacks)
@@ -533,14 +544,6 @@ class TabModel(BaseEstimator):
         self._optimizer = self.optimizer_fn(
             self.network.parameters(), **self.optimizer_params
         )
-
-    def _set_scheduler(self):
-        """Setup scheduler."""
-        self._scheduler = None
-        if self.scheduler_fn:
-            self._scheduler = self.scheduler_fn(
-                self._optimizer, **self.scheduler_params
-            )
 
     def _construct_loaders(self, X_train, y_train, eval_set):
         """Generate dataloaders for train and eval set.
