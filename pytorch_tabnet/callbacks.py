@@ -131,14 +131,15 @@ class EarlyStopping(Callback):
         current_loss = logs.get(self.early_stopping_metric)
         if current_loss is None:
             return
+
         loss_change = current_loss - self.best_loss
         max_improved = self.is_maximize and loss_change > self.tol
         min_improved = (not self.is_maximize) and (-loss_change > self.tol)
         if max_improved or min_improved:
             self.best_loss = current_loss
+            self.best_epoch = epoch
             self.wait = 1
             self.best_weights = copy.deepcopy(self.trainer.network.state_dict())
-            self.best_epoch = epoch
         else:
             if self.wait >= self.patience:
                 self.stopped_epoch = epoch
@@ -148,12 +149,10 @@ class EarlyStopping(Callback):
     def on_train_end(self, logs=None):
         self.trainer.best_epoch = self.best_epoch
         self.trainer.best_cost = self.best_loss
-        final_weights = (
-            self.best_weights
-            if self.best_weights is not None
-            else copy.deepcopy(self.trainer.network.state_dict())
-        )
-        self.trainer.network.load_state_dict(final_weights)
+
+        if self.best_weights is not None:
+            self.trainer.network.load_state_dict(self.best_weights)
+
         if self.stopped_epoch > 0:
             msg = f"\nEarly stopping occured at epoch {self.stopped_epoch}"
             msg += (
@@ -162,8 +161,11 @@ class EarlyStopping(Callback):
             )
             print(msg)
         else:
-            msg = f"Stop training because you reached max_epochs = {self.trainer.max_epochs}"
+            msg = (f"Stop training because you reached max_epochs = {self.trainer.max_epochs}"
+                   + f" with best_epoch = {self.best_epoch} and "
+                   + f"best_{self.early_stopping_metric} = {round(self.best_loss, 5)}")
             print(msg)
+        print("Best weights from best epoch are automatically used!")
 
 
 @dataclass
@@ -230,3 +232,51 @@ class History(Callback):
 
     def __str__(self):
         return str(self.epoch_metrics)
+
+
+@dataclass
+class LRSchedulerCallback(Callback):
+    """Wrapper for most torch scheduler functions.
+
+    Parameters
+    ---------
+    scheduler_fn : torch.optim.lr_scheduler
+        Torch scheduling class
+    scheduler_params : dict
+        Dictionnary containing all parameters for the scheduler_fn
+    is_batch_level : bool (default = False)
+        If set to False : lr updates will happen at every epoch
+        If set to True : lr updates happen at every batch
+        Set this to True for OneCycleLR for example
+    """
+
+    scheduler_fn: Any
+    optimizer: Any
+    scheduler_params: dict
+    early_stopping_metric: str
+    is_batch_level: bool = False
+
+    def __post_init__(self, ):
+        self.is_metric_related = hasattr(self.scheduler_fn,
+                                         "is_better")
+        self.scheduler = self.scheduler_fn(self.optimizer,
+                                           **self.scheduler_params)
+        super().__init__()
+
+    def on_batch_end(self, batch, logs=None):
+        if self.is_batch_level:
+            self.scheduler.step()
+        else:
+            pass
+
+    def on_epoch_end(self, epoch, logs=None):
+        current_loss = logs.get(self.early_stopping_metric)
+        if current_loss is None:
+            return
+        if self.is_batch_level:
+            pass
+        else:
+            if self.is_metric_related:
+                self.scheduler.step(current_loss)
+            else:
+                self.scheduler.step()
