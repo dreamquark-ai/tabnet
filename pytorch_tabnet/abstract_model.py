@@ -73,7 +73,7 @@ class TabModel(BaseEstimator):
         self,
         X_train,
         y_train,
-        eval_set=[],
+        eval_set=None,
         eval_name=None,
         eval_metric=None,
         loss_fn=None,
@@ -133,6 +133,7 @@ class TabModel(BaseEstimator):
         self.drop_last = drop_last
         self.input_dim = X_train.shape[1]
         self._stop_training = False
+        self.eval_set = eval_set if eval_set else []
 
         if loss_fn is None:
             self.loss_fn = self._default_loss
@@ -171,7 +172,8 @@ class TabModel(BaseEstimator):
                 self._predict_epoch(eval_name, valid_dataloader)
 
             # Call method on_epoch_end for all callbacks
-            self._callback_container.on_epoch_end(epoch_idx, self.history.batch_metrics)
+            self._callback_container.on_epoch_end(epoch_idx,
+                                                  logs=self.history.epoch_metrics)
 
             if self._stop_training:
                 break
@@ -337,7 +339,7 @@ class TabModel(BaseEstimator):
             self._callback_container.on_batch_end(batch_idx, batch_logs)
 
         epoch_logs = {"lr": self._optimizer.param_groups[-1]["lr"]}
-        self.history.batch_metrics.update(epoch_logs)
+        self.history.epoch_metrics.update(epoch_logs)
 
         return
 
@@ -409,7 +411,7 @@ class TabModel(BaseEstimator):
 
         metrics_logs = self._metric_container_dict[name](y_true, scores)
         self.network.train()
-        self.history.batch_metrics.update(metrics_logs)
+        self.history.epoch_metrics.update(metrics_logs)
         return
 
     def _predict_batch(self, X):

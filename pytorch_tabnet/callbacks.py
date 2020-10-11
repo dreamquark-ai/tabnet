@@ -192,46 +192,46 @@ class History(Callback):
         self.total_time = 0.0
 
     def on_train_begin(self, logs=None):
-        self.epoch_metrics = {"loss": []}
-        self.epoch_metrics.update({"lr": []})
-        self.epoch_metrics.update({name: [] for name in self.trainer._metrics_names})
+        self.history = {"loss": []}
+        self.history.update({"lr": []})
+        self.history.update({name: [] for name in self.trainer._metrics_names})
         self.start_time = logs["start_time"]
+        self.epoch_loss = 0.
 
     def on_epoch_begin(self, epoch, logs=None):
-        self.batch_metrics = {"loss": 0.0}
+        self.epoch_metrics = {"loss": 0.0}
         self.samples_seen = 0.0
 
     def on_epoch_end(self, epoch, logs=None):
-        for k in self.batch_metrics:
-            self.epoch_metrics[k].append(self.batch_metrics[k])
+        self.epoch_metrics["loss"] = self.epoch_loss
+        for metric_name, metric_value in self.epoch_metrics.items():
+            self.history[metric_name].append(metric_value)
         if self.verbose == 0:
             return
         if epoch % self.verbose != 0:
             return
-        msg = f"epoch: {epoch:<4}"
-        for metric_name, metric_value in self.batch_metrics.items():
+        msg = f"epoch {epoch:<3}"
+        for metric_name, metric_value in self.epoch_metrics.items():
             if metric_name != "lr":
-                msg += f"|  {metric_name:<5}: {np.round(metric_value, 5):<8}"
+                msg += f"| {metric_name:<3}: {np.round(metric_value, 5):<8}"
         self.total_time = int(time.time() - self.start_time)
         msg += f"|  {str(datetime.timedelta(seconds=self.total_time)) + 's':<6}"
         print(msg)
 
     def on_batch_end(self, batch, logs=None):
         batch_size = logs["batch_size"]
-        for k in self.batch_metrics:
-            self.batch_metrics[k] = (
-                self.samples_seen * self.batch_metrics[k] + logs[k] * batch_size
-            ) / (self.samples_seen + batch_size)
+        self.epoch_loss = (self.samples_seen * self.epoch_loss + batch_size * logs["loss"]
+                           ) / (self.samples_seen + batch_size)
         self.samples_seen += batch_size
 
     def __getitem__(self, name):
-        return self.epoch_metrics[name]
+        return self.history[name]
 
     def __repr__(self):
-        return str(self.epoch_metrics)
+        return str(self.history)
 
     def __str__(self):
-        return str(self.epoch_metrics)
+        return str(self.history)
 
 
 @dataclass
