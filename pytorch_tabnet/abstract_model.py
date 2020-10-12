@@ -134,7 +134,7 @@ class TabModel(BaseEstimator):
         self.drop_last = drop_last
         self.input_dim = X_train.shape[1]
         self._stop_training = False
-        self.eval_set = eval_set if eval_set else []
+        eval_set = eval_set if eval_set else []
 
         if loss_fn is None:
             self.loss_fn = self._default_loss
@@ -204,7 +204,10 @@ class TabModel(BaseEstimator):
         """
         self.network.eval()
         dataloader = DataLoader(
-            PredictDataset(X), batch_size=self.batch_size, shuffle=False
+            PredictDataset(X),
+            batch_size=self.batch_size,
+            shuffle=False,
+            pin_memory=True
         )
 
         results = []
@@ -235,7 +238,10 @@ class TabModel(BaseEstimator):
         self.network.eval()
 
         dataloader = DataLoader(
-            PredictDataset(X), batch_size=self.batch_size, shuffle=False
+            PredictDataset(X),
+            batch_size=self.batch_size,
+            shuffle=False,
+            pin_memory=True
         )
 
         res_explain = []
@@ -369,7 +375,8 @@ class TabModel(BaseEstimator):
         X = X.to(self.device).float()
         y = y.to(self.device).float()
 
-        self._optimizer.zero_grad()
+        for param in self.network.parameters():
+            param.grad = None
 
         output, M_loss = self.network(X)
 
