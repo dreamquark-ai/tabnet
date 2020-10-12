@@ -117,6 +117,7 @@ def create_dataloaders(
         shuffle=need_shuffle,
         num_workers=num_workers,
         drop_last=drop_last,
+        pin_memory=True
     )
 
     valid_dataloaders = []
@@ -127,6 +128,7 @@ def create_dataloaders(
                 batch_size=batch_size,
                 shuffle=False,
                 num_workers=num_workers,
+                pin_memory=True
             )
         )
 
