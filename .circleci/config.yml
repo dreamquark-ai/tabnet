@@ -151,6 +151,34 @@ jobs:
                   shell: bash -leo pipefail
                   command: |
                       make test-nb-regression
+    test-nb-multi-task:
+        executor: python-executor
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            - run:
+                  name: run test-nb-multi-task
+                  shell: bash -leo pipefail
+                  command: |
+                      make test-nb-multi-task
+    test-nb-customization:
+        executor: python-executor
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            - run:
+                  name: run test-nb-customization
+                  shell: bash -leo pipefail
+                  command: |
+                      make test-nb-customization
 
 workflows:
     version: 2
@@ -171,6 +199,9 @@ workflows:
             - test-nb-forest:
                   requires:
                       - install
+            - test-nb-multi-task:
+                        requires:
+                            - install
             - lint-code:
                   requires:
                       - install

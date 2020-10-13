@@ -1,4 +1,26 @@
 
+# [2.0.0](https://github.com/dreamquark-ai/tabnet/compare/v1.2.0...v2.0.0) (2020-10-13)
+
+
+### Bug Fixes
+
+* 1000 lines only when env=CI ([c557349](https://github.com/dreamquark-ai/tabnet/commit/c5573496e1262bc765eb04361ae4a3185844a866))
+* add map_location to torch load ([c2b560e](https://github.com/dreamquark-ai/tabnet/commit/c2b560e72bc01e34e8dba7578f239e37bbd6782c))
+* load_model fallback to BytesIO for Py3.6 ([55c09e5](https://github.com/dreamquark-ai/tabnet/commit/55c09e5c47e6ec58276c301a5af7afa2dc529bc1))
+
+
+### Features
+
+* add check nan and inf ([d871406](https://github.com/dreamquark-ai/tabnet/commit/d87140623f2118e494874549752987e89be235f3))
+* add easy schedulers ([0ae114f](https://github.com/dreamquark-ai/tabnet/commit/0ae114ff59900537cd3c48dc9d44669f52b9141e))
+* adding callbacks and metrics ([1e0daec](https://github.com/dreamquark-ai/tabnet/commit/1e0daec01a6a95f39699028c5fad213b2d8f3d3e))
+* refacto models with metrics and callbacks ([cc57d62](https://github.com/dreamquark-ai/tabnet/commit/cc57d62698ef629d63dcc8878d4d48f231f3cd77))
+* speedups ([5a01359](https://github.com/dreamquark-ai/tabnet/commit/5a013596da597263aaf1b9f385732fc2442dda96))
+* TabNetMultiTaskClassifier ([5764a43](https://github.com/dreamquark-ai/tabnet/commit/5764a43e72cb643fff806f70ed9dfa2e48433f50))
+* update readme and notebooks ([9cb38d2](https://github.com/dreamquark-ai/tabnet/commit/9cb38d2d3b636ef5f0a99a9ac4171faeea141213))
+
+
+
 # [1.2.0](https://github.com/dreamquark-ai/tabnet/compare/v1.1.0...v1.2.0) (2020-07-01)
 
 
