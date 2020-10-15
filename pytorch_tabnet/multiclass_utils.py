@@ -51,7 +51,6 @@ def assert_all_finite(X, allow_nan=False):
     Parameters
     ----------
     X : array or sparse matrix
-
     allow_nan : bool
     """
     _assert_all_finite(X.data if sp.issparse(X) else X, allow_nan)
@@ -150,7 +149,7 @@ def is_multilabel(y):
 
     Returns
     -------
-    out : bool,
+    out : bool
         Return ``True``, if ``y`` is in a multilabel format, else ```False``.
 
     Examples
@@ -347,15 +346,15 @@ def infer_output_dim(y_train):
 
     Parameters
     ----------
-        y_train : np.array
-            Training targets
+    y_train : np.array
+        Training targets
 
     Returns
     -------
-        output_dim : int
-            Number of classes for output
-        train_labels : list
-            Sorted list of initial classes
+    output_dim : int
+        Number of classes for output
+    train_labels : list
+        Sorted list of initial classes
     """
     train_labels = unique_labels(y_train)
     output_dim = len(train_labels)
@@ -382,17 +381,15 @@ def infer_multitask_output(y_train):
 
     Parameters
     ----------
-        y_train : np.ndarray
-            Training targets
-        y_valid : np.ndarray
-            Validation targets
+    y_train : np.ndarray
+        Training targets
 
     Returns
     -------
-        tasks_dims : list
-            Number of classes for output
-        tasks_labels : list
-            List of sorted list of initial classes
+    tasks_dims : list
+        Number of classes for output
+    tasks_labels : list
+        List of sorted list of initial classes
     """
 
     if len(y_train.shape) < 2:
