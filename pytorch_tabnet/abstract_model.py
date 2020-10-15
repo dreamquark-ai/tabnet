@@ -12,6 +12,7 @@ from pytorch_tabnet.utils import (
     validate_eval_set,
     create_dataloaders,
     check_nans,
+    define_device,
 )
 from pytorch_tabnet.callbacks import (
     CallbackContainer,
@@ -62,12 +63,7 @@ class TabModel(BaseEstimator):
         self.virtual_batch_size = 1024
         torch.manual_seed(self.seed)
         # Defining device
-        if self.device_name == "auto":
-            if torch.cuda.is_available():
-                device_name = "cuda"
-            else:
-                device_name = "cpu"
-        self.device = torch.device(device_name)
+        self.device = torch.device(define_device(self.device_name))
         print(f"Device used : {self.device}")
 
     def fit(

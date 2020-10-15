@@ -266,3 +266,25 @@ def check_nans(array):
         raise ValueError("NaN were found, TabNet does not allow nans.")
     if np.isinf(array).any():
         raise ValueError("Infinite values were found, TabNet does not allow inf.")
+
+
+def define_device(device_name):
+    """
+    Define the device to use during training and inference.
+    If auto it will detect automatically whether to use cuda or cpu
+    Parameters
+    ----------
+    - device_name : str
+        Either "auto", "cpu" or "cuda"
+    Returns
+    -------
+    - str
+        Either "cpu" or "cuda"
+    """
+    if device_name == "auto":
+        if torch.cuda.is_available():
+            return "cuda"
+        else:
+            return "cpu"
+    else:
+        return device_name
