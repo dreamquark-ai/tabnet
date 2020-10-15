@@ -93,7 +93,6 @@ class TabNetClassifier(TabModel):
             PredictDataset(X),
             batch_size=self.batch_size,
             shuffle=False,
-            pin_memory=True
         )
 
         results = []

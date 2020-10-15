@@ -82,6 +82,7 @@ class TabModel(BaseEstimator):
         num_workers=0,
         drop_last=False,
         callbacks=None,
+        pin_memory=True
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -119,6 +120,9 @@ class TabModel(BaseEstimator):
                 Whether to drop last batch during training
             callbacks : list of callback function
                 List of custom callbacks
+            pin_memory: bool
+                Whether to set pin_memory to True or False during training
+
         """
         # update model name
 
@@ -130,6 +134,8 @@ class TabModel(BaseEstimator):
         self.drop_last = drop_last
         self.input_dim = X_train.shape[1]
         self._stop_training = False
+        self.pin_memory = pin_memory
+
         eval_set = eval_set if eval_set else []
 
         if loss_fn is None:
@@ -203,7 +209,6 @@ class TabModel(BaseEstimator):
             PredictDataset(X),
             batch_size=self.batch_size,
             shuffle=False,
-            pin_memory=True
         )
 
         results = []
@@ -237,7 +242,6 @@ class TabModel(BaseEstimator):
             PredictDataset(X),
             batch_size=self.batch_size,
             shuffle=False,
-            pin_memory=True
         )
 
         res_explain = []
@@ -590,6 +594,7 @@ class TabModel(BaseEstimator):
             self.batch_size,
             self.num_workers,
             self.drop_last,
+            self.pin_memory,
         )
         return train_dataloader, valid_dataloaders
 
