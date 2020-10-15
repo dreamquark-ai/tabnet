@@ -51,7 +51,7 @@ class PredictDataset(Dataset):
 
 
 def create_dataloaders(
-    X_train, y_train, eval_set, weights, batch_size, num_workers, drop_last
+    X_train, y_train, eval_set, weights, batch_size, num_workers, drop_last, pin_memory
 ):
     """
     Create dataloaders with or wihtout subsampling depending on weights and balanced.
@@ -117,7 +117,7 @@ def create_dataloaders(
         shuffle=need_shuffle,
         num_workers=num_workers,
         drop_last=drop_last,
-        pin_memory=True
+        pin_memory=pin_memory
     )
 
     valid_dataloaders = []
@@ -128,7 +128,7 @@ def create_dataloaders(
                 batch_size=batch_size,
                 shuffle=False,
                 num_workers=num_workers,
-                pin_memory=True
+                pin_memory=pin_memory
             )
         )
 
