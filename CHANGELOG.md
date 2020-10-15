@@ -1,4 +1,16 @@
 
+## [2.0.1](https://github.com/dreamquark-ai/tabnet/compare/v2.0.0...v2.0.1) (2020-10-15)
+
+
+### Bug Fixes
+
+* add check for evalset dim ([ba09980](https://github.com/dreamquark-ai/tabnet/commit/ba09980029093ddfee3f10414c366893ea0e4005))
+* pin memory available for training only ([28346c2](https://github.com/dreamquark-ai/tabnet/commit/28346c2259cabbed79e83963c4009eac3ae38f9e))
+* specify device ([46a301f](https://github.com/dreamquark-ai/tabnet/commit/46a301fc5ae702f56f2f54ccabf61762da26588d))
+* torch.load map_location in Py36 fallback ([63cb8c4](https://github.com/dreamquark-ai/tabnet/commit/63cb8c43652f854b0e11a6c8f784d4b5f8f8748b))
+
+
+
 # [2.0.0](https://github.com/dreamquark-ai/tabnet/compare/v1.2.0...v2.0.0) (2020-10-13)
 
 
