@@ -23,14 +23,19 @@ class TabNetMultiTaskClassifier(TabModel):
 
     def compute_loss(self, y_pred, y_true):
         """
-            Computes the loss according to network output and targets
+        Computes the loss according to network output and targets
 
-            Parameters
-            ----------
-                y_pred: list of tensors
-                    Output of network
-                y_true: LongTensor
-                    Targets label encoded
+        Parameters
+        ----------
+        y_pred : list of tensors
+            Output of network
+        y_true : LongTensor
+            Targets label encoded
+
+        Returns
+        -------
+        loss : torch.Tensor
+            output of loss function(s)
 
         """
         loss = 0
@@ -82,15 +87,13 @@ class TabNetMultiTaskClassifier(TabModel):
 
         Parameters
         ----------
-            data: a :tensor: `torch.Tensor`
-                Input data
-            target: a :tensor: `torch.Tensor`
-                Target data
+        X : a :tensor: `torch.Tensor`
+            Input data
 
         Returns
         -------
-            predictions: np.array
-                Predictions of the most probable class
+        results : np.array
+            Predictions of the most probable class
         """
         self.network.eval()
         dataloader = DataLoader(
@@ -129,14 +132,13 @@ class TabNetMultiTaskClassifier(TabModel):
 
         Parameters
         ----------
-            data: a :tensor: `torch.Tensor`
-                Input data
-            target: a :tensor: `torch.Tensor`
-                Target data
+        X : a :tensor: `torch.Tensor`
+            Input data
 
         Returns
         -------
-            batch_outs: dict
+        res : list of np.ndarray
+
         """
         self.network.eval()
 

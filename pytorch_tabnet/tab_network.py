@@ -50,28 +50,30 @@ class TabNetNoEmbeddings(torch.nn.Module):
 
         Parameters
         ----------
-        - input_dim : int
+        input_dim : int
             Number of features
-        - output_dim : int or list of int for multi task classification
+        output_dim : int or list of int for multi task classification
             Dimension of network output
             examples : one for regression, 2 for binary classification etc...
-        - n_d : int
+        n_d : int
             Dimension of the prediction  layer (usually between 4 and 64)
-        - n_a : int
+        n_a : int
             Dimension of the attention  layer (usually between 4 and 64)
-        - n_steps: int
+        n_steps : int
             Number of sucessive steps in the newtork (usually betwenn 3 and 10)
-        - gamma : float
+        gamma : float
             Float above 1, scaling factor for attention updates (usually betwenn 1.0 to 2.0)
-        - momentum : float
-            Float value between 0 and 1 which will be used for momentum in all batch norm
-        - n_independent : int
+        n_independent : int
             Number of independent GLU layer in each GLU block (default 2)
-        - n_shared : int
+        n_shared : int
             Number of independent GLU layer in each GLU block (default 2)
-        - epsilon: float
+        epsilon : float
             Avoid log(0), this should be kept very low
-        - mask_type: str
+        virtual_batch_size : int
+            Batch size for Ghost Batch Normalization
+        momentum : float
+            Float value between 0 and 1 which will be used for momentum in all batch norm
+        mask_type : str
             Either "sparsemax" or "entmax" : this is the masking function to use
         """
         super(TabNetNoEmbeddings, self).__init__()
@@ -202,37 +204,40 @@ class TabNet(torch.nn.Module):
 
         Parameters
         ----------
-        - input_dim : int
+        input_dim : int
             Initial number of features
-        - output_dim : int
+        output_dim : int
             Dimension of network output
             examples : one for regression, 2 for binary classification etc...
-        - n_d : int
+        n_d : int
             Dimension of the prediction  layer (usually between 4 and 64)
-        - n_a : int
+        n_a : int
             Dimension of the attention  layer (usually between 4 and 64)
-        - n_steps: int
+        n_steps : int
             Number of sucessive steps in the newtork (usually betwenn 3 and 10)
-        - gamma : float
+        gamma : float
             Float above 1, scaling factor for attention updates (usually betwenn 1.0 to 2.0)
-        - cat_idxs : list of int
+        cat_idxs : list of int
             Index of each categorical column in the dataset
-        - cat_dims : list of int
+        cat_dims : list of int
             Number of categories in each categorical column
-        - cat_emb_dim : int or list of int
+        cat_emb_dim : int or list of int
             Size of the embedding of categorical features
             if int, all categorical features will have same embedding size
             if list of int, every corresponding feature will have specific size
-        - momentum : float
-            Float value between 0 and 1 which will be used for momentum in all batch norm
-        - n_independent : int
+        n_independent : int
             Number of independent GLU layer in each GLU block (default 2)
-        - n_shared : int
+        n_shared : int
             Number of independent GLU layer in each GLU block (default 2)
-        - mask_type: str
-            Either "sparsemax" or "entmax" : this is the masking function to use
-        - epsilon: float
+        epsilon : float
             Avoid log(0), this should be kept very low
+        virtual_batch_size : int
+            Batch size for Ghost Batch Normalization
+        momentum : float
+            Float value between 0 and 1 which will be used for momentum in all batch norm
+        device_name : {'auto', 'cuda', 'cpu'}
+        mask_type : str
+            Either "sparsemax" or "entmax" : this is the masking function to use
         """
         super(TabNet, self).__init__()
         self.cat_idxs = cat_idxs or []
@@ -290,13 +295,15 @@ class AttentiveTransformer(torch.nn.Module):
 
         Parameters
         ----------
-        - input_dim : int
+        input_dim : int
             Input size
-        - output_dim : int
+        output_dim : int
             Outpu_size
-        - momentum : float
+        virtual_batch_size : int
+            Batch size for Ghost Batch Normalization
+        momentum : float
             Float value between 0 and 1 which will be used for momentum in batch norm
-        - mask_type: str
+        mask_type : str
             Either "sparsemax" or "entmax" : this is the masking function to use
         """
         super(AttentiveTransformer, self).__init__()
@@ -332,14 +339,17 @@ class FeatTransformer(torch.nn.Module):
 
         Parameters
         ----------
-        - input_dim : int
+        input_dim : int
             Input size
-        - output_dim : int
+        output_dim : int
             Outpu_size
-        - n_glu_independant
-        - shared_blocks : torch.nn.ModuleList
+        shared_layers : torch.nn.ModuleList
             The shared block that should be common to every step
-        - momentum : float
+        n_glu_independant : int
+            Number of independent GLU layers
+        virtual_batch_size : int
+            Batch size for Ghost Batch Normalization within GLU block(s)
+        momentum : float
             Float value between 0 and 1 which will be used for momentum in batch norm
         """
 

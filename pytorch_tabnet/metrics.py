@@ -36,9 +36,9 @@ class MetricContainer:
 
         Parameters
         ----------
-        y_true: np.ndarray
+        y_true : np.ndarray
             Target matrix or vector
-        y_pred: np.ndarray
+        y_pred : np.ndarray
             Score matrix or vector
 
         Returns
@@ -106,14 +106,14 @@ class AUC(Metric):
 
         Parameters
         ----------
-        y_true: np.ndarray
+        y_true : np.ndarray
             Target matrix or vector
-        y_score: np.ndarray
+        y_score : np.ndarray
             Score matrix or vector
 
         Returns
         -------
-            float
+        float
             AUC of predictions vs targets.
         """
         return roc_auc_score(y_true, y_score[:, 1])
@@ -141,7 +141,7 @@ class Accuracy(Metric):
 
         Returns
         -------
-            float
+        float
             Accuracy of predictions vs targets.
         """
         y_pred = np.argmax(y_score, axis=1)
@@ -163,14 +163,14 @@ class BalancedAccuracy(Metric):
 
         Parameters
         ----------
-        y_true: np.ndarray
+        y_true : np.ndarray
             Target matrix or vector
-        y_score: np.ndarray
+        y_score : np.ndarray
             Score matrix or vector
 
         Returns
         -------
-            float
+        float
             Accuracy of predictions vs targets.
         """
         y_pred = np.argmax(y_score, axis=1)
@@ -192,14 +192,14 @@ class LogLoss(Metric):
 
         Parameters
         ----------
-        y_true: np.ndarray
+        y_true : np.ndarray
             Target matrix or vector
-        y_score: np.ndarray
+        y_score : np.ndarray
             Score matrix or vector
 
         Returns
         -------
-            float
+        float
             LogLoss of predictions vs targets.
         """
         return log_loss(y_true, y_score)
@@ -220,14 +220,14 @@ class MAE(Metric):
 
         Parameters
         ----------
-        y_true: np.ndarray
+        y_true : np.ndarray
             Target matrix or vector
-        y_pred: np.ndarray
+        y_score : np.ndarray
             Score matrix or vector
 
         Returns
         -------
-            float
+        float
             MAE of predictions vs targets.
         """
         return mean_absolute_error(y_true, y_score)
@@ -248,14 +248,14 @@ class MSE(Metric):
 
         Parameters
         ----------
-        y_true: np.ndarray
+        y_true : np.ndarray
             Target matrix or vector
-        y_pred: np.ndarray
+        y_score : np.ndarray
             Score matrix or vector
 
         Returns
         -------
-            float
+        float
             MSE of predictions vs targets.
         """
         return mean_squared_error(y_true, y_score)
@@ -276,14 +276,14 @@ class RMSE(Metric):
 
         Parameters
         ----------
-        y_true: np.ndarray
+        y_true : np.ndarray
             Target matrix or vector
-        y_pred: np.ndarray
+        y_score : np.ndarray
             Score matrix or vector
 
         Returns
         -------
-            float
+        float
             RMSE of predictions vs targets.
         """
         return np.sqrt(mean_squared_error(y_true, y_score))

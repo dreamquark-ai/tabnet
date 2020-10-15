@@ -31,11 +31,20 @@ class SparsemaxFunction(Function):
     @staticmethod
     def forward(ctx, input, dim=-1):
         """sparsemax: normalizing sparse transform (a la softmax)
-        Parameters:
-            input (Tensor): any shape
-            dim: dimension along which to apply sparsemax
-        Returns:
-            output (Tensor): same shape as input
+
+        Parameters
+        ----------
+        ctx : torch.autograd.function._ContextMethodMixin
+        input : torch.Tensor
+            any shape
+        dim : int
+            dimension along which to apply sparsemax
+
+        Returns
+        -------
+        output : torch.Tensor
+            same shape as input
+
         """
         ctx.dim = dim
         max_val, _ = input.max(dim=dim, keepdim=True)
@@ -60,11 +69,20 @@ class SparsemaxFunction(Function):
     @staticmethod
     def _threshold_and_support(input, dim=-1):
         """Sparsemax building block: compute the threshold
-        Args:
-            input: any dimension
-            dim: dimension along which to apply the sparsemax
-        Returns:
+
+        Parameters
+        ----------
+        input: torch.Tensor
+            any dimension
+        dim : int
+            dimension along which to apply the sparsemax
+
+        Returns
+        -------
+        tau : torch.Tensor
             the threshold value
+        support_size : torch.Tensor
+
         """
 
         input_srt, _ = torch.sort(input, descending=True, dim=dim)
