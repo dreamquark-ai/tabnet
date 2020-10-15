@@ -93,7 +93,7 @@ class TabNetClassifier(TabModel):
             PredictDataset(X),
             batch_size=self.batch_size,
             shuffle=False,
-            pin_memory=True
+            pin_memory=not (isinstance(X, torch.Tensor) and X.is_cuda)
         )
 
         results = []
