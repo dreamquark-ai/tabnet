@@ -40,7 +40,7 @@ class GBN(torch.nn.Module):
 
 class TabNetNoEmbeddings(torch.nn.Module):
     def __init__(self, input_dim, output_dim,
-                 n_d=8, n_a=8,
+                 n_d=8, n_a=8, # n_a will not be used (add extra layer in attention)
                  n_steps=3, gamma=1.3,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02,
@@ -98,31 +98,30 @@ class TabNetNoEmbeddings(torch.nn.Module):
             for i in range(self.n_shared):
                 if i == 0:
                     shared_feat_transform.append(Linear(self.input_dim,
-                                                        2*(n_d + n_a),
+                                                        2*(n_d),
                                                         bias=False))
                 else:
-                    shared_feat_transform.append(Linear(n_d + n_a, 2*(n_d + n_a), bias=False))
+                    shared_feat_transform.append(Linear(n_d, 2*(n_d), bias=False))
 
         else:
             shared_feat_transform = None
 
-        self.initial_splitter = FeatTransformer(self.input_dim, n_d+n_a, shared_feat_transform,
-                                                n_glu_independent=self.n_independent,
-                                                virtual_batch_size=self.virtual_batch_size,
-                                                momentum=momentum)
+        self.initial_attention = AttentiveTransformer(self.input_dim, self.input_dim,
+                                                      virtual_batch_size=self.virtual_batch_size,
+                                                      momentum=momentum)
 
         self.feat_transformers = torch.nn.ModuleList()
         self.att_transformers = torch.nn.ModuleList()
 
         for step in range(n_steps):
-            transformer = FeatTransformer(self.input_dim, n_d+n_a, shared_feat_transform,
+            transformer = FeatTransformer(self.input_dim, n_d, shared_feat_transform,
                                           n_glu_independent=self.n_independent,
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=momentum)
-            attention = AttentiveTransformer(n_a, self.input_dim,
+            attention = AttentiveTransformer(self.input_dim, self.input_dim,
                                              virtual_batch_size=self.virtual_batch_size,
-                                             momentum=momentum,
-                                             mask_type=self.mask_type)
+                                             mask_type=self.mask_type,
+                                             momentum=momentum)
             self.feat_transformers.append(transformer)
             self.att_transformers.append(attention)
 
@@ -138,25 +137,24 @@ class TabNetNoEmbeddings(torch.nn.Module):
 
     def forward(self, x):
         res = 0
-        x = self.initial_bn(x)
+        bn_x = self.initial_bn(x)
 
         prior = torch.ones(x.shape).to(x.device)
         M_loss = 0
-        att = self.initial_splitter(x)[:, self.n_d:]
+        M = self.initial_attention(prior, bn_x)
 
         for step in range(self.n_steps):
-            M = self.att_transformers[step](prior, att)
             M_loss += torch.mean(torch.sum(torch.mul(M, torch.log(M+self.epsilon)),
                                            dim=1))
-            # update prior
-            prior = torch.mul(self.gamma - M, prior)
+            # prior will make previously used feature less important
+            prior = 1 - self.gamma*M
             # output
-            masked_x = torch.mul(M, x)
+            masked_x = torch.mul(M, bn_x)
             out = self.feat_transformers[step](masked_x)
-            d = ReLU()(out[:, :self.n_d])
+            d = ReLU()(out)
             res = torch.add(res, d)
-            # update attention
-            att = out[:, self.n_d:]
+            # update mask for next step
+            M = self.att_transformers[step](prior, bn_x)
 
         M_loss /= self.n_steps
 
@@ -172,27 +170,26 @@ class TabNetNoEmbeddings(torch.nn.Module):
         return out, M_loss
 
     def forward_masks(self, x):
-        x = self.initial_bn(x)
+        bn_x = self.initial_bn(x)
 
-        prior = torch.ones(x.shape).to(x.device)
-        M_explain = torch.zeros(x.shape).to(x.device)
-        att = self.initial_splitter(x)[:, self.n_d:]
+        prior = torch.ones(x.shape).to(bn_x.device)
+        M_explain = torch.zeros(x.shape).to(bn_x.device)
+        M = self.initial_attention(prior, bn_x)
         masks = {}
 
         for step in range(self.n_steps):
-            M = self.att_transformers[step](prior, att)
             masks[step] = M
             # update prior
             prior = torch.mul(self.gamma - M, prior)
             # output
             masked_x = torch.mul(M, x)
             out = self.feat_transformers[step](masked_x)
-            d = ReLU()(out[:, :self.n_d])
+            d = ReLU()(out)
             # explain
             step_importance = torch.sum(d, dim=1)
             M_explain += torch.mul(M, step_importance.unsqueeze(dim=1))
-            # update attention
-            att = out[:, self.n_d:]
+            # update mask
+            M = self.att_transformers[step](prior, bn_x)
 
         return M_explain, masks
 
@@ -319,6 +316,8 @@ class AttentiveTransformer(torch.nn.Module):
         elif mask_type == "entmax":
             # Entmax
             self.selector = sparsemax.Entmax15(dim=-1)
+        elif mask_type == "sigmoid":
+            self.selector = torch.sigmoid
         else:
             raise NotImplementedError("Please choose either sparsemax" +
                                       "or entmax as masktype")
