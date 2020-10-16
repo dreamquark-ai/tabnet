@@ -57,6 +57,7 @@ class TabModel(BaseEstimator):
     input_dim: int = None
     output_dim: int = None
     device_name: str = "auto"
+    dropout: float = 0.0
 
     def __post_init__(self):
         self.batch_size = 1024
@@ -472,6 +473,7 @@ class TabModel(BaseEstimator):
             momentum=self.momentum,
             device_name=self.device_name,
             mask_type=self.mask_type,
+            dropout=self.dropout,
         ).to(self.device)
 
         self.reducing_matrix = create_explain_matrix(

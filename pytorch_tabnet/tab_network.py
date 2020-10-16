@@ -44,7 +44,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
                  n_steps=3, gamma=1.3,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02,
-                 mask_type="sparsemax"):
+                 mask_type="sparsemax",
+                 dropout=0.):
         """
         Defines main part of the TabNet network without the embedding layers.
 
@@ -73,6 +74,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
             Avoid log(0), this should be kept very low
         - mask_type: str
             Either "sparsemax" or "entmax" : this is the masking function to use
+        - dropout : float
+            Dropout applied to last layer
         """
         super(TabNetNoEmbeddings, self).__init__()
         self.input_dim = input_dim
@@ -88,6 +91,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         self.virtual_batch_size = virtual_batch_size
         self.mask_type = mask_type
         self.initial_bn = BatchNorm1d(self.input_dim, momentum=0.01)
+        self.dropout = dropout
 
         if self.n_shared > 0:
             shared_feat_transform = torch.nn.ModuleList()
@@ -156,6 +160,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
 
         M_loss /= self.n_steps
 
+        res = torch.nn.Dropout(self.dropout)(res)
+
         if self.is_multi_task:
             # Result will be in list format
             out = []
@@ -196,7 +202,7 @@ class TabNet(torch.nn.Module):
                  n_steps=3, gamma=1.3, cat_idxs=[], cat_dims=[], cat_emb_dim=1,
                  n_independent=2, n_shared=2, epsilon=1e-15,
                  virtual_batch_size=128, momentum=0.02, device_name='auto',
-                 mask_type="sparsemax"):
+                 mask_type="sparsemax", dropout=0.):
         """
         Defines TabNet network
 
@@ -233,6 +239,8 @@ class TabNet(torch.nn.Module):
             Either "sparsemax" or "entmax" : this is the masking function to use
         - epsilon: float
             Avoid log(0), this should be kept very low
+        - dropout : float
+            Dropout applied to last layer
         """
         super(TabNet, self).__init__()
         self.cat_idxs = cat_idxs or []
@@ -260,7 +268,7 @@ class TabNet(torch.nn.Module):
         self.post_embed_dim = self.embedder.post_embed_dim
         self.tabnet = TabNetNoEmbeddings(self.post_embed_dim, output_dim, n_d, n_a, n_steps,
                                          gamma, n_independent, n_shared, epsilon,
-                                         virtual_batch_size, momentum, mask_type)
+                                         virtual_batch_size, momentum, mask_type, dropout)
 
         # Defining device
         if device_name == 'auto':
