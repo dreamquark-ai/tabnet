@@ -134,7 +134,7 @@ class TabModel(BaseEstimator):
         self.drop_last = drop_last
         self.input_dim = X_train.shape[1]
         self._stop_training = False
-        self.pin_memory = pin_memory
+        self.pin_memory = pin_memory and (self.device.type != 'cpu')
 
         eval_set = eval_set if eval_set else []
 
