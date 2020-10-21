@@ -11,10 +11,10 @@ class TorchDataset(Dataset):
 
     Parameters
     ----------
-        X: 2D array
-            The input matrix
-        y: 2D array
-            The one-hot encoded target
+    X : 2D array
+        The input matrix
+    y : 2D array
+        The one-hot encoded target
     """
 
     def __init__(self, x, y):
@@ -35,8 +35,8 @@ class PredictDataset(Dataset):
 
     Parameters
     ----------
-        X: 2D array
-            The input matrix
+    X : 2D array
+        The input matrix
     """
 
     def __init__(self, x):
@@ -58,24 +58,34 @@ def create_dataloaders(
 
     Parameters
     ----------
-        X_train: np.ndarray
-            Training data
-        y_train: np.array
-            Mapped Training targets
-        X_valid: np.ndarray
-            Validation data
-        y_valid: np.array
-            Mapped Validation targets
-        weights : either 0, 1, dict or iterable
-            if 0 (default) : no weights will be applied
-            if 1 : classification only, will balanced class with inverse frequency
-            if dict : keys are corresponding class values are sample weights
-            if iterable : list or np array must be of length equal to nb elements
-                          in the training set
+    X_train : np.ndarray
+        Training data
+    y_train : np.array
+        Mapped Training targets
+    eval_set : list of tuple
+        List of eval tuple set (X, y)
+    weights : either 0, 1, dict or iterable
+        if 0 (default) : no weights will be applied
+        if 1 : classification only, will balanced class with inverse frequency
+        if dict : keys are corresponding class values are sample weights
+        if iterable : list or np array must be of length equal to nb elements
+                      in the training set
+    batch_size : int
+        how many samples per batch to load
+    num_workers : int
+        how many subprocesses to use for data loading. 0 means that the data
+        will be loaded in the main process
+    drop_last : bool
+        set to True to drop the last incomplete batch, if the dataset size is not
+        divisible by the batch size. If False and the size of dataset is not
+        divisible by the batch size, then the last batch will be smaller
+    pin_memory : bool
+        Whether to pin GPU memory during training
+
     Returns
     -------
-        train_dataloader, valid_dataloader : torch.DataLoader, torch.DataLoader
-            Training and validation dataloaders
+    train_dataloader, valid_dataloader : torch.DataLoader, torch.DataLoader
+        Training and validation dataloaders
     """
 
     if isinstance(weights, int):
@@ -143,7 +153,7 @@ def create_explain_matrix(input_dim, cat_emb_dim, cat_idxs, post_embed_dim):
 
     Parameters
     ----------
-    input_dim: int
+    input_dim : int
         Initial input dim
     cat_emb_dim : int or list of int
         if int : size of embedding for all categorical feature
@@ -186,13 +196,14 @@ def create_explain_matrix(input_dim, cat_emb_dim, cat_idxs, post_embed_dim):
 
 def filter_weights(weights):
     """
-        This function makes sure that weights are in correct format for
-        regression and multitask TabNet
+    This function makes sure that weights are in correct format for
+    regression and multitask TabNet
 
     Parameters
     ----------
-    weights: int, dict or list
+    weights : int, dict or list
         Initial weights parameters given by user
+
     Returns
     -------
     None : This function will only throw an error if format is wrong
@@ -211,12 +222,12 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
 
     Parameters
     ----------
-    eval_set: list of tuple
+    eval_set : list of tuple
         List of eval tuple set (X, y).
         The last one is used for early stopping
-    eval_names: list of str
+    eval_name : list of str
         List of eval set names.
-    X_train: np.ndarray
+    X_train : np.ndarray
         Train owned products
     y_train : np.array
         Train targeted products
@@ -272,13 +283,15 @@ def define_device(device_name):
     """
     Define the device to use during training and inference.
     If auto it will detect automatically whether to use cuda or cpu
+
     Parameters
     ----------
-    - device_name : str
+    device_name : str
         Either "auto", "cpu" or "cuda"
+
     Returns
     -------
-    - str
+    str
         Either "cpu" or "cuda"
     """
     if device_name == "auto":
