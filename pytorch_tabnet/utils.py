@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 import torch
 import numpy as np
 import scipy
+from sklearn.utils import check_array
 
 
 class TorchDataset(Dataset):
@@ -121,7 +122,7 @@ def create_dataloaders(
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
 
     train_dataloader = DataLoader(
-        TorchDataset(X_train, y_train),
+        TorchDataset(X_train.astype(np.float32), y_train),
         batch_size=batch_size,
         sampler=sampler,
         shuffle=need_shuffle,
@@ -134,7 +135,7 @@ def create_dataloaders(
     for X, y in eval_set:
         valid_dataloaders.append(
             DataLoader(
-                TorchDataset(X, y),
+                TorchDataset(X.astype(np.float32), y),
                 batch_size=batch_size,
                 shuffle=False,
                 num_workers=num_workers,
@@ -250,8 +251,7 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
             len(elem) == 2 for elem in eval_set
         ), "Each tuple of eval_set need to have two elements"
     for name, (X, y) in zip(eval_name, eval_set):
-        check_nans(X)
-        check_nans(y)
+        check_array(X)
         msg = (
             f"Number of columns is different between X_{name} "
             + f"({X.shape[1]}) and X_train ({X_train.shape[1]})"
@@ -270,13 +270,6 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
         assert X.shape[0] == y.shape[0], msg
 
     return eval_name, eval_set
-
-
-def check_nans(array):
-    if np.isnan(array).any():
-        raise ValueError("NaN were found, TabNet does not allow nans.")
-    if np.isinf(array).any():
-        raise ValueError("Infinite values were found, TabNet does not allow inf.")
 
 
 def define_device(device_name):

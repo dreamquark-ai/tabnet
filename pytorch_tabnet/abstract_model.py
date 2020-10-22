@@ -11,7 +11,6 @@ from pytorch_tabnet.utils import (
     create_explain_matrix,
     validate_eval_set,
     create_dataloaders,
-    check_nans,
     define_device,
 )
 from pytorch_tabnet.callbacks import (
@@ -22,6 +21,7 @@ from pytorch_tabnet.callbacks import (
 )
 from pytorch_tabnet.metrics import MetricContainer, check_metrics
 from sklearn.base import BaseEstimator
+from sklearn.utils import check_array
 from torch.utils.data import DataLoader
 import io
 import json
@@ -144,8 +144,8 @@ class TabModel(BaseEstimator):
         else:
             self.loss_fn = loss_fn
 
-        check_nans(X_train)
-        check_nans(y_train)
+        check_array(X_train)
+
         self.update_fit_params(
             X_train, y_train, eval_set, weights,
         )
