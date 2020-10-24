@@ -3,12 +3,10 @@ from typing import List, Any, Dict
 import torch
 from torch.nn.utils import clip_grad_norm_
 import numpy as np
-from scipy.sparse import csc_matrix
 from abc import abstractmethod
 from pytorch_tabnet import tab_network
 from pytorch_tabnet.utils import (
     PredictDataset,
-    create_explain_matrix,
     validate_eval_set,
     create_dataloaders,
     check_nans,
