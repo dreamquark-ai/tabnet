@@ -52,7 +52,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         Parameters
         ----------
         input_dim : int
-            Number of features
+            Number of input columns
         output_dim : int or list of int for multi task classification
             Dimension of network output
             examples : one for regression, 2 for binary classification etc...
@@ -84,6 +84,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.feature_embed_widths = feature_embed_widths
+        self.n_features = len(feature_embed_widths) if feature_embed_widths else input_dim
         self.is_multi_task = isinstance(output_dim, list)
         self.n_d = n_d
         self.n_a = n_a
@@ -109,6 +110,14 @@ class TabNetNoEmbeddings(torch.nn.Module):
         else:
             shared_feat_transform = None
 
+        if self.feature_embed_widths:
+            # Pre-process e.g. [2, 3, 1] into LengTensor([0, 0, 1, 1, 1, 2]) for fast mask matrix
+            # expansion via indexing in forward pass:
+            mask_ixs_nested = [[ix] * size for ix, size in enumerate(self.feature_embed_widths)]
+            self.mask_feature_indexes = torch.LongTensor(
+                [item for sublist in mask_ixs_nested for item in sublist]
+            )
+
         self.initial_splitter = FeatTransformer(self.input_dim, n_d+n_a, shared_feat_transform,
                                                 n_glu_independent=self.n_independent,
                                                 virtual_batch_size=self.virtual_batch_size,
@@ -122,13 +131,10 @@ class TabNetNoEmbeddings(torch.nn.Module):
                                           n_glu_independent=self.n_independent,
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=momentum)
-            attention = AttentiveTransformer(
-                n_a,
-                len(self.feature_embed_widths) if self.feature_embed_widths else self.input_dim,
-                virtual_batch_size=self.virtual_batch_size,
-                momentum=momentum,
-                mask_type=self.mask_type,
-            )
+            attention = AttentiveTransformer(n_a, self.n_features,
+                                             virtual_batch_size=self.virtual_batch_size,
+                                             momentum=momentum,
+                                             mask_type=self.mask_type)
             self.feat_transformers.append(transformer)
             self.att_transformers.append(attention)
 
@@ -147,7 +153,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
         x = self.initial_bn(x)
 
         prior = torch.ones(
-            [x.shape[0], len(self.feature_embed_widths)] if self.feature_embed_widths else x.shape
+            [x.shape[0], self.n_features] if self.feature_embed_widths else x.shape
         ).to(x.device)
         M_loss = 0
         att = self.initial_splitter(x)[:, self.n_d:]
@@ -160,13 +166,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
             prior = torch.mul(self.gamma - M, prior)
 
             # expand M to match embedded input dimension, if necessary:
-            if self.feature_embed_widths:
-                M_x_parts = []
-                for ix, size in enumerate(self.feature_embed_widths):
-                    M_x_parts.append(M[:, ix].view(-1, 1).expand(-1, size))
-                M_x = torch.cat(M_x_parts, dim=1)
-            else:
-                M_x = M
+            M_x = M[:, self.mask_feature_indexes] if self.feature_embed_widths else M
 
             # output
             masked_x = torch.mul(M_x, x)
@@ -191,10 +191,10 @@ class TabNetNoEmbeddings(torch.nn.Module):
         x = self.initial_bn(x)
 
         prior = torch.ones(
-            [x.shape[0], len(self.feature_embed_widths)] if self.feature_embed_widths else x.shape
+            [x.shape[0], self.n_features] if self.feature_embed_widths else x.shape
         ).to(x.device)
         M_explain = torch.zeros(
-            [x.shape[0], len(self.feature_embed_widths)] if self.feature_embed_widths else x.shape
+            [x.shape[0], self.n_features] if self.feature_embed_widths else x.shape
         ).to(x.device)
         att = self.initial_splitter(x)[:, self.n_d:]
         masks = {}
@@ -206,13 +206,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
             prior = torch.mul(self.gamma - M, prior)
 
             # expand M to match embedded input dimension, if necessary:
-            if self.feature_embed_widths:
-                M_x_parts = []
-                for ix, size in enumerate(self.feature_embed_widths):
-                    M_x_parts.append(M[:, ix].view(-1, 1).expand(-1, size))
-                M_x = torch.cat(M_x_parts, dim=1)
-            else:
-                M_x = M
+            M_x = M[:, self.mask_feature_indexes] if self.feature_embed_widths else M
 
             # output
             masked_x = torch.mul(M_x, x)
