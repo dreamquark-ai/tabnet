@@ -182,7 +182,6 @@ class TabNetPretrainer(TabModel):
             epsilon=self.epsilon,
             virtual_batch_size=self.virtual_batch_size,
             momentum=self.momentum,
-            device_name=self.device_name,
             mask_type=self.mask_type,
         ).to(self.device)
 
