@@ -64,10 +64,10 @@ class TabModel(BaseEstimator):
         self.batch_size = 1024
         self.virtual_batch_size = 128
         torch.manual_seed(self.seed)
-        torch.manual_seed(self.seed)
         # Defining device
         self.device = torch.device(define_device(self.device_name))
-        print(f"Device used : {self.device}")
+        if self.verbose != 0:
+            print(f"Device used : {self.device}")
 
     def __update__(self, **kwargs):
         """
@@ -330,6 +330,7 @@ class TabModel(BaseEstimator):
             if self.network.state_dict().get(new_param) is not None:
                 # update only common layers
                 update_state_dict[new_param] = weights
+
         self.network.load_state_dict(update_state_dict)
 
     def save_model(self, path):
@@ -380,6 +381,7 @@ class TabModel(BaseEstimator):
             with zipfile.ZipFile(filepath) as z:
                 with z.open("model_params.json") as f:
                     loaded_params = json.load(f)
+                    loaded_params["device_name"] = self.device_name
                 with z.open("network.pt") as f:
                     try:
                         saved_state_dict = torch.load(f, map_location=self.device)
@@ -399,6 +401,7 @@ class TabModel(BaseEstimator):
         self._set_network()
         self.network.load_state_dict(saved_state_dict)
         self.network.eval()
+
         return
 
     def _train_epoch(self, train_loader):
@@ -539,7 +542,6 @@ class TabModel(BaseEstimator):
             epsilon=self.epsilon,
             virtual_batch_size=self.virtual_batch_size,
             momentum=self.momentum,
-            device_name=self.device_name,
             mask_type=self.mask_type,
         ).to(self.device)
 

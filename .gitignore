@@ -10,6 +10,7 @@ data/
 .vscode/
 *.pt
 *~
+.vscode/
 
 # Notebook to python
 forest_example.py

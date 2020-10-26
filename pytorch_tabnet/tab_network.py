@@ -298,7 +298,6 @@ class TabNetPretraining(torch.nn.Module):
         epsilon=1e-15,
         virtual_batch_size=128,
         momentum=0.02,
-        device_name="auto",
         mask_type="sparsemax",
     ):
         super(TabNetPretraining, self).__init__()
@@ -499,7 +498,6 @@ class TabNet(torch.nn.Module):
         epsilon=1e-15,
         virtual_batch_size=128,
         momentum=0.02,
-        device_name="auto",
         mask_type="sparsemax",
     ):
         """
@@ -538,7 +536,6 @@ class TabNet(torch.nn.Module):
             Batch size for Ghost Batch Normalization
         momentum : float
             Float value between 0 and 1 which will be used for momentum in all batch norm
-        device_name : {'auto', 'cuda', 'cpu'}
         mask_type : str
             Either "sparsemax" or "entmax" : this is the masking function to use
         """
@@ -580,15 +577,6 @@ class TabNet(torch.nn.Module):
             momentum,
             mask_type,
         )
-
-        # Defining device
-        if device_name == "auto":
-            if torch.cuda.is_available():
-                device_name = "cuda"
-            else:
-                device_name = "cpu"
-        self.device = torch.device(device_name)
-        self.to(self.device)
 
     def forward(self, x):
         x = self.embedder(x)

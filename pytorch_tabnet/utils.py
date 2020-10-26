@@ -311,5 +311,7 @@ def define_device(device_name):
             return "cuda"
         else:
             return "cpu"
+    elif device_name == "cuda" and not torch.cuda.is_available():
+        return "cpu"
     else:
         return device_name
