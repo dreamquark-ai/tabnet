@@ -51,6 +51,55 @@ class PredictDataset(Dataset):
         return x
 
 
+def create_sampler(weights, y_train):
+    """
+    This creates a sampler from the given weights
+    
+    Parameters
+    ----------
+    weights : either 0, 1, dict or iterable
+        if 0 (default) : no weights will be applied
+        if 1 : classification only, will balanced class with inverse frequency
+        if dict : keys are corresponding class values are sample weights
+        if iterable : list or np array must be of length equal to nb elements
+                      in the training set
+    y_train : np.array
+        Training targets
+    """
+    if isinstance(weights, int):
+        if weights == 0:
+            need_shuffle = True
+            sampler = None
+        elif weights == 1:
+            need_shuffle = False
+            class_sample_count = np.array(
+                [len(np.where(y_train == t)[0]) for t in np.unique(y_train)]
+            )
+
+            weights = 1.0 / class_sample_count
+
+            samples_weight = np.array([weights[t] for t in y_train])
+
+            samples_weight = torch.from_numpy(samples_weight)
+            samples_weight = samples_weight.double()
+            sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+        else:
+            raise ValueError("Weights should be either 0, 1, dictionnary or list.")
+    elif isinstance(weights, dict):
+        # custom weights per class
+        need_shuffle = False
+        samples_weight = np.array([weights[t] for t in y_train])
+        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+    else:
+        # custom weights
+        if len(weights) != len(y_train):
+            raise ValueError("Custom weights should match number of train samples.")
+        need_shuffle = False
+        samples_weight = np.array(weights)
+        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+    return need_shuffle, sampler
+
+
 def create_dataloaders(
     X_train, y_train, eval_set, weights, batch_size, num_workers, drop_last, pin_memory
 ):
@@ -88,38 +137,7 @@ def create_dataloaders(
     train_dataloader, valid_dataloader : torch.DataLoader, torch.DataLoader
         Training and validation dataloaders
     """
-
-    if isinstance(weights, int):
-        if weights == 0:
-            need_shuffle = True
-            sampler = None
-        elif weights == 1:
-            need_shuffle = False
-            class_sample_count = np.array(
-                [len(np.where(y_train == t)[0]) for t in np.unique(y_train)]
-            )
-
-            weights = 1.0 / class_sample_count
-
-            samples_weight = np.array([weights[t] for t in y_train])
-
-            samples_weight = torch.from_numpy(samples_weight)
-            samples_weight = samples_weight.double()
-            sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
-        else:
-            raise ValueError("Weights should be either 0, 1, dictionnary or list.")
-    elif isinstance(weights, dict):
-        # custom weights per class
-        need_shuffle = False
-        samples_weight = np.array([weights[t] for t in y_train])
-        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
-    else:
-        # custom weights
-        if len(weights) != len(y_train):
-            raise ValueError("Custom weights should match number of train samples.")
-        need_shuffle = False
-        samples_weight = np.array(weights)
-        sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+    need_shuffle, sampler = create_sampler(weights, y_train)
 
     train_dataloader = DataLoader(
         TorchDataset(X_train.astype(np.float32), y_train),
@@ -209,7 +227,8 @@ def filter_weights(weights):
     -------
     None : This function will only throw an error if format is wrong
     """
-    err_msg = "Please provide a list of weights for regression or multitask : "
+    err_msg = """Please provide a list or np.array of weights for """
+    err_msg += """regression, multitask or pretraining: """
     if isinstance(weights, int):
         if weights == 1:
             raise ValueError(err_msg + "1 given.")
