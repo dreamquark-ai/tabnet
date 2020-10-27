@@ -9,6 +9,84 @@ from sklearn.metrics import (
     log_loss,
     balanced_accuracy_score,
 )
+import torch
+
+
+def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
+    """
+    Implements unsupervised loss function
+
+    Parameters
+    ----------
+    y_pred : torch.Tensor or np.array
+        Reconstructed prediction (with embeddings)
+    embedded_x : torch.Tensor
+        Orginal input embedded by network
+    obf_vars : torch.Tensor
+        Binary mask for obfuscated variables.
+        1 means the variables was obfuscated so reconstruction is based on this.
+    eps : float
+        A small floating point to avoid ZeroDivisionError
+        This can happen in degenerated case when a feature has only one value
+
+    Returns
+    -------
+    loss : torch float
+        Unsupervised loss, average value over batch samples.    
+    """
+    errors = y_pred - embedded_x
+    reconstruction_errors = torch.mul(errors, obf_vars)**2
+    batch_stds = torch.std(embedded_x, dim=0)**2 + eps
+    features_loss = torch.matmul(reconstruction_errors, 1 / batch_stds)
+    # here we take the mean per batch, contrary to the paper
+    loss = torch.mean(features_loss)
+    return loss
+
+
+@dataclass
+class UnsupMetricContainer:
+    """Container holding a list of metrics.
+
+    Parameters
+    ----------
+    y_pred : torch.Tensor or np.array
+        Reconstructed prediction (with embeddings)
+    embedded_x : torch.Tensor
+        Orginal input embedded by network
+    obf_vars : torch.Tensor
+        Binary mask for obfuscated variables.
+        1 means the variables was obfuscated so reconstruction is based on this.
+
+    """
+
+    metric_names: List[str]
+    prefix: str = ""
+
+    def __post_init__(self):
+        self.metrics = Metric.get_metrics_by_names(self.metric_names)
+        self.names = [self.prefix + name for name in self.metric_names]
+
+    def __call__(self, y_pred, embedded_x, obf_vars):
+        """Compute all metrics and store into a dict.
+
+        Parameters
+        ----------
+        y_true : np.ndarray
+            Target matrix or vector
+        y_pred : np.ndarray
+            Score matrix or vector
+
+        Returns
+        -------
+        dict
+            Dict of metrics ({metric_name: metric_value}).
+
+        """
+        logs = {}
+        for metric in self.metrics:
+            res = metric(y_pred, embedded_x, obf_vars)
+            logs[self.prefix + metric._name] = res
+        return logs
 
 
 @dataclass
@@ -259,6 +337,38 @@ class MSE(Metric):
             MSE of predictions vs targets.
         """
         return mean_squared_error(y_true, y_score)
+
+
+class UnsupervisedMetric(Metric):
+    """
+    Unsupervised metric
+    """
+
+    def __init__(self):
+        self._name = "unsup_loss"
+        self._maximize = False
+
+    def __call__(self, y_pred, embedded_x, obf_vars):
+        """
+        Compute MSE (Mean Squared Error) of predictions.
+
+        Parameters
+        ----------
+        y_pred : torch.Tensor or np.array
+            Reconstructed prediction (with embeddings)
+        embedded_x : torch.Tensor
+            Orginal input embedded by network
+        obf_vars : torch.Tensor
+            Binary mask for obfuscated variables.
+            1 means the variables was obfuscated so reconstruction is based on this.
+
+        Returns
+        -------
+        float
+            MSE of predictions vs targets.
+        """
+        loss = UnsupervisedLoss(y_pred, embedded_x, obf_vars)
+        return loss.item()
 
 
 class RMSE(Metric):
