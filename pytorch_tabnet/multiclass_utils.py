@@ -67,7 +67,11 @@ def _unique_indicator(y):
     """
     Not implemented
     """
-    pass
+    raise IndexError(
+        f"""Given labels are of size {y.shape} while they should be (n_samples,) \n"""
+        + """If attempting multilabel classification, try using TabNetMultiTaskClassification """
+        + """or TabNetRegressor"""
+    )
 
 
 _FN_UNIQUE_LABELS = {
