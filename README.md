@@ -102,6 +102,11 @@ preds = clf.predict(X_test)
 - cat_emb_dim : list of int
 
     List of embeddings size for each categorical features. (default =1)
+- cat_dims : list of int (default =[]) 
+    
+    This is the list of input dimension 
+    of the categorical variables
+    (basicly the number of unique value of your categorical variables)
 
 - n_independent : int  (default=2)
 
