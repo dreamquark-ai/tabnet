@@ -486,7 +486,7 @@ class EmbeddingGenerator(torch.nn.Module):
 
         # check that all embeddings are provided
         if len(self.cat_emb_dims) != len(cat_dims):
-            msg = """ cat_emb_dim and cat_dims must be lists of same length, got {len(self.cat_emb_dims)}
+            msg = f""" cat_emb_dim and cat_dims must be lists of same length, got {len(self.cat_emb_dims)}
                       and {len(cat_dims)}"""
             raise ValueError(msg)
         self.post_embed_dim = int(input_dim + np.sum(self.cat_emb_dims) - len(self.cat_emb_dims))
