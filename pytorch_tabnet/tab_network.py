@@ -105,33 +105,33 @@ class TabNetEncoder(torch.nn.Module):
             for i in range(self.n_shared):
                 if i == 0:
                     shared_feat_transform.append(
-                        Linear(self.input_dim, 2 * (n_d + n_a), bias=False)
+                        Linear(self.input_dim, 2 * (n_d), bias=False)
                     )
                 else:
                     shared_feat_transform.append(
-                        Linear(n_d + n_a, 2 * (n_d + n_a), bias=False)
+                        Linear(n_d, 2 * (n_d), bias=False)
                     )
 
         else:
             shared_feat_transform = None
 
-        self.initial_splitter = FeatTransformer(
-            self.input_dim,
-            n_d + n_a,
-            shared_feat_transform,
-            n_glu_independent=self.n_independent,
-            virtual_batch_size=self.virtual_batch_size,
-            momentum=momentum,
-        )
-
         self.feat_transformers = torch.nn.ModuleList()
         self.att_transformers = torch.nn.ModuleList()
+        self.att_transformers_head = torch.nn.ModuleList()
 
         for step in range(n_steps):
             transformer = FeatTransformer(
                 self.input_dim,
-                n_d + n_a,
+                n_d,
                 shared_feat_transform,
+                n_glu_independent=self.n_independent,
+                virtual_batch_size=self.virtual_batch_size,
+                momentum=momentum,
+            )
+            att_transformer = FeatTransformer(
+                self.input_dim,
+                n_a,
+                None,
                 n_glu_independent=self.n_independent,
                 virtual_batch_size=self.virtual_batch_size,
                 momentum=momentum,
@@ -144,7 +144,8 @@ class TabNetEncoder(torch.nn.Module):
                 mask_type=self.mask_type,
             )
             self.feat_transformers.append(transformer)
-            self.att_transformers.append(attention)
+            self.att_transformers.append(att_transformer)
+            self.att_transformers_head.append(attention)
 
     def forward(self, x, prior=None):
         x = self.initial_bn(x)
@@ -153,11 +154,11 @@ class TabNetEncoder(torch.nn.Module):
             prior = torch.ones(x.shape).to(x.device)
 
         M_loss = 0
-        att = self.initial_splitter(x)[:, self.n_d :]
 
         steps_output = []
         for step in range(self.n_steps):
-            M = self.att_transformers[step](prior, att)
+            att = self.att_transformers[step](x)
+            M = self.att_transformers_head[step](prior, att)
             M_loss += torch.mean(
                 torch.sum(torch.mul(M, torch.log(M + self.epsilon)), dim=1)
             )
@@ -166,10 +167,8 @@ class TabNetEncoder(torch.nn.Module):
             # output
             masked_x = torch.mul(M, x)
             out = self.feat_transformers[step](masked_x)
-            d = ReLU()(out[:, : self.n_d])
+            d = ReLU()(out)
             steps_output.append(d)
-            # update attention
-            att = out[:, self.n_d :]
 
         M_loss /= self.n_steps
         return steps_output, M_loss
@@ -179,11 +178,11 @@ class TabNetEncoder(torch.nn.Module):
 
         prior = torch.ones(x.shape).to(x.device)
         M_explain = torch.zeros(x.shape).to(x.device)
-        att = self.initial_splitter(x)[:, self.n_d :]
         masks = {}
 
         for step in range(self.n_steps):
-            M = self.att_transformers[step](prior, att)
+            att = self.att_transformers[step](x)
+            M = self.att_transformers_head[step](prior, att)
             masks[step] = M
             # update prior
             prior = torch.mul(self.gamma - M, prior)
@@ -194,8 +193,6 @@ class TabNetEncoder(torch.nn.Module):
             # explain
             step_importance = torch.sum(d, dim=1)
             M_explain += torch.mul(M, step_importance.unsqueeze(dim=1))
-            # update attention
-            att = out[:, self.n_d :]
 
         return M_explain, masks
 
