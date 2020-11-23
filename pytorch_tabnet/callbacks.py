@@ -161,9 +161,11 @@ class EarlyStopping(Callback):
             )
             print(msg)
         else:
-            msg = (f"Stop training because you reached max_epochs = {self.trainer.max_epochs}"
-                   + f" with best_epoch = {self.best_epoch} and "
-                   + f"best_{self.early_stopping_metric} = {round(self.best_loss, 5)}")
+            msg = (
+                f"Stop training because you reached max_epochs = {self.trainer.max_epochs}"
+                + f" with best_epoch = {self.best_epoch} and "
+                + f"best_{self.early_stopping_metric} = {round(self.best_loss, 5)}"
+            )
             print(msg)
         print("Best weights from best epoch are automatically used!")
 
@@ -196,7 +198,7 @@ class History(Callback):
         self.history.update({"lr": []})
         self.history.update({name: [] for name in self.trainer._metrics_names})
         self.start_time = logs["start_time"]
-        self.epoch_loss = 0.
+        self.epoch_loss = 0.0
 
     def on_epoch_begin(self, epoch, logs=None):
         self.epoch_metrics = {"loss": 0.0}
@@ -220,8 +222,9 @@ class History(Callback):
 
     def on_batch_end(self, batch, logs=None):
         batch_size = logs["batch_size"]
-        self.epoch_loss = (self.samples_seen * self.epoch_loss + batch_size * logs["loss"]
-                           ) / (self.samples_seen + batch_size)
+        self.epoch_loss = (
+            self.samples_seen * self.epoch_loss + batch_size * logs["loss"]
+        ) / (self.samples_seen + batch_size)
         self.samples_seen += batch_size
 
     def __getitem__(self, name):
@@ -256,11 +259,11 @@ class LRSchedulerCallback(Callback):
     early_stopping_metric: str
     is_batch_level: bool = False
 
-    def __post_init__(self, ):
-        self.is_metric_related = hasattr(self.scheduler_fn,
-                                         "is_better")
-        self.scheduler = self.scheduler_fn(self.optimizer,
-                                           **self.scheduler_params)
+    def __post_init__(
+        self,
+    ):
+        self.is_metric_related = hasattr(self.scheduler_fn, "is_better")
+        self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
         super().__init__()
 
     def on_batch_end(self, batch, logs=None):

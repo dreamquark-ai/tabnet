@@ -140,7 +140,7 @@ def _is_integral_float(y):
 
 
 def is_multilabel(y):
-    """ Check if ``y`` is in a multilabel format.
+    """Check if ``y`` is in a multilabel format.
 
     Parameters
     ----------
@@ -394,17 +394,15 @@ def infer_multitask_output(y_train):
 
     if len(y_train.shape) < 2:
         raise ValueError(
-            f"""y_train shoud be of shape (n_examples, n_tasks) """
-            + f"""but got {y_train.shape}"""
+            "y_train shoud be of shape (n_examples, n_tasks)"
+            + f"but got {y_train.shape}"
         )
     nb_tasks = y_train.shape[1]
     tasks_dims = []
     tasks_labels = []
     for task_idx in range(nb_tasks):
         try:
-            output_dim, train_labels = infer_output_dim(
-                y_train[:, task_idx]
-            )
+            output_dim, train_labels = infer_output_dim(y_train[:, task_idx])
             tasks_dims.append(output_dim)
             tasks_labels.append(train_labels)
         except ValueError as err:
