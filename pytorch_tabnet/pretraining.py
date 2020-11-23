@@ -131,6 +131,7 @@ class TabNetPretrainer(TabModel):
 
         if not hasattr(self, 'network'):
             self._set_network()
+        self._update_network_params()
         self._set_metrics(eval_names)
         self._set_optimizer()
         self._set_callbacks(callbacks)
@@ -191,6 +192,10 @@ class TabNetPretrainer(TabModel):
             self.network.cat_idxs,
             self.network.post_embed_dim,
         )
+
+    def _update_network_params(self):
+        self.network.virtual_batch_size = self.virtual_batch_size
+        self.network.pretraining_ratio = self.pretraining_ratio
 
     def _set_metrics(self, eval_names):
         """Set attributes relative to the metrics.

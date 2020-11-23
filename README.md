@@ -96,6 +96,44 @@ clf.fit(
 
 A specific customization example notebook is available here : https://github.com/dreamquark-ai/tabnet/blob/develop/customizing_example.ipynb
 
+# Semi-supervised pre-training
+
+Added later to TabNet's original paper, semi-supervised pre-training is now available via the class `TabNetPretrainer`:
+
+```python
+# TabNetPretrainer
+unsupervised_model = TabNetPretrainer(
+    optimizer_fn=torch.optim.Adam,
+    optimizer_params=dict(lr=2e-2),
+    mask_type='entmax' # "sparsemax"
+)
+
+unsupervised_model.fit(
+    X_train=X_train,
+    eval_set=[X_valid],
+    pretraining_ratio=0.8,
+)
+
+clf = TabNetClassifier(
+    optimizer_fn=torch.optim.Adam,
+    optimizer_params=dict(lr=2e-2),
+    scheduler_params={"step_size":10, # how to use learning rate scheduler
+                      "gamma":0.9},
+    scheduler_fn=torch.optim.lr_scheduler.StepLR,
+    mask_type='sparsemax' # This will be overwritten if using pretrain model
+)
+
+clf.fit(
+    X_train=X_train, y_train=y_train,
+    eval_set=[(X_train, y_train), (X_valid, y_valid)],
+    eval_name=['train', 'valid'],
+    eval_metric=['auc'],
+    from_unsupervised=unsupervised_model
+)
+```
+
+A complete exemple can be found within the notebook `pretraining_example.ipynb`.
+
 # Useful links
 
 - [explanatory video](https://youtu.be/ysBaZO8YmX8)

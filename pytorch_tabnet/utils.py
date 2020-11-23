@@ -54,7 +54,7 @@ class PredictDataset(Dataset):
 def create_sampler(weights, y_train):
     """
     This creates a sampler from the given weights
-    
+
     Parameters
     ----------
     weights : either 0, 1, dict or iterable
@@ -146,7 +146,7 @@ def create_dataloaders(
         shuffle=need_shuffle,
         num_workers=num_workers,
         drop_last=drop_last,
-        pin_memory=pin_memory
+        pin_memory=pin_memory,
     )
 
     valid_dataloaders = []
@@ -157,7 +157,7 @@ def create_dataloaders(
                 batch_size=batch_size,
                 shuffle=False,
                 num_workers=num_workers,
-                pin_memory=pin_memory
+                pin_memory=pin_memory,
             )
         )
 

@@ -364,14 +364,17 @@ class TabNetPretraining(torch.nn.Module):
             masked_x, obf_vars = self.masker(embedded_x)
             # set prior of encoder with obf_mask
             prior = 1 - obf_vars
-            steps_out, _ = self.encoder(masked_x,
-                                        prior=prior)
+            steps_out, _ = self.encoder(masked_x, prior=prior)
             res = self.decoder(steps_out)
             return res, embedded_x, obf_vars
         else:
             steps_out, _ = self.encoder(embedded_x)
             res = self.decoder(steps_out)
             return res, embedded_x, torch.ones(embedded_x.shape).to(x.device)
+
+    def forward_masks(self, x):
+        embedded_x = self.embedder(x)
+        return self.encoder.forward_masks(embedded_x)
 
 
 class TabNetNoEmbeddings(torch.nn.Module):
@@ -887,6 +890,8 @@ class RandomObfuscator(torch.nn.Module):
         -------
         masked input and obfuscated variables.
         """
-        obfuscated_vars = torch.bernoulli(self.pretraining_ratio * torch.ones(x.shape)).to(x.device)
+        obfuscated_vars = torch.bernoulli(
+            self.pretraining_ratio * torch.ones(x.shape)
+        ).to(x.device)
         masked_input = torch.mul(1 - obfuscated_vars, x)
         return masked_input, obfuscated_vars
