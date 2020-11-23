@@ -1,7 +1,8 @@
 from torch.utils.data import DataLoader
-from pytorch_tabnet.utils import (create_sampler,
-                                  PredictDataset,
-                                  )
+from pytorch_tabnet.utils import (
+    create_sampler,
+    PredictDataset,
+)
 from sklearn.utils import check_array
 
 
@@ -49,7 +50,7 @@ def create_dataloaders(
         shuffle=need_shuffle,
         num_workers=num_workers,
         drop_last=drop_last,
-        pin_memory=pin_memory
+        pin_memory=pin_memory,
     )
 
     valid_dataloaders = []
@@ -62,7 +63,7 @@ def create_dataloaders(
                 shuffle=need_shuffle,
                 num_workers=num_workers,
                 drop_last=drop_last,
-                pin_memory=pin_memory
+                pin_memory=pin_memory,
             )
         )
 
@@ -94,7 +95,7 @@ def validate_eval_set(eval_set, eval_name, X_train):
     for set_nb, X in enumerate(eval_set):
         check_array(X)
         msg = (
-            f"Number of columns is different between eval set {set_nb} "
+            f"Number of columns is different between eval set {set_nb}"
             + f"({X.shape[1]}) and X_train ({X_train.shape[1]})"
         )
         assert X.shape[1] == X_train.shape[1], msg
