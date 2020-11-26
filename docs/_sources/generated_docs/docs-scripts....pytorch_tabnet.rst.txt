@@ -1,0 +1,84 @@
+docs-scripts....pytorch_tabnet package
+======================================
+
+
+docs-scripts....pytorch_tabnet.metrics module
+...............................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+docs-scripts....pytorch_tabnet.sparsemax module
+.................................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.sparsemax
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+docs-scripts....pytorch_tabnet.callbacks module
+.................................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.callbacks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+docs-scripts....pytorch_tabnet.tab_network module
+...................................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.tab_network
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+docs-scripts....pytorch_tabnet.utils module
+.............................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+docs-scripts....pytorch_tabnet.multiclass_utils module
+........................................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.multiclass_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+docs-scripts....pytorch_tabnet.abstract_model module
+......................................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.abstract_model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+docs-scripts....pytorch_tabnet.multitask module
+.................................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.multitask
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+docs-scripts....pytorch_tabnet.tab_model module
+.................................................
+
+.. automodule:: docs-scripts....pytorch_tabnet.tab_model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+

@@ -9,7 +9,6 @@ from pytorch_tabnet.utils import (
     PredictDataset,
     validate_eval_set,
     create_dataloaders,
-    check_nans,
     define_device,
 )
 from pytorch_tabnet.callbacks import (
@@ -20,6 +19,7 @@ from pytorch_tabnet.callbacks import (
 )
 from pytorch_tabnet.metrics import MetricContainer, check_metrics
 from sklearn.base import BaseEstimator
+from sklearn.utils import check_array
 from torch.utils.data import DataLoader
 import io
 import json
@@ -133,7 +133,7 @@ class TabModel(BaseEstimator):
         self.drop_last = drop_last
         self.input_dim = X_train.shape[1]
         self._stop_training = False
-        self.pin_memory = pin_memory
+        self.pin_memory = pin_memory and (self.device.type != 'cpu')
 
         eval_set = eval_set if eval_set else []
 
@@ -142,8 +142,8 @@ class TabModel(BaseEstimator):
         else:
             self.loss_fn = loss_fn
 
-        check_nans(X_train)
-        check_nans(y_train)
+        check_array(X_train)
+
         self.update_fit_params(
             X_train, y_train, eval_set, weights,
         )
