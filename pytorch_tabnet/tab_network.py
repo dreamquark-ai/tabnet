@@ -40,6 +40,7 @@ class GBN(torch.nn.Module):
 
 class TabNetNoEmbeddings(torch.nn.Module):
     def __init__(self, input_dim, output_dim,
+                 feature_embed_widths=None,
                  n_d=8, n_a=8,
                  n_steps=3, gamma=1.3,
                  n_independent=2, n_shared=2, epsilon=1e-15,
@@ -51,10 +52,13 @@ class TabNetNoEmbeddings(torch.nn.Module):
         Parameters
         ----------
         input_dim : int
-            Number of features
+            Number of input columns
         output_dim : int or list of int for multi task classification
             Dimension of network output
             examples : one for regression, 2 for binary classification etc...
+        feature_embed_widths : list of int
+            The embedding width of each underlying feature in the input, for embedding-aware
+            attention. If not supplied, every input column will be treated as a separate feature.
         n_d : int
             Dimension of the prediction  layer (usually between 4 and 64)
         n_a : int
@@ -79,6 +83,8 @@ class TabNetNoEmbeddings(torch.nn.Module):
         super(TabNetNoEmbeddings, self).__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
+        self.feature_embed_widths = feature_embed_widths
+        self.n_features = len(feature_embed_widths) if feature_embed_widths else input_dim
         self.is_multi_task = isinstance(output_dim, list)
         self.n_d = n_d
         self.n_a = n_a
@@ -104,6 +110,14 @@ class TabNetNoEmbeddings(torch.nn.Module):
         else:
             shared_feat_transform = None
 
+        if self.feature_embed_widths:
+            # Pre-process e.g. [2, 3, 1] into LengTensor([0, 0, 1, 1, 1, 2]) for fast mask matrix
+            # expansion via indexing in forward pass:
+            mask_ixs_nested = [[ix] * size for ix, size in enumerate(self.feature_embed_widths)]
+            self.mask_feature_indexes = torch.LongTensor(
+                [item for sublist in mask_ixs_nested for item in sublist]
+            )
+
         self.initial_splitter = FeatTransformer(self.input_dim, n_d+n_a, shared_feat_transform,
                                                 n_glu_independent=self.n_independent,
                                                 virtual_batch_size=self.virtual_batch_size,
@@ -117,7 +131,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
                                           n_glu_independent=self.n_independent,
                                           virtual_batch_size=self.virtual_batch_size,
                                           momentum=momentum)
-            attention = AttentiveTransformer(n_a, self.input_dim,
+            attention = AttentiveTransformer(n_a, self.n_features,
                                              virtual_batch_size=self.virtual_batch_size,
                                              momentum=momentum,
                                              mask_type=self.mask_type)
@@ -138,7 +152,9 @@ class TabNetNoEmbeddings(torch.nn.Module):
         res = 0
         x = self.initial_bn(x)
 
-        prior = torch.ones(x.shape).to(x.device)
+        prior = torch.ones(
+            [x.shape[0], self.n_features] if self.feature_embed_widths else x.shape
+        ).to(x.device)
         M_loss = 0
         att = self.initial_splitter(x)[:, self.n_d:]
 
@@ -148,8 +164,12 @@ class TabNetNoEmbeddings(torch.nn.Module):
                                            dim=1))
             # update prior
             prior = torch.mul(self.gamma - M, prior)
+
+            # expand M to match embedded input dimension, if necessary:
+            M_x = M[:, self.mask_feature_indexes] if self.feature_embed_widths else M
+
             # output
-            masked_x = torch.mul(M, x)
+            masked_x = torch.mul(M_x, x)
             out = self.feat_transformers[step](masked_x)
             d = ReLU()(out[:, :self.n_d])
             res = torch.add(res, d)
@@ -170,8 +190,12 @@ class TabNetNoEmbeddings(torch.nn.Module):
     def forward_masks(self, x):
         x = self.initial_bn(x)
 
-        prior = torch.ones(x.shape).to(x.device)
-        M_explain = torch.zeros(x.shape).to(x.device)
+        prior = torch.ones(
+            [x.shape[0], self.n_features] if self.feature_embed_widths else x.shape
+        ).to(x.device)
+        M_explain = torch.zeros(
+            [x.shape[0], self.n_features] if self.feature_embed_widths else x.shape
+        ).to(x.device)
         att = self.initial_splitter(x)[:, self.n_d:]
         masks = {}
 
@@ -180,8 +204,12 @@ class TabNetNoEmbeddings(torch.nn.Module):
             masks[step] = M
             # update prior
             prior = torch.mul(self.gamma - M, prior)
+
+            # expand M to match embedded input dimension, if necessary:
+            M_x = M[:, self.mask_feature_indexes] if self.feature_embed_widths else M
+
             # output
-            masked_x = torch.mul(M, x)
+            masked_x = torch.mul(M_x, x)
             out = self.feat_transformers[step](masked_x)
             d = ReLU()(out[:, :self.n_d])
             # explain
@@ -263,7 +291,9 @@ class TabNet(torch.nn.Module):
         self.virtual_batch_size = virtual_batch_size
         self.embedder = EmbeddingGenerator(input_dim, cat_dims, cat_idxs, cat_emb_dim)
         self.post_embed_dim = self.embedder.post_embed_dim
-        self.tabnet = TabNetNoEmbeddings(self.post_embed_dim, output_dim, n_d, n_a, n_steps,
+        self.feature_embed_widths = self.embedder.feature_embed_widths
+        self.tabnet = TabNetNoEmbeddings(self.post_embed_dim, output_dim,
+                                         self.feature_embed_widths, n_d, n_a, n_steps,
                                          gamma, n_independent, n_shared, epsilon,
                                          virtual_batch_size, momentum, mask_type)
 
@@ -475,6 +505,7 @@ class EmbeddingGenerator(torch.nn.Module):
         super(EmbeddingGenerator, self).__init__()
         if cat_dims == [] or cat_idxs == []:
             self.skip_embedding = True
+            self.feature_embed_widths = None
             self.post_embed_dim = input_dim
             return
 
@@ -504,6 +535,11 @@ class EmbeddingGenerator(torch.nn.Module):
         # record continuous indices
         self.continuous_idx = torch.ones(input_dim, dtype=torch.bool)
         self.continuous_idx[cat_idxs] = 0
+
+        # Record final embedded widths of each feature
+        self.feature_embed_widths = input_dim * [1]
+        for ix, dim in zip(cat_idxs, self.cat_emb_dims):
+            self.feature_embed_widths[ix] = dim
 
     def forward(self, x):
         """

@@ -3,12 +3,10 @@ from typing import List, Any, Dict
 import torch
 from torch.nn.utils import clip_grad_norm_
 import numpy as np
-from scipy.sparse import csc_matrix
 from abc import abstractmethod
 from pytorch_tabnet import tab_network
 from pytorch_tabnet.utils import (
     PredictDataset,
-    create_explain_matrix,
     validate_eval_set,
     create_dataloaders,
     define_device,
@@ -252,13 +250,9 @@ class TabModel(BaseEstimator):
 
             M_explain, masks = self.network.forward_masks(data)
             for key, value in masks.items():
-                masks[key] = csc_matrix.dot(
-                    value.cpu().detach().numpy(), self.reducing_matrix
-                )
+                masks[key] = value.cpu().detach().numpy()
 
-            res_explain.append(
-                csc_matrix.dot(M_explain.cpu().detach().numpy(), self.reducing_matrix)
-            )
+            res_explain.append(M_explain.cpu().detach().numpy())
 
             if batch_nb == 0:
                 res_masks = masks
@@ -481,13 +475,6 @@ class TabModel(BaseEstimator):
             mask_type=self.mask_type,
         ).to(self.device)
 
-        self.reducing_matrix = create_explain_matrix(
-            self.network.input_dim,
-            self.network.cat_emb_dim,
-            self.network.cat_idxs,
-            self.network.post_embed_dim,
-        )
-
     def _set_metrics(self, metrics, eval_names):
         """Set attributes relative to the metrics.
 
@@ -615,15 +602,12 @@ class TabModel(BaseEstimator):
 
         """
         self.network.eval()
-        feature_importances_ = np.zeros((self.network.post_embed_dim))
+        feature_importances_ = np.zeros((self.network.input_dim))
         for data, targets in loader:
             data = data.to(self.device).float()
             M_explain, masks = self.network.forward_masks(data)
             feature_importances_ += M_explain.sum(dim=0).cpu().detach().numpy()
 
-        feature_importances_ = csc_matrix.dot(
-            feature_importances_, self.reducing_matrix
-        )
         self.feature_importances_ = feature_importances_ / np.sum(feature_importances_)
 
     @abstractmethod
