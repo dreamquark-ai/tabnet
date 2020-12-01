@@ -294,3 +294,41 @@ def define_device(device_name):
             return "cpu"
     else:
         return device_name
+
+def get_idxs_dims(data, cat_cols=None):
+    """
+    Returns a dict containing the indexes and 
+    n_unique values of categorical columns
+
+    Parameters
+    ----------
+    data : pandas.DataFrame
+
+    cat_cols : list
+        List of column names of categorical values.
+        If None dtype object is used to guess the
+        categorical columns
+
+    Returns
+    -------
+    dict
+        {idx_nth0: dim_nth0, idx_nth1: dim_nth1, ...}
+        Dict with indexes of categorical columns as keys
+        and n_unique as values
+
+    Usage:
+    cat_dims = get_idxs_dims(df_train, cat_cols=categorical_features)
+
+    clf = TabNetClassifier(cat_idxs=[x for x, _ in cat_dims.items()],
+                           cat_dims=[x for _, x in cat_dims.items()],
+                          )
+    """
+    cat_idxs_dims = {}
+    
+    if cat_cols is None:
+        cat_cols = [col for col, dtype in zip(data.columns,
+                                              data.dtypes) if dtype == 'object']
+    for col in cat_cols:
+        cat_idxs_dims[data.columns.get_loc(col)] = data[col].nunique()
+
+    return cat_idxs_dims
