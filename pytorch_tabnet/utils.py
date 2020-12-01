@@ -297,7 +297,7 @@ def define_device(device_name):
 
 def get_idxs_dims(data, cat_cols=None):
     """
-    Returns a dict containing the indexes and 
+    Returns a dict containing the indexes and
     n_unique values of categorical columns
 
     Parameters
@@ -324,7 +324,7 @@ def get_idxs_dims(data, cat_cols=None):
                           )
     """
     cat_idxs_dims = {}
-    
+
     if cat_cols is None:
         cat_cols = [col for col, dtype in zip(data.columns,
                                               data.dtypes) if dtype == 'object']
