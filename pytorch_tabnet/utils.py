@@ -272,10 +272,23 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
     for name, (X, y) in zip(eval_name, eval_set):
         check_array(X)
         msg = (
+            f"Dimension mismatch between X_{name} "
+            + f"{X.shape} and X_train {X_train.shape}"
+        )
+        assert len(X.shape) == len(X_train.shape), msg
+
+        msg = (
+            f"Dimension mismatch between y_{name} "
+            + f"{y.shape} and y_train {y_train.shape}"
+        )
+        assert len(y.shape) == len(y_train.shape), msg
+
+        msg = (
             f"Number of columns is different between X_{name} "
             + f"({X.shape[1]}) and X_train ({X_train.shape[1]})"
         )
         assert X.shape[1] == X_train.shape[1], msg
+
         if len(y_train.shape) == 2:
             msg = (
                 f"Number of columns is different between y_{name} "
