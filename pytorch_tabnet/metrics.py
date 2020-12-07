@@ -14,7 +14,9 @@ import torch
 
 def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
     """
-    Implements unsupervised loss function
+    Implements unsupervised loss function.
+    This differs from orginal paper as it's scaled to be batch size independent
+    and number of features reconstructed independent (by taking the mean)
 
     Parameters
     ----------
@@ -38,12 +40,10 @@ def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
     reconstruction_errors = torch.mul(errors, obf_vars) ** 2
     batch_stds = torch.std(embedded_x, dim=0) ** 2 + eps
     features_loss = torch.matmul(reconstruction_errors, 1 / batch_stds)
-    # compute the number of non-obfuscated variables
-    nb_used_variables = torch.sum(obf_vars, dim=1)
-    # print(nb_used_variables)
-    # take the mean of the used variable errors
-    # print(features_loss)
-    features_loss = features_loss / (nb_used_variables + eps)
+    # compute the number of obfuscated variables to reconstruct
+    nb_reconstructed_variables = torch.sum(obf_vars, dim=1)
+    # take the mean of the reconstructed variable errors
+    features_loss = features_loss / (nb_reconstructed_variables + eps)
     # here we take the mean per batch, contrary to the paper
     loss = torch.mean(features_loss)
     return loss
