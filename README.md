@@ -132,7 +132,10 @@ clf.fit(
 )
 ```
 
-A complete exemple can be found within the notebook `pretraining_example.ipynb`.
+The loss function has been normalized to be independant of `pretraining_ratio`, `batch_size` and number of features in the problem.
+A self supervised loss greater than 1 means that your model is reconstructing worse than predicting the mean for each feature, a loss bellow 1 means that the model is doing better than predicting the mean.
+
+A complete example can be found within the notebook `pretraining_example.ipynb`.
 
 # Useful links
 
@@ -142,6 +145,7 @@ A complete exemple can be found within the notebook `pretraining_example.ipynb`.
 - [regression examples](https://github.com/dreamquark-ai/tabnet/blob/develop/regression_example.ipynb)
 - [multi-task regression examples](https://github.com/dreamquark-ai/tabnet/blob/develop/multi_regression_example.ipynb)
 - [multi-task multi-class classification examples](https://www.kaggle.com/optimo/tabnetmultitaskclassifier)
+- [kaggle moa 1st place solution using tabnet](https://www.kaggle.com/c/lish-moa/discussion/201510)
 
 ## Model parameters
 
@@ -165,11 +169,16 @@ A complete exemple can be found within the notebook `pretraining_example.ipynb`.
     A value close to 1 will make mask selection least correlated between layers.
     Values range from 1.0 to 2.0.
 
-- `cat_idxs` : list of int (default =[])
+- `cat_idxs` : list of int (default=[] - Mandatory for embeddings) 
 
     List of categorical features indices.
 
-- `cat_emb_dim` : list of int
+- `cat_dims` : list of int (default=[] - Mandatory for embeddings)
+
+    List of categorical features number of modalities (number of unique values for a categorical feature)
+    /!\ no new modalities can be predicted
+
+- `cat_emb_dim` : list of int (optional)
 
     List of embeddings size for each categorical features. (default =1)
 
@@ -182,6 +191,7 @@ A complete exemple can be found within the notebook `pretraining_example.ipynb`.
 
     Number of shared Gated Linear Units at each step
     Usual values range from 1 to 5
+
 - `epsilon` : float  (default 1e-15)
 
     Should be left untouched.
@@ -265,6 +275,8 @@ A complete exemple can be found within the notebook `pretraining_example.ipynb`.
 - `patience` : int (default = 15)
 
     Number of consecutive epochs without improvement before performing early stopping.
+    If patience is set to 0 then no early stopping will be performed.
+    Note that if patience is enabled, best weights from best epoch will automatically be loaded at the end of `fit`.
 
 - weights : int or dict (default=0)
 
@@ -286,7 +298,8 @@ A complete exemple can be found within the notebook `pretraining_example.ipynb`.
 
 - `virtual_batch_size` : int (default=128)
 
-    Size of the mini batches used for "Ghost Batch Normalization"
+    Size of the mini batches used for "Ghost Batch Normalization".
+    /!\ `virtual_batch_size` should divide `batch_size`
 
 - `num_workers` : int (default=0)
 
@@ -298,3 +311,7 @@ A complete exemple can be found within the notebook `pretraining_example.ipynb`.
 
 - `callbacks` : list of callback function  
         List of custom callbacks
+
+- `pretraining_ratio` : float
+        /!\ TabNetPretrainer Only : Percentage of input features to mask during pretraining.
+        Should be between 0 and 1. The bigger the harder the reconstruction task is.
