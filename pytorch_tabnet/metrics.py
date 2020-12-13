@@ -8,6 +8,7 @@ from sklearn.metrics import (
     accuracy_score,
     log_loss,
     balanced_accuracy_score,
+    mean_squared_log_error,
 )
 import torch
 
@@ -345,6 +346,39 @@ class MSE(Metric):
             MSE of predictions vs targets.
         """
         return mean_squared_error(y_true, y_score)
+
+
+class RMSLE(Metric):
+    """
+    Mean squared logarithmic error regression loss.
+    Scikit-imeplementation:
+    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html
+    Note: In order to avoid error, negative predictions are clipped to 0.
+    This means that you should clip negative predictions manually after calling predict.
+    """
+
+    def __init__(self):
+        self._name = "rmsle"
+        self._maximize = False
+
+    def __call__(self, y_true, y_score):
+        """
+        Compute RMSLE of predictions.
+
+        Parameters
+        ----------
+        y_true : np.ndarray
+            Target matrix or vector
+        y_score : np.ndarray
+            Score matrix or vector
+
+        Returns
+        -------
+        float
+            RMSLE of predictions vs targets.
+        """
+        y_score = np.clip(y_score, a_min=0, a_max=None)
+        return mean_squared_log_error(y_true, y_score)
 
 
 class UnsupervisedMetric(Metric):

@@ -70,7 +70,21 @@ clf.fit(
 preds = clf.predict(X_test)
 ```
 
-### Custom early_stopping_metrics
+### Default eval_metric
+
+A few classical evaluation metrics are implemented (see bellow section for custom ones):
+- binary classification metrics : 'auc', 'accuracy', 'balanced_accuracy', 'logloss'
+- multiclass classification : 'accuracy', 'balanced_accuracy', 'logloss'
+- regression: 'mse', 'mae', 'rmse', 'rmsle'
+
+
+Important Note : 'rmsle' will automatically clip negative predictions to 0, because the model can predict negative values.
+In order to match the given scores, you need to use `np.clip(clf.predict(X_predict), a_min=0, a_max=None)` when doing predictions.
+
+
+### Custom evaluation metrics
+
+It's easy to create a metric that matches your specific need. Here is an example for gini score (note that you need to specifiy whether this metric should be maximized or not):
 
 ```python
 from pytorch_tabnet.metrics import Metric
@@ -136,6 +150,9 @@ The loss function has been normalized to be independant of `pretraining_ratio`, 
 A self supervised loss greater than 1 means that your model is reconstructing worse than predicting the mean for each feature, a loss bellow 1 means that the model is doing better than predicting the mean.
 
 A complete example can be found within the notebook `pretraining_example.ipynb`.
+
+/!\ : current implementation is trying to reconstruct the original inputs, but Batch Normalization applies a random transformation that can't be deduced by a single line, making the reconstruction harder. Lowering the `batch_size` might make the pretraining easier.
+
 
 # Useful links
 
@@ -275,10 +292,12 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 - `patience` : int (default = 15)
 
     Number of consecutive epochs without improvement before performing early stopping.
+
     If patience is set to 0 then no early stopping will be performed.
+
     Note that if patience is enabled, best weights from best epoch will automatically be loaded at the end of `fit`.
 
-- weights : int or dict (default=0)
+- `weights` : int or dict (default=0)
 
     /!\ Only for TabNetClassifier
     Sampling parameter
@@ -313,5 +332,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
         List of custom callbacks
 
 - `pretraining_ratio` : float
+
         /!\ TabNetPretrainer Only : Percentage of input features to mask during pretraining.
+
         Should be between 0 and 1. The bigger the harder the reconstruction task is.
