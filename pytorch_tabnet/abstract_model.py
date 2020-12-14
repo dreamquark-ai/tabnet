@@ -28,6 +28,8 @@ import json
 from pathlib import Path
 import shutil
 import zipfile
+import warnings
+import copy
 
 
 @dataclass
@@ -60,11 +62,41 @@ class TabModel(BaseEstimator):
 
     def __post_init__(self):
         self.batch_size = 1024
-        self.virtual_batch_size = 1024
+        self.virtual_batch_size = 128
         torch.manual_seed(self.seed)
         # Defining device
         self.device = torch.device(define_device(self.device_name))
-        print(f"Device used : {self.device}")
+        if self.verbose != 0:
+            print(f"Device used : {self.device}")
+
+    def __update__(self, **kwargs):
+        """
+        Updates parameters.
+        If does not already exists, creates it.
+        Otherwise overwrite with warnings.
+        """
+        update_list = [
+            "cat_dims",
+            "cat_emb_dim",
+            "cat_idxs",
+            "input_dim",
+            "mask_type",
+            "n_a",
+            "n_d",
+            "n_independent",
+            "n_shared",
+            "n_steps",
+        ]
+        for var_name, value in kwargs.items():
+            if var_name in update_list:
+                try:
+                    exec(f"global previous_val; previous_val = self.{var_name}")
+                    if previous_val != value:  # noqa
+                        wrn_msg = f"Pretraining: {var_name} changed from {previous_val} to {value}"  # noqa
+                        warnings.warn(wrn_msg)
+                        exec(f"self.{var_name} = value")
+                except AttributeError:
+                    exec(f"self.{var_name} = value")
 
     def fit(
         self,
@@ -82,7 +114,8 @@ class TabModel(BaseEstimator):
         num_workers=0,
         drop_last=False,
         callbacks=None,
-        pin_memory=True
+        pin_memory=True,
+        from_unsupervised=None,
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -124,6 +157,8 @@ class TabModel(BaseEstimator):
             List of custom callbacks
         pin_memory: bool
             Whether to set pin_memory to True or False during training
+        from_unsupervised: unsupervised trained model
+            Use a previously self supervised model as starting weights
         """
         # update model name
 
@@ -135,7 +170,7 @@ class TabModel(BaseEstimator):
         self.drop_last = drop_last
         self.input_dim = X_train.shape[1]
         self._stop_training = False
-        self.pin_memory = pin_memory and (self.device.type != 'cpu')
+        self.pin_memory = pin_memory and (self.device.type != "cpu")
 
         eval_set = eval_set if eval_set else []
 
@@ -147,7 +182,10 @@ class TabModel(BaseEstimator):
         check_array(X_train)
 
         self.update_fit_params(
-            X_train, y_train, eval_set, weights,
+            X_train,
+            y_train,
+            eval_set,
+            weights,
         )
 
         # Validate and reformat eval set depending on training data
@@ -157,10 +195,20 @@ class TabModel(BaseEstimator):
             X_train, y_train, eval_set
         )
 
-        self._set_network()
+        if from_unsupervised is not None:
+            # Update parameters to match self pretraining
+            self.__update__(**from_unsupervised.get_params())
+
+        if not hasattr(self, "network"):
+            self._set_network()
+        self._update_network_params()
         self._set_metrics(eval_metric, eval_names)
         self._set_optimizer()
         self._set_callbacks(callbacks)
+
+        if from_unsupervised is not None:
+            print("Loading weights from unsupervised pretraining")
+            self.load_weights_from_unsupervised(from_unsupervised)
 
         # Call method on_train_begin for all callbacks
         self._callback_container.on_train_begin()
@@ -178,8 +226,9 @@ class TabModel(BaseEstimator):
                 self._predict_epoch(eval_name, valid_dataloader)
 
             # Call method on_epoch_end for all callbacks
-            self._callback_container.on_epoch_end(epoch_idx,
-                                                  logs=self.history.epoch_metrics)
+            self._callback_container.on_epoch_end(
+                epoch_idx, logs=self.history.epoch_metrics
+            )
 
             if self._stop_training:
                 break
@@ -270,6 +319,20 @@ class TabModel(BaseEstimator):
 
         return res_explain, res_masks
 
+    def load_weights_from_unsupervised(self, unsupervised_model):
+        update_state_dict = copy.deepcopy(self.network.state_dict())
+        for param, weights in unsupervised_model.network.state_dict().items():
+            if param.startswith("encoder"):
+                # Convert encoder's layers name to match
+                new_param = "tabnet." + param
+            else:
+                new_param = param
+            if self.network.state_dict().get(new_param) is not None:
+                # update only common layers
+                update_state_dict[new_param] = weights
+
+        self.network.load_state_dict(update_state_dict)
+
     def save_model(self, path):
         """Saving TabNet model in two distinct files.
 
@@ -318,6 +381,7 @@ class TabModel(BaseEstimator):
             with zipfile.ZipFile(filepath) as z:
                 with z.open("model_params.json") as f:
                     loaded_params = json.load(f)
+                    loaded_params["device_name"] = self.device_name
                 with z.open("network.pt") as f:
                     try:
                         saved_state_dict = torch.load(f, map_location=self.device)
@@ -337,6 +401,7 @@ class TabModel(BaseEstimator):
         self._set_network()
         self.network.load_state_dict(saved_state_dict)
         self.network.eval()
+
         return
 
     def _train_epoch(self, train_loader):
@@ -415,7 +480,7 @@ class TabModel(BaseEstimator):
         loader : torch.utils.data.Dataloader
                 DataLoader with validation set
         """
-        # Setting network on evaluation mode (no dropout etc...)
+        # Setting network on evaluation mode
         self.network.eval()
 
         list_y_true = []
@@ -477,7 +542,6 @@ class TabModel(BaseEstimator):
             epsilon=self.epsilon,
             virtual_batch_size=self.virtual_batch_size,
             momentum=self.momentum,
-            device_name=self.device_name,
             mask_type=self.mask_type,
         ).to(self.device)
 
@@ -543,7 +607,9 @@ class TabModel(BaseEstimator):
             )
             callbacks.append(early_stopping)
         else:
-            print("No early stopping will be performed, last training weights will be used.")
+            print(
+                "No early stopping will be performed, last training weights will be used."
+            )
         if self.scheduler_fn is not None:
             # Add LR Scheduler call_back
             is_batch_level = self.scheduler_params.pop("is_batch_level", False)
@@ -625,6 +691,9 @@ class TabModel(BaseEstimator):
             feature_importances_, self.reducing_matrix
         )
         self.feature_importances_ = feature_importances_ / np.sum(feature_importances_)
+
+    def _update_network_params(self):
+        self.network.virtual_batch_size = self.virtual_batch_size
 
     @abstractmethod
     def update_fit_params(self, X_train, y_train, eval_set, weights):
