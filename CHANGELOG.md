@@ -1,4 +1,23 @@
 
+# [3.0.0](https://github.com/dreamquark-ai/tabnet/compare/v2.0.1...v3.0.0) (2020-12-15)
+
+
+### Bug Fixes
+
+* checknan allow string as targets ([855befc](https://github.com/dreamquark-ai/tabnet/commit/855befc5a2cd153509b8c93eccdea866bf094a29))
+* deactivate pin memory when device is cpu ([bd0b96f](https://github.com/dreamquark-ai/tabnet/commit/bd0b96f4f61c44b58713f60a030094cc21edb6e3))
+* fixed docstring issues ([d216fbf](https://github.com/dreamquark-ai/tabnet/commit/d216fbfa4dadd6c8d4110fa8da0f1c0bdfdccc2d))
+* load from cpu when saved on gpu ([451bd86](https://github.com/dreamquark-ai/tabnet/commit/451bd8669038ddf7869843f45ca872ae92e2260d))
+
+
+### Features
+
+* add new default metrics ([0fe5b72](https://github.com/dreamquark-ai/tabnet/commit/0fe5b72b60e894fae821488c0d4c34752309fc26))
+* enable self supervised pretraining ([d4af838](https://github.com/dreamquark-ai/tabnet/commit/d4af838d375128b3d62e17622ec8e0a558faf1b7))
+* mask-dependent loss ([64052b0](https://github.com/dreamquark-ai/tabnet/commit/64052b0f816eb9d63008347783cd1fe655be3088))
+
+
+
 ## [2.0.1](https://github.com/dreamquark-ai/tabnet/compare/v2.0.0...v2.0.1) (2020-10-15)
 
 

@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -185,6 +186,8 @@
 <span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
 <span class="kn">import</span> <span class="nn">zipfile</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">copy</span>
 
 
 <div class="viewcode-block" id="TabModel"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel">[docs]</a><span class="nd">@dataclass</span>
@@ -217,11 +220,41 @@
 
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">1024</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="mi">1024</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="mi">128</span>
         <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
         <span class="c1"># Defining device</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">define_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">))</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device used : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device used : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__update__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates parameters.</span>
+<span class="sd">        If does not already exists, creates it.</span>
+<span class="sd">        Otherwise overwrite with warnings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">update_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;cat_dims&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cat_emb_dim&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cat_idxs&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;input_dim&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mask_type&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_a&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_d&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_independent&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_shared&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_steps&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">update_list</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">exec</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;global previous_val; previous_val = self.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">previous_val</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>  <span class="c1"># noqa</span>
+                        <span class="n">wrn_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Pretraining: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> changed from </span><span class="si">{</span><span class="n">previous_val</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">wrn_msg</span><span class="p">)</span>
+                        <span class="n">exec</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;self.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> = value&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="n">exec</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;self.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> = value&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TabModel.fit"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -239,7 +272,8 @@
         <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span>
+        <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">from_unsupervised</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Train a neural network stored in self.network</span>
 <span class="sd">        Using train_dataloader for training data and</span>
@@ -281,6 +315,8 @@
 <span class="sd">            List of custom callbacks</span>
 <span class="sd">        pin_memory: bool</span>
 <span class="sd">            Whether to set pin_memory to True or False during training</span>
+<span class="sd">        from_unsupervised: unsupervised trained model</span>
+<span class="sd">            Use a previously self supervised model as starting weights</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># update model name</span>
 
@@ -292,7 +328,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span> <span class="o">=</span> <span class="n">drop_last</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stop_training</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pin_memory</span> <span class="o">=</span> <span class="n">pin_memory</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pin_memory</span> <span class="o">=</span> <span class="n">pin_memory</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 
         <span class="n">eval_set</span> <span class="o">=</span> <span class="n">eval_set</span> <span class="k">if</span> <span class="n">eval_set</span> <span class="k">else</span> <span class="p">[]</span>
 
@@ -304,7 +340,10 @@
         <span class="n">check_array</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">update_fit_params</span><span class="p">(</span>
-            <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span>
+            <span class="n">X_train</span><span class="p">,</span>
+            <span class="n">y_train</span><span class="p">,</span>
+            <span class="n">eval_set</span><span class="p">,</span>
+            <span class="n">weights</span><span class="p">,</span>
         <span class="p">)</span>
 
         <span class="c1"># Validate and reformat eval set depending on training data</span>
@@ -314,10 +353,20 @@
             <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span>
         <span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_set_network</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">from_unsupervised</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Update parameters to match self pretraining</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__update__</span><span class="p">(</span><span class="o">**</span><span class="n">from_unsupervised</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;network&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_network</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_network_params</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_metrics</span><span class="p">(</span><span class="n">eval_metric</span><span class="p">,</span> <span class="n">eval_names</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_optimizer</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">(</span><span class="n">callbacks</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">from_unsupervised</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading weights from unsupervised pretraining&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_weights_from_unsupervised</span><span class="p">(</span><span class="n">from_unsupervised</span><span class="p">)</span>
 
         <span class="c1"># Call method on_train_begin for all callbacks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_train_begin</span><span class="p">()</span>
@@ -335,8 +384,9 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_predict_epoch</span><span class="p">(</span><span class="n">eval_name</span><span class="p">,</span> <span class="n">valid_dataloader</span><span class="p">)</span>
 
             <span class="c1"># Call method on_epoch_end for all callbacks</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_epoch_end</span><span class="p">(</span><span class="n">epoch_idx</span><span class="p">,</span>
-                                                  <span class="n">logs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">epoch_metrics</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_epoch_end</span><span class="p">(</span>
+                <span class="n">epoch_idx</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">epoch_metrics</span>
+            <span class="p">)</span>
 
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stop_training</span><span class="p">:</span>
                 <span class="k">break</span>
@@ -427,6 +477,20 @@
 
         <span class="k">return</span> <span class="n">res_explain</span><span class="p">,</span> <span class="n">res_masks</span></div>
 
+<div class="viewcode-block" id="TabModel.load_weights_from_unsupervised"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.load_weights_from_unsupervised">[docs]</a>    <span class="k">def</span> <span class="nf">load_weights_from_unsupervised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unsupervised_model</span><span class="p">):</span>
+        <span class="n">update_state_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">weights</span> <span class="ow">in</span> <span class="n">unsupervised_model</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">):</span>
+                <span class="c1"># Convert encoder&#39;s layers name to match</span>
+                <span class="n">new_param</span> <span class="o">=</span> <span class="s2">&quot;tabnet.&quot;</span> <span class="o">+</span> <span class="n">param</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_param</span> <span class="o">=</span> <span class="n">param</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">new_param</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># update only common layers</span>
+                <span class="n">update_state_dict</span><span class="p">[</span><span class="n">new_param</span><span class="p">]</span> <span class="o">=</span> <span class="n">weights</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">update_state_dict</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="TabModel.save_model"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.save_model">[docs]</a>    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Saving TabNet model in two distinct files.</span>
 
@@ -475,6 +539,7 @@
             <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
                 <span class="k">with</span> <span class="n">z</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;model_params.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                     <span class="n">loaded_params</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="n">loaded_params</span><span class="p">[</span><span class="s2">&quot;device_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span>
                 <span class="k">with</span> <span class="n">z</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;network.pt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="n">saved_state_dict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
@@ -494,6 +559,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_network</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">saved_state_dict</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
         <span class="k">return</span></div>
 
     <span class="k">def</span> <span class="nf">_train_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">):</span>
@@ -572,7 +638,7 @@
 <span class="sd">        loader : torch.utils.data.Dataloader</span>
 <span class="sd">                DataLoader with validation set</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># Setting network on evaluation mode (no dropout etc...)</span>
+        <span class="c1"># Setting network on evaluation mode</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
         <span class="n">list_y_true</span> <span class="o">=</span> <span class="p">[]</span>
@@ -634,7 +700,6 @@
             <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">,</span>
             <span class="n">virtual_batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span><span class="p">,</span>
             <span class="n">momentum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">,</span>
-            <span class="n">device_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">,</span>
             <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
         <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
@@ -700,7 +765,9 @@
             <span class="p">)</span>
             <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">early_stopping</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;No early stopping will be performed, last training weights will be used.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;No early stopping will be performed, last training weights will be used.&quot;</span>
+            <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Add LR Scheduler call_back</span>
             <span class="n">is_batch_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;is_batch_level&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
@@ -782,6 +849,9 @@
             <span class="n">feature_importances_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducing_matrix</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">feature_importances_</span> <span class="o">=</span> <span class="n">feature_importances_</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">feature_importances_</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update_network_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span>
 
 <div class="viewcode-block" id="TabModel.update_fit_params"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.update_fit_params">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">update_fit_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>

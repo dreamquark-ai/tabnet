@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -283,6 +284,11 @@
         <span class="n">eval_set</span><span class="p">,</span>
         <span class="n">weights</span>
     <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Targets should be 2D : (n_samples, n_regression) &quot;</span> <span class="o">+</span> \
+                  <span class="sa">f</span><span class="s2">&quot;but y_train.shape=</span><span class="si">{</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> given.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> \
+                  <span class="s2">&quot;Use reshape(-1, 1) for single regression.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">output_dim</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">updated_weights</span> <span class="o">=</span> <span class="n">weights</span>

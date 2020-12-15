@@ -99,9 +99,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#how-to-use-it">How to use it?</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#custom-early-stopping-metrics">Custom early_stopping_metrics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#default-eval-metric">Default eval_metric</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-evaluation-metrics">Custom evaluation metrics</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#useful-links">Useful links</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#model-parameters">Model parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fit-parameters">Fit parameters</a></li>
@@ -229,7 +231,7 @@
 <div class="section" id="how-to-use-it">
 <h1>How to use it?<a class="headerlink" href="#how-to-use-it" title="Permalink to this headline">¶</a></h1>
 <p>TabNet is now scikit-compatible, training a TabNetClassifier or TabNetRegressor is really easy.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.tab_model</span> <span class="kn">import</span> <span class="n">TabNetClassifier</span><span class="p">,</span> <span class="n">TabNetRegressor</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.tab_model</span> <span class="kn">import</span> <span class="n">TabNetClassifier</span><span class="p">,</span> <span class="n">TabNetRegressor</span>
 
 <span class="n">clf</span> <span class="o">=</span> <span class="n">TabNetClassifier</span><span class="p">()</span>  <span class="c1">#TabNetRegressor()</span>
 <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
@@ -240,7 +242,7 @@
 </pre></div>
 </div>
 <p>or for TabNetMultiTaskClassifier :</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.multitask</span> <span class="kn">import</span> <span class="n">TabNetMultiTaskClassifier</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.multitask</span> <span class="kn">import</span> <span class="n">TabNetMultiTaskClassifier</span>
 <span class="n">clf</span> <span class="o">=</span> <span class="n">TabNetMultiTaskClassifier</span><span class="p">()</span>
 <span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
   <span class="n">X_train</span><span class="p">,</span> <span class="n">Y_train</span><span class="p">,</span>
@@ -249,9 +251,21 @@
 <span class="n">preds</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="section" id="custom-early-stopping-metrics">
-<h2>Custom early_stopping_metrics<a class="headerlink" href="#custom-early-stopping-metrics" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
+<div class="section" id="default-eval-metric">
+<h2>Default eval_metric<a class="headerlink" href="#default-eval-metric" title="Permalink to this headline">¶</a></h2>
+<p>A few classical evaluation metrics are implemented (see bellow section for custom ones):</p>
+<ul class="simple">
+<li><p>binary classification metrics : ‘auc’, ‘accuracy’, ‘balanced_accuracy’, ‘logloss’</p></li>
+<li><p>multiclass classification : ‘accuracy’, ‘balanced_accuracy’, ‘logloss’</p></li>
+<li><p>regression: ‘mse’, ‘mae’, ‘rmse’, ‘rmsle’</p></li>
+</ul>
+<p>Important Note : ‘rmsle’ will automatically clip negative predictions to 0, because the model can predict negative values.
+In order to match the given scores, you need to use <code class="docutils literal notranslate"><span class="pre">np.clip(clf.predict(X_predict),</span> <span class="pre">a_min=0,</span> <span class="pre">a_max=None)</span></code> when doing predictions.</p>
+</div>
+<div class="section" id="custom-evaluation-metrics">
+<h2>Custom evaluation metrics<a class="headerlink" href="#custom-evaluation-metrics" title="Permalink to this headline">¶</a></h2>
+<p>It’s easy to create a metric that matches your specific need. Here is an example for gini score (note that you need to specifiy whether this metric should be maximized or not):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
 <span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_auc_score</span>
 
 <span class="k">class</span> <span class="nc">Gini</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
@@ -274,6 +288,45 @@
 <p>A specific customization example notebook is available here : https://github.com/dreamquark-ai/tabnet/blob/develop/customizing_example.ipynb</p>
 </div>
 </div>
+<div class="section" id="semi-supervised-pre-training">
+<h1>Semi-supervised pre-training<a class="headerlink" href="#semi-supervised-pre-training" title="Permalink to this headline">¶</a></h1>
+<p>Added later to TabNet’s original paper, semi-supervised pre-training is now available via the class <code class="docutils literal notranslate"><span class="pre">TabNetPretrainer</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># TabNetPretrainer</span>
+<span class="n">unsupervised_model</span> <span class="o">=</span> <span class="n">TabNetPretrainer</span><span class="p">(</span>
+    <span class="n">optimizer_fn</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
+    <span class="n">optimizer_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">2e-2</span><span class="p">),</span>
+    <span class="n">mask_type</span><span class="o">=</span><span class="s1">&#39;entmax&#39;</span> <span class="c1"># &quot;sparsemax&quot;</span>
+<span class="p">)</span>
+
+<span class="n">unsupervised_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span>
+    <span class="n">eval_set</span><span class="o">=</span><span class="p">[</span><span class="n">X_valid</span><span class="p">],</span>
+    <span class="n">pretraining_ratio</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">clf</span> <span class="o">=</span> <span class="n">TabNetClassifier</span><span class="p">(</span>
+    <span class="n">optimizer_fn</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">,</span>
+    <span class="n">optimizer_params</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">2e-2</span><span class="p">),</span>
+    <span class="n">scheduler_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;step_size&quot;</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="c1"># how to use learning rate scheduler</span>
+                      <span class="s2">&quot;gamma&quot;</span><span class="p">:</span><span class="mf">0.9</span><span class="p">},</span>
+    <span class="n">scheduler_fn</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">StepLR</span><span class="p">,</span>
+    <span class="n">mask_type</span><span class="o">=</span><span class="s1">&#39;sparsemax&#39;</span> <span class="c1"># This will be overwritten if using pretrain model</span>
+<span class="p">)</span>
+
+<span class="n">clf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">X_train</span><span class="o">=</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="o">=</span><span class="n">y_train</span><span class="p">,</span>
+    <span class="n">eval_set</span><span class="o">=</span><span class="p">[(</span><span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">),</span> <span class="p">(</span><span class="n">X_valid</span><span class="p">,</span> <span class="n">y_valid</span><span class="p">)],</span>
+    <span class="n">eval_name</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;train&#39;</span><span class="p">,</span> <span class="s1">&#39;valid&#39;</span><span class="p">],</span>
+    <span class="n">eval_metric</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;auc&#39;</span><span class="p">],</span>
+    <span class="n">from_unsupervised</span><span class="o">=</span><span class="n">unsupervised_model</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>The loss function has been normalized to be independant of <code class="docutils literal notranslate"><span class="pre">pretraining_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> and number of features in the problem.
+A self supervised loss greater than 1 means that your model is reconstructing worse than predicting the mean for each feature, a loss bellow 1 means that the model is doing better than predicting the mean.</p>
+<p>A complete example can be found within the notebook <code class="docutils literal notranslate"><span class="pre">pretraining_example.ipynb</span></code>.</p>
+<p>/!\ : current implementation is trying to reconstruct the original inputs, but Batch Normalization applies a random transformation that can’t be deduced by a single line, making the reconstruction harder. Lowering the <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> might make the pretraining easier.</p>
+</div>
 <div class="section" id="useful-links">
 <h1>Useful links<a class="headerlink" href="#useful-links" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
@@ -283,127 +336,142 @@
 <li><p><a class="reference external" href="https://github.com/dreamquark-ai/tabnet/blob/develop/regression_example.ipynb">regression examples</a></p></li>
 <li><p><a class="reference external" href="https://github.com/dreamquark-ai/tabnet/blob/develop/multi_regression_example.ipynb">multi-task regression examples</a></p></li>
 <li><p><a class="reference external" href="https://www.kaggle.com/optimo/tabnetmultitaskclassifier">multi-task multi-class classification examples</a></p></li>
+<li><p><a class="reference external" href="https://www.kaggle.com/c/lish-moa/discussion/201510">kaggle moa 1st place solution using tabnet</a></p></li>
 </ul>
 <div class="section" id="model-parameters">
 <h2>Model parameters<a class="headerlink" href="#model-parameters" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p>n_d : int (default=8)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_d</span></code> : int (default=8)</p>
 <p>Width of the decision prediction layer. Bigger values gives more capacity to the model with the risk of overfitting.
 Values typically range from 8 to 64.</p>
 </li>
-<li><p>n_a : int (default=8)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_a</span></code>: int (default=8)</p>
 <p>Width of the attention embedding for each mask.
 According to the paper n_d=n_a is usually a good choice. (default=8)</p>
 </li>
-<li><p>n_steps : int (default=3)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_steps</span></code> : int (default=3)</p>
 <p>Number of steps in the architecture (usually between 3 and 10)</p>
 </li>
-<li><p>gamma : float  (default=1.3)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">gamma</span></code> : float  (default=1.3)</p>
 <p>This is the coefficient for feature reusage in the masks.
 A value close to 1 will make mask selection least correlated between layers.
 Values range from 1.0 to 2.0.</p>
 </li>
-<li><p>cat_idxs : list of int (default =[])</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">cat_idxs</span></code> : list of int (default=[] - Mandatory for embeddings)</p>
 <p>List of categorical features indices.</p>
 </li>
-<li><p>cat_emb_dim : list of int</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">cat_dims</span></code> : list of int (default=[] - Mandatory for embeddings)</p>
+<p>List of categorical features number of modalities (number of unique values for a categorical feature)
+/!\ no new modalities can be predicted</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cat_emb_dim</span></code> : list of int (optional)</p>
 <p>List of embeddings size for each categorical features. (default =1)</p>
 </li>
-<li><p>n_independent : int  (default=2)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_independent</span></code> : int  (default=2)</p>
 <p>Number of independent Gated Linear Units layers at each step.
 Usual values range from 1 to 5.</p>
 </li>
-<li><p>n_shared : int (default=2)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_shared</span></code> : int (default=2)</p>
 <p>Number of shared Gated Linear Units at each step
 Usual values range from 1 to 5</p>
 </li>
-<li><p>epsilon : float  (default 1e-15)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">epsilon</span></code> : float  (default 1e-15)</p>
 <p>Should be left untouched.</p>
 </li>
-<li><p>seed : int (default=0)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">seed</span></code> : int (default=0)</p>
 <p>Random seed for reproducibility</p>
 </li>
-<li><p>momentum : float</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">momentum</span></code> : float</p>
 <p>Momentum for batch normalization, typically ranges from 0.01 to 0.4 (default=0.02)</p>
 </li>
-<li><p>clip_value : float (default None)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">clip_value</span></code> : float (default None)</p>
 <p>If a float is given this will clip the gradient at clip_value.</p>
 </li>
-<li><p>lambda_sparse : float (default = 1e-3)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">lambda_sparse</span></code> : float (default = 1e-3)</p>
 <p>This is the extra sparsity loss coefficient as proposed in the original paper. The bigger this coefficient is, the sparser your model will be in terms of feature selection. Depending on the difficulty of your problem, reducing this value could help.</p>
 </li>
-<li><p>optimizer_fn : torch.optim (default=torch.optim.Adam)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizer_fn</span></code> : torch.optim (default=torch.optim.Adam)</p>
 <p>Pytorch optimizer function</p>
 </li>
-<li><p>optimizer_params: dict (default=dict(lr=2e-2))</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">optimizer_params</span></code>: dict (default=dict(lr=2e-2))</p>
 <p>Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning of <code class="docutils literal notranslate"><span class="pre">0.02</span> </code>  with decay is a good option.</p>
 </li>
-<li><p>scheduler_fn : torch.optim.lr_scheduler (default=None)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">scheduler_fn</span></code> : torch.optim.lr_scheduler (default=None)</p>
 <p>Pytorch Scheduler to change learning rates during training.</p>
 </li>
-<li><p>scheduler_params : dict</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">scheduler_params</span></code> : dict</p>
 <p>Dictionnary of parameters to apply to the scheduler_fn. Ex : {“gamma”: 0.95, “step_size”: 10}</p>
 </li>
-<li><p>model_name : str (default = ‘DreamQuarkTabNet’)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">model_name</span></code> : str (default = ‘DreamQuarkTabNet’)</p>
 <p>Name of the model used for saving in disk, you can customize this to easily retrieve and reuse your trained models.</p>
 </li>
-<li><p>saving_path : str (default = ‘./’)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">saving_path</span></code> : str (default = ‘./’)</p>
 <p>Path defining where to save models.</p>
 </li>
-<li><p>verbose : int (default=1)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code> : int (default=1)</p>
 <p>Verbosity for notebooks plots, set to 1 to see every epoch, 0 to get None.</p>
 </li>
-<li><p>device_name : str (default=’auto’)
+<li><p><code class="docutils literal notranslate"><span class="pre">device_name</span></code> : str (default=’auto’)
 ‘cpu’ for cpu training, ‘gpu’ for gpu training, ‘auto’ to automatically detect gpu.</p></li>
-<li><p>mask_type: str (default=’sparsemax’)
+<li><p><code class="docutils literal notranslate"><span class="pre">mask_type:</span> <span class="pre">str</span></code> (default=’sparsemax’)
 Either “sparsemax” or “entmax” : this is the masking function to use for selecting features</p></li>
 </ul>
 </div>
 <div class="section" id="fit-parameters">
 <h2>Fit parameters<a class="headerlink" href="#fit-parameters" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p>X_train : np.array</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code> : np.array</p>
 <p>Training features</p>
 </li>
-<li><p>y_train : np.array</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code> : np.array</p>
 <p>Training targets</p>
 </li>
-<li><p>eval_set: list of tuple</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">eval_set</span></code>: list of tuple</p>
 <p>List of eval tuple set (X, y).<br />The last one is used for early stopping</p>
 </li>
-<li><p>eval_name: list of str<br />List of eval set names.</p></li>
-<li><p>eval_metric : list of str<br />List of evaluation metrics.<br />The last metric is used for early stopping.</p></li>
-<li><p>max_epochs : int (default = 200)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">eval_name</span></code>: list of str<br />List of eval set names.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eval_metric</span></code> : list of str<br />List of evaluation metrics.<br />The last metric is used for early stopping.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_epochs</span></code> : int (default = 200)</p>
 <p>Maximum number of epochs for trainng.</p>
 </li>
-<li><p>patience : int (default = 15)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">patience</span></code> : int (default = 15)</p>
 <p>Number of consecutive epochs without improvement before performing early stopping.</p>
+<p>If patience is set to 0 then no early stopping will be performed.</p>
+<p>Note that if patience is enabled, best weights from best epoch will automatically be loaded at the end of <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p>
 </li>
-<li><p>weights : int or dict (default=0)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">weights</span></code> : int or dict (default=0)</p>
 <p>/!\ Only for TabNetClassifier
 Sampling parameter
 0 : no sampling
 1 : automated sampling with inverse class occurences
 dict : keys are classes, values are weights for each class</p>
 </li>
-<li><p>loss_fn : torch.loss or list of torch.loss</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">loss_fn</span></code> : torch.loss or list of torch.loss</p>
 <p>Loss function for training (default to mse for regression and cross entropy for classification)
 When using TabNetMultiTaskClassifier you can set a list of same length as number of tasks,
 each task will be assigned its own loss function</p>
 </li>
-<li><p>batch_size : int (default=1024)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code> : int (default=1024)</p>
 <p>Number of examples per batch, large batch sizes are recommended.</p>
 </li>
-<li><p>virtual_batch_size : int (default=128)</p>
-<p>Size of the mini batches used for “Ghost Batch Normalization”</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">virtual_batch_size</span></code> : int (default=128)</p>
+<p>Size of the mini batches used for “Ghost Batch Normalization”.
+/!\ <code class="docutils literal notranslate"><span class="pre">virtual_batch_size</span></code> should divide <code class="docutils literal notranslate"><span class="pre">batch_size</span></code></p>
 </li>
-<li><p>num_workers : int (default=0)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">num_workers</span></code> : int (default=0)</p>
 <p>Number or workers used in torch.utils.data.Dataloader</p>
 </li>
-<li><p>drop_last : bool (default=False)</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">drop_last</span></code> : bool (default=False)</p>
 <p>Whether to drop last batch if not complete during training</p>
 </li>
-<li><p>callbacks : list of callback function<br />List of custom callbacks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">callbacks</span></code> : list of callback function<br />List of custom callbacks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pretraining_ratio</span></code> : float</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>  /!\ TabNetPretrainer Only : Percentage of input features to mask during pretraining.
+
+  Should be between 0 and 1. The bigger the harder the reconstruction task is.
+</pre></div>
+</div>
+</li>
 </ul>
 </div>
 </div>

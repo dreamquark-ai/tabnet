@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -224,7 +225,11 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Not implemented</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">pass</span>
+    <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;&quot;&quot;Given labels are of size </span><span class="si">{</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> while they should be (n_samples,) </span><span class="se">\n</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="o">+</span> <span class="s2">&quot;&quot;&quot;If attempting multilabel classification, try using TabNetMultiTaskClassification &quot;&quot;&quot;</span>
+        <span class="o">+</span> <span class="s2">&quot;&quot;&quot;or TabNetRegressor&quot;&quot;&quot;</span>
+    <span class="p">)</span>
 
 
 <span class="n">_FN_UNIQUE_LABELS</span> <span class="o">=</span> <span class="p">{</span>
@@ -297,7 +302,7 @@
 
 
 <div class="viewcode-block" id="is_multilabel"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.is_multilabel">[docs]</a><span class="k">def</span> <span class="nf">is_multilabel</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Check if ``y`` is in a multilabel format.</span>
+    <span class="sd">&quot;&quot;&quot;Check if ``y`` is in a multilabel format.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -551,17 +556,15 @@
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;&quot;&quot;y_train shoud be of shape (n_examples, n_tasks) &quot;&quot;&quot;</span>
-            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;but got </span><span class="si">{</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+            <span class="s2">&quot;y_train shoud be of shape (n_examples, n_tasks)&quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
     <span class="n">nb_tasks</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
     <span class="n">tasks_dims</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">tasks_labels</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">task_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_tasks</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">output_dim</span><span class="p">,</span> <span class="n">train_labels</span> <span class="o">=</span> <span class="n">infer_output_dim</span><span class="p">(</span>
-                <span class="n">y_train</span><span class="p">[:,</span> <span class="n">task_idx</span><span class="p">]</span>
-            <span class="p">)</span>
+            <span class="n">output_dim</span><span class="p">,</span> <span class="n">train_labels</span> <span class="o">=</span> <span class="n">infer_output_dim</span><span class="p">(</span><span class="n">y_train</span><span class="p">[:,</span> <span class="n">task_idx</span><span class="p">])</span>
             <span class="n">tasks_dims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output_dim</span><span class="p">)</span>
             <span class="n">tasks_labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">train_labels</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>

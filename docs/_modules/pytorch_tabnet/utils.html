@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -208,6 +209,55 @@
         <span class="k">return</span> <span class="n">x</span></div>
 
 
+<div class="viewcode-block" id="create_sampler"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_sampler">[docs]</a><span class="k">def</span> <span class="nf">create_sampler</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This creates a sampler from the given weights</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    weights : either 0, 1, dict or iterable</span>
+<span class="sd">        if 0 (default) : no weights will be applied</span>
+<span class="sd">        if 1 : classification only, will balanced class with inverse frequency</span>
+<span class="sd">        if dict : keys are corresponding class values are sample weights</span>
+<span class="sd">        if iterable : list or np array must be of length equal to nb elements</span>
+<span class="sd">                      in the training set</span>
+<span class="sd">    y_train : np.array</span>
+<span class="sd">        Training targets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">class_sample_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_train</span> <span class="o">==</span> <span class="n">t</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y_train</span><span class="p">)]</span>
+            <span class="p">)</span>
+
+            <span class="n">weights</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">class_sample_count</span>
+
+            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">weights</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">y_train</span><span class="p">])</span>
+
+            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">)</span>
+            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">samples_weight</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Weights should be either 0, 1, dictionnary or list.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="c1"># custom weights per class</span>
+        <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">weights</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">y_train</span><span class="p">])</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># custom weights</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom weights should match number of train samples.&quot;</span><span class="p">)</span>
+        <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">need_shuffle</span><span class="p">,</span> <span class="n">sampler</span></div>
+
+
 <div class="viewcode-block" id="create_dataloaders"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_dataloaders">[docs]</a><span class="k">def</span> <span class="nf">create_dataloaders</span><span class="p">(</span>
     <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">pin_memory</span>
 <span class="p">):</span>
@@ -245,38 +295,7 @@
 <span class="sd">    train_dataloader, valid_dataloader : torch.DataLoader, torch.DataLoader</span>
 <span class="sd">        Training and validation dataloaders</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">sampler</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">class_sample_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
-                <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_train</span> <span class="o">==</span> <span class="n">t</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y_train</span><span class="p">)]</span>
-            <span class="p">)</span>
-
-            <span class="n">weights</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">class_sample_count</span>
-
-            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">weights</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">y_train</span><span class="p">])</span>
-
-            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">)</span>
-            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">samples_weight</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
-            <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Weights should be either 0, 1, dictionnary or list.&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-        <span class="c1"># custom weights per class</span>
-        <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">weights</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">y_train</span><span class="p">])</span>
-        <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># custom weights</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom weights should match number of train samples.&quot;</span><span class="p">)</span>
-        <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
-        <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
+    <span class="n">need_shuffle</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">create_sampler</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 
     <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
         <span class="n">TorchDataset</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y_train</span><span class="p">),</span>
@@ -285,7 +304,7 @@
         <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
         <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
         <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
-        <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span>
+        <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="n">valid_dataloaders</span> <span class="o">=</span> <span class="p">[]</span>
@@ -296,7 +315,7 @@
                 <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
                 <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                 <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-                <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span>
+                <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="p">)</span>
 
@@ -366,7 +385,8 @@
 <span class="sd">    -------</span>
 <span class="sd">    None : This function will only throw an error if format is wrong</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Please provide a list of weights for regression or multitask : &quot;</span>
+    <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Please provide a list or np.array of weights for &quot;&quot;&quot;</span>
+    <span class="n">err_msg</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;regression, multitask or pretraining: &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span> <span class="o">+</span> <span class="s2">&quot;1 given.&quot;</span><span class="p">)</span>
@@ -410,10 +430,23 @@
     <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">eval_name</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">):</span>
         <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Dimension mismatch between X_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and X_train </span><span class="si">{</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">msg</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Dimension mismatch between y_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and y_train </span><span class="si">{</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">msg</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
             <span class="sa">f</span><span class="s2">&quot;Number of columns is different between X_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
             <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">) and X_train (</span><span class="si">{</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
         <span class="p">)</span>
         <span class="k">assert</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">msg</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Number of columns is different between y_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
@@ -449,6 +482,8 @@
             <span class="k">return</span> <span class="s2">&quot;cuda&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;cpu&quot;</span>
+    <span class="k">elif</span> <span class="n">device_name</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">&quot;cpu&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">device_name</span></div>
 </pre></div>
