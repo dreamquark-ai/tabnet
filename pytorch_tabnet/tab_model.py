@@ -20,11 +20,12 @@ class TabNetClassifier(TabModel):
 
         Parameters
         ----------
-            weights : bool or dict
-                Given weights for balancing training.
+        weights : bool or dict
+            Given weights for balancing training.
+
         Returns
         -------
-            bool or dict
+        bool or dict
             Same bool if weights are bool, updated dict otherwise.
 
         """
@@ -78,14 +79,13 @@ class TabNetClassifier(TabModel):
 
         Parameters
         ----------
-            data: a :tensor: `torch.Tensor`
-                Input data
-            target: a :tensor: `torch.Tensor`
-                Target data
+        X : a :tensor: `torch.Tensor`
+            Input data
 
         Returns
         -------
-            batch_outs: dict
+        res : np.ndarray
+
         """
         self.network.eval()
 
@@ -126,6 +126,11 @@ class TabNetRegressor(TabModel):
         eval_set,
         weights
     ):
+        if len(y_train.shape) != 2:
+            msg = "Targets should be 2D : (n_samples, n_regression) " + \
+                  f"but y_train.shape={y_train.shape} given.\n" + \
+                  "Use reshape(-1, 1) for single regression."
+            raise ValueError(msg)
         self.output_dim = y_train.shape[1]
 
         self.updated_weights = weights

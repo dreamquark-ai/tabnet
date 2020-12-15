@@ -73,6 +73,12 @@ _run_notebook:
 	echo "$(NB_FILE)" | sed 's/.ipynb/.py/' | xargs -n1 -I {} echo "echo 'Cleaning up $(NOTEBOOKS_DIR)/{}' && rm $(NOTEBOOKS_DIR)/{} || exit 1"  | sh
 .PHONY: _run_notebook
 
+doc: build ## Build and generate docs
+	$(DOCKER_RUN) 'cd ./docs-scripts && ./rst_generator.sh'
+	$(DOCKER_RUN) 'poetry run sphinx-build ./docs-scripts/source ./docs -b html'
+	$(DOCKER_RUN) 'touch ./docs/.nojekyll'
+.PHONY: doc
+
 test-nb-census: ## run census income tests using notebooks
 	$(MAKE) _run_notebook NB_FILE="./census_example.ipynb"
 .PHONY: test-obfuscator

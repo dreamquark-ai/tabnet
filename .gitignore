@@ -1,10 +1,16 @@
+.doctrees
+docs-scripts/source
+objects.inv
+.buildinfo
 .cache/
 ../.history/
 .history/
 data/
 .ipynb_checkpoints/
+.vscode/
 *.pt
 *~
+.vscode/
 
 # Notebook to python
 forest_example.py

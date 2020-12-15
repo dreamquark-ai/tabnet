@@ -51,7 +51,6 @@ def assert_all_finite(X, allow_nan=False):
     Parameters
     ----------
     X : array or sparse matrix
-
     allow_nan : bool
     """
     _assert_all_finite(X.data if sp.issparse(X) else X, allow_nan)
@@ -68,7 +67,11 @@ def _unique_indicator(y):
     """
     Not implemented
     """
-    pass
+    raise IndexError(
+        f"""Given labels are of size {y.shape} while they should be (n_samples,) \n"""
+        + """If attempting multilabel classification, try using TabNetMultiTaskClassification """
+        + """or TabNetRegressor"""
+    )
 
 
 _FN_UNIQUE_LABELS = {
@@ -141,7 +144,7 @@ def _is_integral_float(y):
 
 
 def is_multilabel(y):
-    """ Check if ``y`` is in a multilabel format.
+    """Check if ``y`` is in a multilabel format.
 
     Parameters
     ----------
@@ -150,7 +153,7 @@ def is_multilabel(y):
 
     Returns
     -------
-    out : bool,
+    out : bool
         Return ``True``, if ``y`` is in a multilabel format, else ```False``.
 
     Examples
@@ -347,15 +350,15 @@ def infer_output_dim(y_train):
 
     Parameters
     ----------
-        y_train : np.array
-            Training targets
+    y_train : np.array
+        Training targets
 
     Returns
     -------
-        output_dim : int
-            Number of classes for output
-        train_labels : list
-            Sorted list of initial classes
+    output_dim : int
+        Number of classes for output
+    train_labels : list
+        Sorted list of initial classes
     """
     train_labels = unique_labels(y_train)
     output_dim = len(train_labels)
@@ -382,32 +385,28 @@ def infer_multitask_output(y_train):
 
     Parameters
     ----------
-        y_train : np.ndarray
-            Training targets
-        y_valid : np.ndarray
-            Validation targets
+    y_train : np.ndarray
+        Training targets
 
     Returns
     -------
-        tasks_dims : list
-            Number of classes for output
-        tasks_labels : list
-            List of sorted list of initial classes
+    tasks_dims : list
+        Number of classes for output
+    tasks_labels : list
+        List of sorted list of initial classes
     """
 
     if len(y_train.shape) < 2:
         raise ValueError(
-            f"""y_train shoud be of shape (n_examples, n_tasks) """
-            + f"""but got {y_train.shape}"""
+            "y_train shoud be of shape (n_examples, n_tasks)"
+            + f"but got {y_train.shape}"
         )
     nb_tasks = y_train.shape[1]
     tasks_dims = []
     tasks_labels = []
     for task_idx in range(nb_tasks):
         try:
-            output_dim, train_labels = infer_output_dim(
-                y_train[:, task_idx]
-            )
+            output_dim, train_labels = infer_output_dim(y_train[:, task_idx])
             tasks_dims.append(output_dim)
             tasks_labels.append(train_labels)
         except ValueError as err:

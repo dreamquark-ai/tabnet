@@ -18,11 +18,12 @@ git clone -q git@github.com:dreamquark-ai/tabnet.git tabnet
 cd tabnet
 # Create release branch and push it
 git checkout -b release/${version}
-
 # Change version of package
 docker run --rm -v ${PWD}:/work -w /work tabnet:latest poetry version ${version}
-# Add modified file
-git add pyproject.toml
+# Generate docs
+make install doc
+# Add modified files
+git add pyproject.toml docs/
 # Commit release
 git commit -m "chore: release v${version}"
 # Create tag for changelog generation
@@ -40,4 +41,4 @@ git commit --amend --no-edit
 git push origin release/${version}
 
 cd ${localDir}
-rm -rf ${releaseDir}
+sudo rm -rf ${releaseDir}

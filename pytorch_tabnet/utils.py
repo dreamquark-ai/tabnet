@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 import torch
 import numpy as np
 import scipy
+from sklearn.utils import check_array
 
 
 class TorchDataset(Dataset):
@@ -11,10 +12,10 @@ class TorchDataset(Dataset):
 
     Parameters
     ----------
-        X: 2D array
-            The input matrix
-        y: 2D array
-            The one-hot encoded target
+    X : 2D array
+        The input matrix
+    y : 2D array
+        The one-hot encoded target
     """
 
     def __init__(self, x, y):
@@ -35,8 +36,8 @@ class PredictDataset(Dataset):
 
     Parameters
     ----------
-        X: 2D array
-            The input matrix
+    X : 2D array
+        The input matrix
     """
 
     def __init__(self, x):
@@ -50,34 +51,21 @@ class PredictDataset(Dataset):
         return x
 
 
-def create_dataloaders(
-    X_train, y_train, eval_set, weights, batch_size, num_workers, drop_last, pin_memory
-):
+def create_sampler(weights, y_train):
     """
-    Create dataloaders with or wihtout subsampling depending on weights and balanced.
+    This creates a sampler from the given weights
 
     Parameters
     ----------
-        X_train: np.ndarray
-            Training data
-        y_train: np.array
-            Mapped Training targets
-        X_valid: np.ndarray
-            Validation data
-        y_valid: np.array
-            Mapped Validation targets
-        weights : either 0, 1, dict or iterable
-            if 0 (default) : no weights will be applied
-            if 1 : classification only, will balanced class with inverse frequency
-            if dict : keys are corresponding class values are sample weights
-            if iterable : list or np array must be of length equal to nb elements
-                          in the training set
-    Returns
-    -------
-        train_dataloader, valid_dataloader : torch.DataLoader, torch.DataLoader
-            Training and validation dataloaders
+    weights : either 0, 1, dict or iterable
+        if 0 (default) : no weights will be applied
+        if 1 : classification only, will balanced class with inverse frequency
+        if dict : keys are corresponding class values are sample weights
+        if iterable : list or np array must be of length equal to nb elements
+                      in the training set
+    y_train : np.array
+        Training targets
     """
-
     if isinstance(weights, int):
         if weights == 0:
             need_shuffle = True
@@ -109,26 +97,67 @@ def create_dataloaders(
         need_shuffle = False
         samples_weight = np.array(weights)
         sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
+    return need_shuffle, sampler
+
+
+def create_dataloaders(
+    X_train, y_train, eval_set, weights, batch_size, num_workers, drop_last, pin_memory
+):
+    """
+    Create dataloaders with or wihtout subsampling depending on weights and balanced.
+
+    Parameters
+    ----------
+    X_train : np.ndarray
+        Training data
+    y_train : np.array
+        Mapped Training targets
+    eval_set : list of tuple
+        List of eval tuple set (X, y)
+    weights : either 0, 1, dict or iterable
+        if 0 (default) : no weights will be applied
+        if 1 : classification only, will balanced class with inverse frequency
+        if dict : keys are corresponding class values are sample weights
+        if iterable : list or np array must be of length equal to nb elements
+                      in the training set
+    batch_size : int
+        how many samples per batch to load
+    num_workers : int
+        how many subprocesses to use for data loading. 0 means that the data
+        will be loaded in the main process
+    drop_last : bool
+        set to True to drop the last incomplete batch, if the dataset size is not
+        divisible by the batch size. If False and the size of dataset is not
+        divisible by the batch size, then the last batch will be smaller
+    pin_memory : bool
+        Whether to pin GPU memory during training
+
+    Returns
+    -------
+    train_dataloader, valid_dataloader : torch.DataLoader, torch.DataLoader
+        Training and validation dataloaders
+    """
+    need_shuffle, sampler = create_sampler(weights, y_train)
 
     train_dataloader = DataLoader(
-        TorchDataset(X_train, y_train),
+        TorchDataset(X_train.astype(np.float32), y_train),
         batch_size=batch_size,
         sampler=sampler,
         shuffle=need_shuffle,
         num_workers=num_workers,
         drop_last=drop_last,
-        pin_memory=pin_memory
+        pin_memory=pin_memory,
     )
 
     valid_dataloaders = []
     for X, y in eval_set:
         valid_dataloaders.append(
             DataLoader(
-                TorchDataset(X, y),
+                TorchDataset(X.astype(np.float32), y),
                 batch_size=batch_size,
                 shuffle=False,
                 num_workers=num_workers,
-                pin_memory=pin_memory
+                pin_memory=pin_memory,
             )
         )
 
@@ -143,7 +172,7 @@ def create_explain_matrix(input_dim, cat_emb_dim, cat_idxs, post_embed_dim):
 
     Parameters
     ----------
-    input_dim: int
+    input_dim : int
         Initial input dim
     cat_emb_dim : int or list of int
         if int : size of embedding for all categorical feature
@@ -186,18 +215,20 @@ def create_explain_matrix(input_dim, cat_emb_dim, cat_idxs, post_embed_dim):
 
 def filter_weights(weights):
     """
-        This function makes sure that weights are in correct format for
-        regression and multitask TabNet
+    This function makes sure that weights are in correct format for
+    regression and multitask TabNet
 
     Parameters
     ----------
-    weights: int, dict or list
+    weights : int, dict or list
         Initial weights parameters given by user
+
     Returns
     -------
     None : This function will only throw an error if format is wrong
     """
-    err_msg = "Please provide a list of weights for regression or multitask : "
+    err_msg = """Please provide a list or np.array of weights for """
+    err_msg += """regression, multitask or pretraining: """
     if isinstance(weights, int):
         if weights == 1:
             raise ValueError(err_msg + "1 given.")
@@ -211,12 +242,12 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
 
     Parameters
     ----------
-    eval_set: list of tuple
+    eval_set : list of tuple
         List of eval tuple set (X, y).
         The last one is used for early stopping
-    eval_names: list of str
+    eval_name : list of str
         List of eval set names.
-    X_train: np.ndarray
+    X_train : np.ndarray
         Train owned products
     y_train : np.array
         Train targeted products
@@ -239,13 +270,25 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
             len(elem) == 2 for elem in eval_set
         ), "Each tuple of eval_set need to have two elements"
     for name, (X, y) in zip(eval_name, eval_set):
-        check_nans(X)
-        check_nans(y)
+        check_array(X)
+        msg = (
+            f"Dimension mismatch between X_{name} "
+            + f"{X.shape} and X_train {X_train.shape}"
+        )
+        assert len(X.shape) == len(X_train.shape), msg
+
+        msg = (
+            f"Dimension mismatch between y_{name} "
+            + f"{y.shape} and y_train {y_train.shape}"
+        )
+        assert len(y.shape) == len(y_train.shape), msg
+
         msg = (
             f"Number of columns is different between X_{name} "
             + f"({X.shape[1]}) and X_train ({X_train.shape[1]})"
         )
         assert X.shape[1] == X_train.shape[1], msg
+
         if len(y_train.shape) == 2:
             msg = (
                 f"Number of columns is different between y_{name} "
@@ -261,24 +304,19 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
     return eval_name, eval_set
 
 
-def check_nans(array):
-    if np.isnan(array).any():
-        raise ValueError("NaN were found, TabNet does not allow nans.")
-    if np.isinf(array).any():
-        raise ValueError("Infinite values were found, TabNet does not allow inf.")
-
-
 def define_device(device_name):
     """
     Define the device to use during training and inference.
     If auto it will detect automatically whether to use cuda or cpu
+
     Parameters
     ----------
-    - device_name : str
+    device_name : str
         Either "auto", "cpu" or "cuda"
+
     Returns
     -------
-    - str
+    str
         Either "cpu" or "cuda"
     """
     if device_name == "auto":
@@ -286,5 +324,7 @@ def define_device(device_name):
             return "cuda"
         else:
             return "cpu"
+    elif device_name == "cuda" and not torch.cuda.is_available():
+        return "cpu"
     else:
         return device_name

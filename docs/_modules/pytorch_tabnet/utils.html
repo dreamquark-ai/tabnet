@@ -1,0 +1,537 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pytorch_tabnet.utils &mdash; pytorch_tabnet  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/./default.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> pytorch_tabnet
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pytorch_tabnet</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pytorch_tabnet.utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pytorch_tabnet.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">WeightedRandomSampler</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">check_array</span>
+
+
+<div class="viewcode-block" id="TorchDataset"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.TorchDataset">[docs]</a><span class="k">class</span> <span class="nc">TorchDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format for numpy array</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : 2D array</span>
+<span class="sd">        The input matrix</span>
+<span class="sd">    y : 2D array</span>
+<span class="sd">        The one-hot encoded target</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+
+<div class="viewcode-block" id="PredictDataset"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.PredictDataset">[docs]</a><span class="k">class</span> <span class="nc">PredictDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format for numpy array</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : 2D array</span>
+<span class="sd">        The input matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="create_sampler"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_sampler">[docs]</a><span class="k">def</span> <span class="nf">create_sampler</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This creates a sampler from the given weights</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    weights : either 0, 1, dict or iterable</span>
+<span class="sd">        if 0 (default) : no weights will be applied</span>
+<span class="sd">        if 1 : classification only, will balanced class with inverse frequency</span>
+<span class="sd">        if dict : keys are corresponding class values are sample weights</span>
+<span class="sd">        if iterable : list or np array must be of length equal to nb elements</span>
+<span class="sd">                      in the training set</span>
+<span class="sd">    y_train : np.array</span>
+<span class="sd">        Training targets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">elif</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">class_sample_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">y_train</span> <span class="o">==</span> <span class="n">t</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">y_train</span><span class="p">)]</span>
+            <span class="p">)</span>
+
+            <span class="n">weights</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">class_sample_count</span>
+
+            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">weights</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">y_train</span><span class="p">])</span>
+
+            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">)</span>
+            <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">samples_weight</span><span class="o">.</span><span class="n">double</span><span class="p">()</span>
+            <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Weights should be either 0, 1, dictionnary or list.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="c1"># custom weights per class</span>
+        <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">weights</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">y_train</span><span class="p">])</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># custom weights</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom weights should match number of train samples.&quot;</span><span class="p">)</span>
+        <span class="n">need_shuffle</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">samples_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">WeightedRandomSampler</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">samples_weight</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">need_shuffle</span><span class="p">,</span> <span class="n">sampler</span></div>
+
+
+<div class="viewcode-block" id="create_dataloaders"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_dataloaders">[docs]</a><span class="k">def</span> <span class="nf">create_dataloaders</span><span class="p">(</span>
+    <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">pin_memory</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create dataloaders with or wihtout subsampling depending on weights and balanced.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X_train : np.ndarray</span>
+<span class="sd">        Training data</span>
+<span class="sd">    y_train : np.array</span>
+<span class="sd">        Mapped Training targets</span>
+<span class="sd">    eval_set : list of tuple</span>
+<span class="sd">        List of eval tuple set (X, y)</span>
+<span class="sd">    weights : either 0, 1, dict or iterable</span>
+<span class="sd">        if 0 (default) : no weights will be applied</span>
+<span class="sd">        if 1 : classification only, will balanced class with inverse frequency</span>
+<span class="sd">        if dict : keys are corresponding class values are sample weights</span>
+<span class="sd">        if iterable : list or np array must be of length equal to nb elements</span>
+<span class="sd">                      in the training set</span>
+<span class="sd">    batch_size : int</span>
+<span class="sd">        how many samples per batch to load</span>
+<span class="sd">    num_workers : int</span>
+<span class="sd">        how many subprocesses to use for data loading. 0 means that the data</span>
+<span class="sd">        will be loaded in the main process</span>
+<span class="sd">    drop_last : bool</span>
+<span class="sd">        set to True to drop the last incomplete batch, if the dataset size is not</span>
+<span class="sd">        divisible by the batch size. If False and the size of dataset is not</span>
+<span class="sd">        divisible by the batch size, then the last batch will be smaller</span>
+<span class="sd">    pin_memory : bool</span>
+<span class="sd">        Whether to pin GPU memory during training</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    train_dataloader, valid_dataloader : torch.DataLoader, torch.DataLoader</span>
+<span class="sd">        Training and validation dataloaders</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">need_shuffle</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">create_sampler</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+    <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+        <span class="n">TorchDataset</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y_train</span><span class="p">),</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+        <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+        <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+        <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
+        <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">valid_dataloaders</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">eval_set</span><span class="p">:</span>
+        <span class="n">valid_dataloaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">DataLoader</span><span class="p">(</span>
+                <span class="n">TorchDataset</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y</span><span class="p">),</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">valid_dataloaders</span></div>
+
+
+<div class="viewcode-block" id="create_explain_matrix"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_explain_matrix">[docs]</a><span class="k">def</span> <span class="nf">create_explain_matrix</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">cat_emb_dim</span><span class="p">,</span> <span class="n">cat_idxs</span><span class="p">,</span> <span class="n">post_embed_dim</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a computational trick.</span>
+<span class="sd">    In order to rapidly sum importances from same embeddings</span>
+<span class="sd">    to the initial index.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_dim : int</span>
+<span class="sd">        Initial input dim</span>
+<span class="sd">    cat_emb_dim : int or list of int</span>
+<span class="sd">        if int : size of embedding for all categorical feature</span>
+<span class="sd">        if list of int : size of embedding for each categorical feature</span>
+<span class="sd">    cat_idxs : list of int</span>
+<span class="sd">        Initial position of categorical features</span>
+<span class="sd">    post_embed_dim : int</span>
+<span class="sd">        Post embedding inputs dimension</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    reducing_matrix : np.array</span>
+<span class="sd">        Matrix of dim (post_embed_dim, input_dim)  to performe reduce</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cat_emb_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">all_emb_impact</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat_emb_dim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_idxs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">all_emb_impact</span> <span class="o">=</span> <span class="p">[</span><span class="n">emb_dim</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">emb_dim</span> <span class="ow">in</span> <span class="n">cat_emb_dim</span><span class="p">]</span>
+
+    <span class="n">acc_emb</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nb_emb</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">indices_trick</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">input_dim</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cat_idxs</span><span class="p">:</span>
+            <span class="n">indices_trick</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">i</span> <span class="o">+</span> <span class="n">acc_emb</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">indices_trick</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">acc_emb</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">acc_emb</span> <span class="o">+</span> <span class="n">all_emb_impact</span><span class="p">[</span><span class="n">nb_emb</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">acc_emb</span> <span class="o">+=</span> <span class="n">all_emb_impact</span><span class="p">[</span><span class="n">nb_emb</span><span class="p">]</span>
+            <span class="n">nb_emb</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">reducing_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">post_embed_dim</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">cols</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">indices_trick</span><span class="p">):</span>
+        <span class="n">reducing_matrix</span><span class="p">[</span><span class="n">cols</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">reducing_matrix</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="filter_weights"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.filter_weights">[docs]</a><span class="k">def</span> <span class="nf">filter_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This function makes sure that weights are in correct format for</span>
+<span class="sd">    regression and multitask TabNet</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    weights : int, dict or list</span>
+<span class="sd">        Initial weights parameters given by user</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None : This function will only throw an error if format is wrong</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;Please provide a list or np.array of weights for &quot;&quot;&quot;</span>
+    <span class="n">err_msg</span> <span class="o">+=</span> <span class="s2">&quot;&quot;&quot;regression, multitask or pretraining: &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">weights</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span> <span class="o">+</span> <span class="s2">&quot;1 given.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span> <span class="o">+</span> <span class="s2">&quot;Dict given.&quot;</span><span class="p">)</span>
+    <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="validate_eval_set"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.validate_eval_set">[docs]</a><span class="k">def</span> <span class="nf">validate_eval_set</span><span class="p">(</span><span class="n">eval_set</span><span class="p">,</span> <span class="n">eval_name</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Check if the shapes of eval_set are compatible with (X_train, y_train).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    eval_set : list of tuple</span>
+<span class="sd">        List of eval tuple set (X, y).</span>
+<span class="sd">        The last one is used for early stopping</span>
+<span class="sd">    eval_name : list of str</span>
+<span class="sd">        List of eval set names.</span>
+<span class="sd">    X_train : np.ndarray</span>
+<span class="sd">        Train owned products</span>
+<span class="sd">    y_train : np.array</span>
+<span class="sd">        Train targeted products</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    eval_names : list of str</span>
+<span class="sd">        Validated list of eval_names.</span>
+<span class="sd">    eval_set : list of tuple</span>
+<span class="sd">        Validated list of eval_set.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">eval_name</span> <span class="o">=</span> <span class="n">eval_name</span> <span class="ow">or</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;val_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">eval_set</span><span class="p">))]</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">eval_set</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+        <span class="n">eval_name</span>
+    <span class="p">),</span> <span class="s2">&quot;eval_set and eval_name have not the same length&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">eval_set</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">eval_set</span>
+        <span class="p">),</span> <span class="s2">&quot;Each tuple of eval_set need to have two elements&quot;</span>
+    <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">eval_name</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">):</span>
+        <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Dimension mismatch between X_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and X_train </span><span class="si">{</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">msg</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Dimension mismatch between y_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> and y_train </span><span class="si">{</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">msg</span>
+
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Number of columns is different between X_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">) and X_train (</span><span class="si">{</span><span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">msg</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Number of columns is different between y_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">) and y_train (</span><span class="si">{</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">msg</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;You need the same number of rows between X_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="si">{</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">) and y_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+        <span class="k">assert</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">y</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">msg</span>
+
+    <span class="k">return</span> <span class="n">eval_name</span><span class="p">,</span> <span class="n">eval_set</span></div>
+
+
+<div class="viewcode-block" id="define_device"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.define_device">[docs]</a><span class="k">def</span> <span class="nf">define_device</span><span class="p">(</span><span class="n">device_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Define the device to use during training and inference.</span>
+<span class="sd">    If auto it will detect automatically whether to use cuda or cpu</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    device_name : str</span>
+<span class="sd">        Either &quot;auto&quot;, &quot;cpu&quot; or &quot;cuda&quot;</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        Either &quot;cpu&quot; or &quot;cuda&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">device_name</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+            <span class="k">return</span> <span class="s2">&quot;cuda&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;cpu&quot;</span>
+    <span class="k">elif</span> <span class="n">device_name</span> <span class="o">==</span> <span class="s2">&quot;cuda&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+        <span class="k">return</span> <span class="s2">&quot;cpu&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">device_name</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Dreamquark
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

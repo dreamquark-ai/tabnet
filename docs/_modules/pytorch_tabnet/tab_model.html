@@ -1,0 +1,352 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pytorch_tabnet.tab_model &mdash; pytorch_tabnet  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/./default.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> pytorch_tabnet
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pytorch_tabnet</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pytorch_tabnet.tab_model</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pytorch_tabnet.tab_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">softmax</span>
+<span class="kn">from</span> <span class="nn">pytorch_tabnet.utils</span> <span class="kn">import</span> <span class="n">PredictDataset</span><span class="p">,</span> <span class="n">filter_weights</span>
+<span class="kn">from</span> <span class="nn">pytorch_tabnet.abstract_model</span> <span class="kn">import</span> <span class="n">TabModel</span>
+<span class="kn">from</span> <span class="nn">pytorch_tabnet.multiclass_utils</span> <span class="kn">import</span> <span class="n">infer_output_dim</span><span class="p">,</span> <span class="n">check_output_dim</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+
+
+<div class="viewcode-block" id="TabNetClassifier"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier">[docs]</a><span class="k">class</span> <span class="nc">TabNetClassifier</span><span class="p">(</span><span class="n">TabModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TabNetClassifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="s1">&#39;classification&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">cross_entropy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_metric</span> <span class="o">=</span> <span class="s1">&#39;accuracy&#39;</span>
+
+<div class="viewcode-block" id="TabNetClassifier.weight_updater"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.weight_updater">[docs]</a>    <span class="k">def</span> <span class="nf">weight_updater</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates weights dictionnary according to target_mapper.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        weights : bool or dict</span>
+<span class="sd">            Given weights for balancing training.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        bool or dict</span>
+<span class="sd">            Same bool if weights are bool, updated dict otherwise.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">weights</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">target_mapper</span><span class="p">[</span><span class="n">key</span><span class="p">]:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">weights</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">weights</span></div>
+
+<div class="viewcode-block" id="TabNetClassifier.prepare_target"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.prepare_target">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">target_mapper</span><span class="o">.</span><span class="n">get</span><span class="p">)(</span><span class="n">y</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabNetClassifier.compute_loss"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="o">.</span><span class="n">long</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="TabNetClassifier.update_fit_params"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.update_fit_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_fit_params</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X_train</span><span class="p">,</span>
+        <span class="n">y_train</span><span class="p">,</span>
+        <span class="n">eval_set</span><span class="p">,</span>
+        <span class="n">weights</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">output_dim</span><span class="p">,</span> <span class="n">train_labels</span> <span class="o">=</span> <span class="n">infer_output_dim</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">eval_set</span><span class="p">:</span>
+            <span class="n">check_output_dim</span><span class="p">(</span><span class="n">train_labels</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dim</span> <span class="o">=</span> <span class="n">output_dim</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_metric</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;auc&#39;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_dim</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="s1">&#39;accuracy&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classes_</span> <span class="o">=</span> <span class="n">train_labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_mapper</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">class_label</span><span class="p">:</span> <span class="n">index</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">class_label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preds_mapper</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">index</span><span class="p">:</span> <span class="n">class_label</span> <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">class_label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classes_</span><span class="p">)</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updated_weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_updater</span><span class="p">(</span><span class="n">weights</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabNetClassifier.stack_batches"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.stack_batches">[docs]</a>    <span class="k">def</span> <span class="nf">stack_batches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_y_true</span><span class="p">,</span> <span class="n">list_y_score</span><span class="p">):</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">(</span><span class="n">list_y_true</span><span class="p">)</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">list_y_score</span><span class="p">)</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="n">softmax</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span></div>
+
+<div class="viewcode-block" id="TabNetClassifier.predict_func"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.predict_func">[docs]</a>    <span class="k">def</span> <span class="nf">predict_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preds_mapper</span><span class="o">.</span><span class="n">get</span><span class="p">)(</span><span class="n">outputs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabNetClassifier.predict_proba"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.predict_proba">[docs]</a>    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make predictions for classification on a batch (valid)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : a :tensor: `torch.Tensor`</span>
+<span class="sd">            Input data</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        res : np.ndarray</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">batch_nb</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+            <span class="n">output</span><span class="p">,</span> <span class="n">M_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Softmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)(</span><span class="n">output</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">res</span></div></div>
+
+
+<div class="viewcode-block" id="TabNetRegressor"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetRegressor">[docs]</a><span class="k">class</span> <span class="nc">TabNetRegressor</span><span class="p">(</span><span class="n">TabModel</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TabNetRegressor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="s1">&#39;regression&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">mse_loss</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_metric</span> <span class="o">=</span> <span class="s1">&#39;mse&#39;</span>
+
+<div class="viewcode-block" id="TabNetRegressor.prepare_target"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetRegressor.prepare_target">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">y</span></div>
+
+<div class="viewcode-block" id="TabNetRegressor.compute_loss"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetRegressor.compute_loss">[docs]</a>    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">y_true</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabNetRegressor.update_fit_params"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetRegressor.update_fit_params">[docs]</a>    <span class="k">def</span> <span class="nf">update_fit_params</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X_train</span><span class="p">,</span>
+        <span class="n">y_train</span><span class="p">,</span>
+        <span class="n">eval_set</span><span class="p">,</span>
+        <span class="n">weights</span>
+    <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Targets should be 2D : (n_samples, n_regression) &quot;</span> <span class="o">+</span> \
+                  <span class="sa">f</span><span class="s2">&quot;but y_train.shape=</span><span class="si">{</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> given.</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span> \
+                  <span class="s2">&quot;Use reshape(-1, 1) for single regression.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dim</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">updated_weights</span> <span class="o">=</span> <span class="n">weights</span>
+        <span class="n">filter_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updated_weights</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabNetRegressor.predict_func"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetRegressor.predict_func">[docs]</a>    <span class="k">def</span> <span class="nf">predict_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">outputs</span></div>
+
+<div class="viewcode-block" id="TabNetRegressor.stack_batches"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetRegressor.stack_batches">[docs]</a>    <span class="k">def</span> <span class="nf">stack_batches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_y_true</span><span class="p">,</span> <span class="n">list_y_score</span><span class="p">):</span>
+        <span class="n">y_true</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">list_y_true</span><span class="p">)</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">list_y_score</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Dreamquark
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,964 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pytorch_tabnet.abstract_model &mdash; pytorch_tabnet  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/graphviz.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/./default.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> pytorch_tabnet
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pytorch_tabnet</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+        
+      <li>pytorch_tabnet.abstract_model</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for pytorch_tabnet.abstract_model</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.nn.utils</span> <span class="kn">import</span> <span class="n">clip_grad_norm_</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">csc_matrix</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">pytorch_tabnet</span> <span class="kn">import</span> <span class="n">tab_network</span>
+<span class="kn">from</span> <span class="nn">pytorch_tabnet.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PredictDataset</span><span class="p">,</span>
+    <span class="n">create_explain_matrix</span><span class="p">,</span>
+    <span class="n">validate_eval_set</span><span class="p">,</span>
+    <span class="n">create_dataloaders</span><span class="p">,</span>
+    <span class="n">define_device</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pytorch_tabnet.callbacks</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">CallbackContainer</span><span class="p">,</span>
+    <span class="n">History</span><span class="p">,</span>
+    <span class="n">EarlyStopping</span><span class="p">,</span>
+    <span class="n">LRSchedulerCallback</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">pytorch_tabnet.metrics</span> <span class="kn">import</span> <span class="n">MetricContainer</span><span class="p">,</span> <span class="n">check_metrics</span>
+<span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span>
+<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">check_array</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">import</span> <span class="nn">io</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">zipfile</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+
+
+<div class="viewcode-block" id="TabModel"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">TabModel</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Class for TabNet model.&quot;&quot;&quot;</span>
+
+    <span class="n">n_d</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">n_a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
+    <span class="n">n_steps</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.3</span>
+    <span class="n">cat_idxs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">cat_dims</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">cat_emb_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">n_independent</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">n_shared</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-15</span>
+    <span class="n">momentum</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.02</span>
+    <span class="n">lambda_sparse</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-3</span>
+    <span class="n">seed</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">clip_value</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">verbose</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">optimizer_fn</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span>
+    <span class="n">optimizer_params</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">lr</span><span class="o">=</span><span class="mf">2e-2</span><span class="p">))</span>
+    <span class="n">scheduler_fn</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">scheduler_params</span><span class="p">:</span> <span class="n">Dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="n">mask_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sparsemax&quot;</span>
+    <span class="n">input_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">output_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">device_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">1024</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="mi">128</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+        <span class="c1"># Defining device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">define_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device used : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__update__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates parameters.</span>
+<span class="sd">        If does not already exists, creates it.</span>
+<span class="sd">        Otherwise overwrite with warnings.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">update_list</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;cat_dims&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cat_emb_dim&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;cat_idxs&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;input_dim&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;mask_type&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_a&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_d&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_independent&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_shared&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;n_steps&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">update_list</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">exec</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;global previous_val; previous_val = self.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">previous_val</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>  <span class="c1"># noqa</span>
+                        <span class="n">wrn_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Pretraining: </span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> changed from </span><span class="si">{</span><span class="n">previous_val</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># noqa</span>
+                        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">wrn_msg</span><span class="p">)</span>
+                        <span class="n">exec</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;self.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> = value&quot;</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="n">exec</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;self.</span><span class="si">{</span><span class="n">var_name</span><span class="si">}</span><span class="s2"> = value&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TabModel.fit"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">X_train</span><span class="p">,</span>
+        <span class="n">y_train</span><span class="p">,</span>
+        <span class="n">eval_set</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">eval_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">eval_metric</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">loss_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">weights</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">max_epochs</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+        <span class="n">patience</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+        <span class="n">batch_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
+        <span class="n">virtual_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
+        <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">from_unsupervised</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Train a neural network stored in self.network</span>
+<span class="sd">        Using train_dataloader for training data and</span>
+<span class="sd">        valid_dataloader for validation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X_train : np.ndarray</span>
+<span class="sd">            Train set</span>
+<span class="sd">        y_train : np.array</span>
+<span class="sd">            Train targets</span>
+<span class="sd">        eval_set : list of tuple</span>
+<span class="sd">            List of eval tuple set (X, y).</span>
+<span class="sd">            The last one is used for early stopping</span>
+<span class="sd">        eval_name : list of str</span>
+<span class="sd">            List of eval set names.</span>
+<span class="sd">        eval_metric : list of str</span>
+<span class="sd">            List of evaluation metrics.</span>
+<span class="sd">            The last metric is used for early stopping.</span>
+<span class="sd">        loss_fn : callable or None</span>
+<span class="sd">            a PyTorch loss function</span>
+<span class="sd">        weights : bool or dictionnary</span>
+<span class="sd">            0 for no balancing</span>
+<span class="sd">            1 for automated balancing</span>
+<span class="sd">            dict for custom weights per class</span>
+<span class="sd">        max_epochs : int</span>
+<span class="sd">            Maximum number of epochs during training</span>
+<span class="sd">        patience : int</span>
+<span class="sd">            Number of consecutive non improving epoch before early stopping</span>
+<span class="sd">        batch_size : int</span>
+<span class="sd">            Training batch size</span>
+<span class="sd">        virtual_batch_size : int</span>
+<span class="sd">            Batch size for Ghost Batch Normalization (virtual_batch_size &lt; batch_size)</span>
+<span class="sd">        num_workers : int</span>
+<span class="sd">            Number of workers used in torch.utils.data.DataLoader</span>
+<span class="sd">        drop_last : bool</span>
+<span class="sd">            Whether to drop last batch during training</span>
+<span class="sd">        callbacks : list of callback function</span>
+<span class="sd">            List of custom callbacks</span>
+<span class="sd">        pin_memory: bool</span>
+<span class="sd">            Whether to set pin_memory to True or False during training</span>
+<span class="sd">        from_unsupervised: unsupervised trained model</span>
+<span class="sd">            Use a previously self supervised model as starting weights</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># update model name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_epochs</span> <span class="o">=</span> <span class="n">max_epochs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">patience</span> <span class="o">=</span> <span class="n">patience</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="n">batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="n">virtual_batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span> <span class="o">=</span> <span class="n">num_workers</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span> <span class="o">=</span> <span class="n">drop_last</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span> <span class="o">=</span> <span class="n">X_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stop_training</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pin_memory</span> <span class="o">=</span> <span class="n">pin_memory</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+        <span class="n">eval_set</span> <span class="o">=</span> <span class="n">eval_set</span> <span class="k">if</span> <span class="n">eval_set</span> <span class="k">else</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">loss_fn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_loss</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">loss_fn</span>
+
+        <span class="n">check_array</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">update_fit_params</span><span class="p">(</span>
+            <span class="n">X_train</span><span class="p">,</span>
+            <span class="n">y_train</span><span class="p">,</span>
+            <span class="n">eval_set</span><span class="p">,</span>
+            <span class="n">weights</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Validate and reformat eval set depending on training data</span>
+        <span class="n">eval_names</span><span class="p">,</span> <span class="n">eval_set</span> <span class="o">=</span> <span class="n">validate_eval_set</span><span class="p">(</span><span class="n">eval_set</span><span class="p">,</span> <span class="n">eval_name</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
+
+        <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">valid_dataloaders</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_construct_loaders</span><span class="p">(</span>
+            <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">from_unsupervised</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Update parameters to match self pretraining</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__update__</span><span class="p">(</span><span class="o">**</span><span class="n">from_unsupervised</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;network&quot;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_set_network</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_network_params</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_metrics</span><span class="p">(</span><span class="n">eval_metric</span><span class="p">,</span> <span class="n">eval_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_optimizer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">(</span><span class="n">callbacks</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">from_unsupervised</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading weights from unsupervised pretraining&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">load_weights_from_unsupervised</span><span class="p">(</span><span class="n">from_unsupervised</span><span class="p">)</span>
+
+        <span class="c1"># Call method on_train_begin for all callbacks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_train_begin</span><span class="p">()</span>
+
+        <span class="c1"># Training loop over epochs</span>
+        <span class="k">for</span> <span class="n">epoch_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_epochs</span><span class="p">):</span>
+
+            <span class="c1"># Call method on_epoch_begin for all callbacks</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_epoch_begin</span><span class="p">(</span><span class="n">epoch_idx</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_train_epoch</span><span class="p">(</span><span class="n">train_dataloader</span><span class="p">)</span>
+
+            <span class="c1"># Apply predict epoch to all eval sets</span>
+            <span class="k">for</span> <span class="n">eval_name</span><span class="p">,</span> <span class="n">valid_dataloader</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">eval_names</span><span class="p">,</span> <span class="n">valid_dataloaders</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_predict_epoch</span><span class="p">(</span><span class="n">eval_name</span><span class="p">,</span> <span class="n">valid_dataloader</span><span class="p">)</span>
+
+            <span class="c1"># Call method on_epoch_end for all callbacks</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_epoch_end</span><span class="p">(</span>
+                <span class="n">epoch_idx</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">epoch_metrics</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stop_training</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="c1"># Call method on_train_end for all callbacks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_train_end</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="c1"># compute feature importance once the best model is defined</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_compute_feature_importances</span><span class="p">(</span><span class="n">train_dataloader</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabModel.predict"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make predictions on a batch (valid)</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : a :tensor: `torch.Tensor`</span>
+<span class="sd">            Input data</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        predictions : np.array</span>
+<span class="sd">            Predictions of the regression problem</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">batch_nb</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="n">output</span><span class="p">,</span> <span class="n">M_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_func</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabModel.explain"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.explain">[docs]</a>    <span class="k">def</span> <span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return local explanation</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : tensor: `torch.Tensor`</span>
+<span class="sd">            Input data</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        M_explain : matrix</span>
+<span class="sd">            Importance per sample, per columns.</span>
+<span class="sd">        masks : matrix</span>
+<span class="sd">            Sparse matrix showing attention masks used by network.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">res_explain</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">batch_nb</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+            <span class="n">M_explain</span><span class="p">,</span> <span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">forward_masks</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">masks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">masks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                    <span class="n">value</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducing_matrix</span>
+                <span class="p">)</span>
+
+            <span class="n">res_explain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">csc_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">M_explain</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducing_matrix</span><span class="p">)</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">batch_nb</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">res_masks</span> <span class="o">=</span> <span class="n">masks</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">masks</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">res_masks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">res_masks</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">value</span><span class="p">])</span>
+
+        <span class="n">res_explain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">res_explain</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">res_explain</span><span class="p">,</span> <span class="n">res_masks</span></div>
+
+<div class="viewcode-block" id="TabModel.load_weights_from_unsupervised"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.load_weights_from_unsupervised">[docs]</a>    <span class="k">def</span> <span class="nf">load_weights_from_unsupervised</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">unsupervised_model</span><span class="p">):</span>
+        <span class="n">update_state_dict</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">state_dict</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">weights</span> <span class="ow">in</span> <span class="n">unsupervised_model</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;encoder&quot;</span><span class="p">):</span>
+                <span class="c1"># Convert encoder&#39;s layers name to match</span>
+                <span class="n">new_param</span> <span class="o">=</span> <span class="s2">&quot;tabnet.&quot;</span> <span class="o">+</span> <span class="n">param</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_param</span> <span class="o">=</span> <span class="n">param</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">new_param</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="c1"># update only common layers</span>
+                <span class="n">update_state_dict</span><span class="p">[</span><span class="n">new_param</span><span class="p">]</span> <span class="o">=</span> <span class="n">weights</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">update_state_dict</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabModel.save_model"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.save_model">[docs]</a>    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Saving TabNet model in two distinct files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str</span>
+<span class="sd">            Path of the model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        str</span>
+<span class="sd">            input filepath with &quot;.zip&quot; appended</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">saved_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_params</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+                <span class="c1"># Don&#39;t save torch specific params</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">saved_params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+        <span class="c1"># Create folder</span>
+        <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Save models params</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;model_params.json&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">saved_params</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+        <span class="c1"># Save state_dict</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">state_dict</span><span class="p">(),</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">joinpath</span><span class="p">(</span><span class="s2">&quot;network.pt&quot;</span><span class="p">))</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">make_archive</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;zip&quot;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully saved model at </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.zip&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.zip&quot;</span></div>
+
+<div class="viewcode-block" id="TabModel.load_model"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.load_model">[docs]</a>    <span class="k">def</span> <span class="nf">load_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Load TabNet model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filepath : str</span>
+<span class="sd">            Path of the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span> <span class="k">as</span> <span class="n">z</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">z</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;model_params.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="n">loaded_params</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                    <span class="n">loaded_params</span><span class="p">[</span><span class="s2">&quot;device_name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_name</span>
+                <span class="k">with</span> <span class="n">z</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;network.pt&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">saved_state_dict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="n">io</span><span class="o">.</span><span class="n">UnsupportedOperation</span><span class="p">:</span>
+                        <span class="c1"># In Python &lt;3.7, the returned file object is not seekable (which at least</span>
+                        <span class="c1"># some versions of PyTorch require) - so we&#39;ll try buffering it in to a</span>
+                        <span class="c1"># BytesIO instead:</span>
+                        <span class="n">saved_state_dict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+                            <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()),</span>
+                            <span class="n">map_location</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span>
+                        <span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Your zip file is missing at least one component&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">loaded_params</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_set_network</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">saved_state_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="nf">_train_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains one epoch of the network in self.network</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        train_loader : a :class: `torch.utils.data.Dataloader`</span>
+<span class="sd">            DataLoader with train set</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_loader</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_batch_begin</span><span class="p">(</span><span class="n">batch_idx</span><span class="p">)</span>
+
+            <span class="n">batch_logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_train_batch</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_batch_end</span><span class="p">(</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">batch_logs</span><span class="p">)</span>
+
+        <span class="n">epoch_logs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;lr&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="o">.</span><span class="n">param_groups</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;lr&quot;</span><span class="p">]}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">epoch_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">epoch_logs</span><span class="p">)</span>
+
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_train_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trains one batch of data</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : torch.Tensor</span>
+<span class="sd">            Train matrix</span>
+<span class="sd">        y : torch.Tensor</span>
+<span class="sd">            Target matrix</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        batch_outs : dict</span>
+<span class="sd">            Dictionnary with &quot;y&quot;: target and &quot;score&quot;: prediction scores.</span>
+<span class="sd">        batch_logs : dict</span>
+<span class="sd">            Dictionnary with &quot;batch_size&quot; and &quot;loss&quot;.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">batch_logs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span>
+
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="n">y</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">grad</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">output</span><span class="p">,</span> <span class="n">M_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+        <span class="c1"># Add the overall sparsity loss</span>
+        <span class="n">loss</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_sparse</span> <span class="o">*</span> <span class="n">M_loss</span>
+
+        <span class="c1"># Perform backward pass and optimization</span>
+        <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip_value</span><span class="p">:</span>
+            <span class="n">clip_grad_norm_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">clip_value</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+        <span class="n">batch_logs</span><span class="p">[</span><span class="s2">&quot;loss&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">loss</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">batch_logs</span>
+
+    <span class="k">def</span> <span class="nf">_predict_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict an epoch and update metrics.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name of the validation set</span>
+<span class="sd">        loader : torch.utils.data.Dataloader</span>
+<span class="sd">                DataLoader with validation set</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Setting network on evaluation mode</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="n">list_y_true</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">list_y_score</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Main loop</span>
+        <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loader</span><span class="p">):</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_batch</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">list_y_true</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">list_y_score</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+
+        <span class="n">y_true</span><span class="p">,</span> <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack_batches</span><span class="p">(</span><span class="n">list_y_true</span><span class="p">,</span> <span class="n">list_y_score</span><span class="p">)</span>
+
+        <span class="n">metrics_logs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_container_dict</span><span class="p">[</span><span class="n">name</span><span class="p">](</span><span class="n">y_true</span><span class="p">,</span> <span class="n">scores</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="o">.</span><span class="n">epoch_metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">metrics_logs</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_predict_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict one batch of data.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X : torch.Tensor</span>
+<span class="sd">            Owned products</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.array</span>
+<span class="sd">            model scores</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+
+        <span class="c1"># compute model output</span>
+        <span class="n">scores</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">scores</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">scores</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">scores</span>
+
+    <span class="k">def</span> <span class="nf">_set_network</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Setup the network and explain matrix.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="n">tab_network</span><span class="o">.</span><span class="n">TabNet</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">output_dim</span><span class="p">,</span>
+            <span class="n">n_d</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_d</span><span class="p">,</span>
+            <span class="n">n_a</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_a</span><span class="p">,</span>
+            <span class="n">n_steps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">,</span>
+            <span class="n">gamma</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span><span class="p">,</span>
+            <span class="n">cat_idxs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_idxs</span><span class="p">,</span>
+            <span class="n">cat_dims</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_dims</span><span class="p">,</span>
+            <span class="n">cat_emb_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dim</span><span class="p">,</span>
+            <span class="n">n_independent</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_independent</span><span class="p">,</span>
+            <span class="n">n_shared</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n_shared</span><span class="p">,</span>
+            <span class="n">epsilon</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="p">,</span>
+            <span class="n">virtual_batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span><span class="p">,</span>
+            <span class="n">momentum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">,</span>
+            <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">reducing_matrix</span> <span class="o">=</span> <span class="n">create_explain_matrix</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">input_dim</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">cat_emb_dim</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">cat_idxs</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">post_embed_dim</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">eval_names</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set attributes relative to the metrics.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        metrics : list of str</span>
+<span class="sd">            List of eval metric names.</span>
+<span class="sd">        eval_names : list of str</span>
+<span class="sd">            List of eval set names.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">metrics</span> <span class="ow">or</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_default_metric</span><span class="p">]</span>
+
+        <span class="n">metrics</span> <span class="o">=</span> <span class="n">check_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+        <span class="c1"># Set metric container for each sets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metric_container_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">eval_names</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metric_container_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span><span class="n">name</span><span class="p">:</span> <span class="n">MetricContainer</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_&quot;</span><span class="p">)}</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">metric_container</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric_container_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">metric_container</span><span class="o">.</span><span class="n">metrics</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_names</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">metric_container</span><span class="o">.</span><span class="n">names</span><span class="p">)</span>
+
+        <span class="c1"># Early stopping metric is the last eval metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_metric</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_metrics_names</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metrics_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_callbacks</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Setup the callbacks functions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        custom_callbacks : list of func</span>
+<span class="sd">            List of callback functions.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Setup default callbacks history, early stopping and scheduler</span>
+        <span class="n">callbacks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">history</span> <span class="o">=</span> <span class="n">History</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">)</span>
+        <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">history</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_metric</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">patience</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">early_stopping</span> <span class="o">=</span> <span class="n">EarlyStopping</span><span class="p">(</span>
+                <span class="n">early_stopping_metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="p">,</span>
+                <span class="n">is_maximize</span><span class="o">=</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">_maximize</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_metrics</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">),</span>
+                <span class="n">patience</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">patience</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">early_stopping</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;No early stopping will be performed, last training weights will be used.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Add LR Scheduler call_back</span>
+            <span class="n">is_batch_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;is_batch_level&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+            <span class="n">scheduler</span> <span class="o">=</span> <span class="n">LRSchedulerCallback</span><span class="p">(</span>
+                <span class="n">scheduler_fn</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scheduler_fn</span><span class="p">,</span>
+                <span class="n">scheduler_params</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scheduler_params</span><span class="p">,</span>
+                <span class="n">optimizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span><span class="p">,</span>
+                <span class="n">early_stopping_metric</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="p">,</span>
+                <span class="n">is_batch_level</span><span class="o">=</span><span class="n">is_batch_level</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scheduler</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">custom_callbacks</span><span class="p">:</span>
+            <span class="n">callbacks</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">custom_callbacks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span> <span class="o">=</span> <span class="n">CallbackContainer</span><span class="p">(</span><span class="n">callbacks</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">set_trainer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Setup optimizer.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_fn</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_params</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_construct_loaders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate dataloaders for train and eval set.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X_train : np.array</span>
+<span class="sd">            Train set.</span>
+<span class="sd">        y_train : np.array</span>
+<span class="sd">            Train targets.</span>
+<span class="sd">        eval_set : list of tuple</span>
+<span class="sd">            List of eval tuple set (X, y).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        train_dataloader : `torch.utils.data.Dataloader`</span>
+<span class="sd">            Training dataloader.</span>
+<span class="sd">        valid_dataloaders : list of `torch.utils.data.Dataloader`</span>
+<span class="sd">            List of validation dataloaders.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># all weights are not allowed for this type of model</span>
+        <span class="n">y_train_mapped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_target</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">eval_set</span><span class="p">):</span>
+            <span class="n">y_mapped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_target</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
+            <span class="n">eval_set</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y_mapped</span><span class="p">)</span>
+
+        <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">valid_dataloaders</span> <span class="o">=</span> <span class="n">create_dataloaders</span><span class="p">(</span>
+            <span class="n">X_train</span><span class="p">,</span>
+            <span class="n">y_train_mapped</span><span class="p">,</span>
+            <span class="n">eval_set</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updated_weights</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">drop_last</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pin_memory</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">valid_dataloaders</span>
+
+    <span class="k">def</span> <span class="nf">_compute_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute global feature importance.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        loader : `torch.utils.data.Dataloader`</span>
+<span class="sd">            Pytorch dataloader.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+        <span class="n">feature_importances_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">post_embed_dim</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">targets</span> <span class="ow">in</span> <span class="n">loader</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+            <span class="n">M_explain</span><span class="p">,</span> <span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">forward_masks</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">feature_importances_</span> <span class="o">+=</span> <span class="n">M_explain</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+
+        <span class="n">feature_importances_</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+            <span class="n">feature_importances_</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducing_matrix</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_importances_</span> <span class="o">=</span> <span class="n">feature_importances_</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">feature_importances_</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_update_network_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span>
+
+<div class="viewcode-block" id="TabModel.update_fit_params"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.update_fit_params">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">update_fit_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set attributes relative to fit function.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        X_train : np.ndarray</span>
+<span class="sd">            Train set</span>
+<span class="sd">        y_train : np.array</span>
+<span class="sd">            Train targets</span>
+<span class="sd">        eval_set : list of tuple</span>
+<span class="sd">            List of eval tuple set (X, y).</span>
+<span class="sd">        weights : bool or dictionnary</span>
+<span class="sd">            0 for no balancing</span>
+<span class="sd">            1 for automated balancing</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;users must define update_fit_params to use this base class&quot;</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabModel.compute_loss"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.compute_loss">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_score</span><span class="p">,</span> <span class="n">y_true</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the loss.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y_score : a :tensor: `torch.Tensor`</span>
+<span class="sd">            Score matrix</span>
+<span class="sd">        y_true : a :tensor: `torch.Tensor`</span>
+<span class="sd">            Target matrix</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            Loss value</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;users must define compute_loss to use this base class&quot;</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TabModel.prepare_target"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.prepare_target">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">prepare_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Prepare target before training.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y : a :tensor: `torch.Tensor`</span>
+<span class="sd">            Target matrix.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        `torch.Tensor`</span>
+<span class="sd">            Converted target matrix.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">&quot;users must define prepare_target to use this base class&quot;</span>
+        <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2019, Dreamquark
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

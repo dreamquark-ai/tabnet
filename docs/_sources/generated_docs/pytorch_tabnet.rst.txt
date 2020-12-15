@@ -1,0 +1,102 @@
+pytorch_tabnet package
+======================
+
+
+pytorch_tabnet.utils module
+.............................
+
+.. automodule:: pytorch_tabnet.utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.pretraining_utils module
+.........................................
+
+.. automodule:: pytorch_tabnet.pretraining_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.tab_network module
+...................................
+
+.. automodule:: pytorch_tabnet.tab_network
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.multitask module
+.................................
+
+.. automodule:: pytorch_tabnet.multitask
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.multiclass_utils module
+........................................
+
+.. automodule:: pytorch_tabnet.multiclass_utils
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.tab_model module
+.................................
+
+.. automodule:: pytorch_tabnet.tab_model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.abstract_model module
+......................................
+
+.. automodule:: pytorch_tabnet.abstract_model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.callbacks module
+.................................
+
+.. automodule:: pytorch_tabnet.callbacks
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.pretraining module
+...................................
+
+.. automodule:: pytorch_tabnet.pretraining
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.sparsemax module
+.................................
+
+.. automodule:: pytorch_tabnet.sparsemax
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.metrics module
+...............................
+
+.. automodule:: pytorch_tabnet.metrics
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
