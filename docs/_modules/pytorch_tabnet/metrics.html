@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -165,7 +166,92 @@
     <span class="n">accuracy_score</span><span class="p">,</span>
     <span class="n">log_loss</span><span class="p">,</span>
     <span class="n">balanced_accuracy_score</span><span class="p">,</span>
+    <span class="n">mean_squared_log_error</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+
+<div class="viewcode-block" id="UnsupervisedLoss"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedLoss">[docs]</a><span class="k">def</span> <span class="nf">UnsupervisedLoss</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implements unsupervised loss function.</span>
+<span class="sd">    This differs from orginal paper as it&#39;s scaled to be batch size independent</span>
+<span class="sd">    and number of features reconstructed independent (by taking the mean)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_pred : torch.Tensor or np.array</span>
+<span class="sd">        Reconstructed prediction (with embeddings)</span>
+<span class="sd">    embedded_x : torch.Tensor</span>
+<span class="sd">        Orginal input embedded by network</span>
+<span class="sd">    obf_vars : torch.Tensor</span>
+<span class="sd">        Binary mask for obfuscated variables.</span>
+<span class="sd">        1 means the variable was obfuscated so reconstruction is based on this.</span>
+<span class="sd">    eps : float</span>
+<span class="sd">        A small floating point to avoid ZeroDivisionError</span>
+<span class="sd">        This can happen in degenerated case when a feature has only one value</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    loss : torch float</span>
+<span class="sd">        Unsupervised loss, average value over batch samples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">y_pred</span> <span class="o">-</span> <span class="n">embedded_x</span>
+    <span class="n">reconstruction_errors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">batch_stds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span>
+    <span class="n">features_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">reconstruction_errors</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">batch_stds</span><span class="p">)</span>
+    <span class="c1"># compute the number of obfuscated variables to reconstruct</span>
+    <span class="n">nb_reconstructed_variables</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">obf_vars</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># take the mean of the reconstructed variable errors</span>
+    <span class="n">features_loss</span> <span class="o">=</span> <span class="n">features_loss</span> <span class="o">/</span> <span class="p">(</span><span class="n">nb_reconstructed_variables</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="c1"># here we take the mean per batch, contrary to the paper</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">features_loss</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">loss</span></div>
+
+
+<div class="viewcode-block" id="UnsupMetricContainer"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupMetricContainer">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">UnsupMetricContainer</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Container holding a list of metrics.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    y_pred : torch.Tensor or np.array</span>
+<span class="sd">        Reconstructed prediction (with embeddings)</span>
+<span class="sd">    embedded_x : torch.Tensor</span>
+<span class="sd">        Orginal input embedded by network</span>
+<span class="sd">    obf_vars : torch.Tensor</span>
+<span class="sd">        Binary mask for obfuscated variables.</span>
+<span class="sd">        1 means the variables was obfuscated so reconstruction is based on this.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">metric_names</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+    <span class="n">prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="n">Metric</span><span class="o">.</span><span class="n">get_metrics_by_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_names</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_names</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute all metrics and store into a dict.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y_true : np.ndarray</span>
+<span class="sd">            Target matrix or vector</span>
+<span class="sd">        y_pred : np.ndarray</span>
+<span class="sd">            Score matrix or vector</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            Dict of metrics ({metric_name: metric_value}).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+            <span class="n">res</span> <span class="o">=</span> <span class="n">metric</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">)</span>
+            <span class="n">logs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">metric</span><span class="o">.</span><span class="n">_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span>
+        <span class="k">return</span> <span class="n">logs</span></div>
 
 
 <div class="viewcode-block" id="MetricContainer"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.MetricContainer">[docs]</a><span class="nd">@dataclass</span>
@@ -241,7 +327,9 @@
         <span class="n">available_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">metric</span><span class="p">()</span><span class="o">.</span><span class="n">_name</span> <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="n">available_metrics</span><span class="p">]</span>
         <span class="n">metrics</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">available_names</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not available, choose in </span><span class="si">{</span><span class="n">available_names</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">name</span> <span class="ow">in</span> <span class="n">available_names</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> is not available, choose in </span><span class="si">{</span><span class="n">available_names</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">idx</span> <span class="o">=</span> <span class="n">available_names</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
             <span class="n">metric</span> <span class="o">=</span> <span class="n">available_metrics</span><span class="p">[</span><span class="n">idx</span><span class="p">]()</span>
             <span class="n">metrics</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
@@ -416,6 +504,71 @@
 <span class="sd">            MSE of predictions vs targets.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">mean_squared_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RMSLE"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.RMSLE">[docs]</a><span class="k">class</span> <span class="nc">RMSLE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Mean squared logarithmic error regression loss.</span>
+<span class="sd">    Scikit-imeplementation:</span>
+<span class="sd">    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html</span>
+<span class="sd">    Note: In order to avoid error, negative predictions are clipped to 0.</span>
+<span class="sd">    This means that you should clip negative predictions manually after calling predict.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;rmsle&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute RMSLE of predictions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y_true : np.ndarray</span>
+<span class="sd">            Target matrix or vector</span>
+<span class="sd">        y_score : np.ndarray</span>
+<span class="sd">            Score matrix or vector</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            RMSLE of predictions vs targets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">y_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">a_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">a_max</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mean_squared_log_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UnsupervisedMetric"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedMetric">[docs]</a><span class="k">class</span> <span class="nc">UnsupervisedMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unsupervised metric</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;unsup_loss&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute MSE (Mean Squared Error) of predictions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y_pred : torch.Tensor or np.array</span>
+<span class="sd">            Reconstructed prediction (with embeddings)</span>
+<span class="sd">        embedded_x : torch.Tensor</span>
+<span class="sd">            Orginal input embedded by network</span>
+<span class="sd">        obf_vars : torch.Tensor</span>
+<span class="sd">            Binary mask for obfuscated variables.</span>
+<span class="sd">            1 means the variables was obfuscated so reconstruction is based on this.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            MSE of predictions vs targets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">UnsupervisedLoss</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="RMSE"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.RMSE">[docs]</a><span class="k">class</span> <span class="nc">RMSE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
