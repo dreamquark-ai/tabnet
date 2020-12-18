@@ -75,7 +75,7 @@ class TabNetMultiTaskClassifier(TabModel):
             for classes in self.classes_
         ]
         self.preds_mapper = [
-            {index: class_label for index, class_label in enumerate(classes)}
+            {str(index): str(class_label) for index, class_label in enumerate(classes)}
             for classes in self.classes_
         ]
         self.updated_weights = weights
@@ -121,7 +121,7 @@ class TabNetMultiTaskClassifier(TabModel):
         results = [np.hstack(task_res) for task_res in results.values()]
         # map all task individually
         results = [
-            np.vectorize(self.preds_mapper[task_idx].get)(task_res)
+            np.vectorize(self.preds_mapper[task_idx].get)(task_res.astype(str))
             for task_idx, task_res in enumerate(results)
         ]
         return results
