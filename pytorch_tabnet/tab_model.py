@@ -59,7 +59,7 @@ class TabNetClassifier(TabModel):
             class_label: index for index, class_label in enumerate(self.classes_)
         }
         self.preds_mapper = {
-            index: class_label for index, class_label in enumerate(self.classes_)
+            str(index): class_label for index, class_label in enumerate(self.classes_)
         }
         self.updated_weights = self.weight_updater(weights)
 
@@ -71,7 +71,7 @@ class TabNetClassifier(TabModel):
 
     def predict_func(self, outputs):
         outputs = np.argmax(outputs, axis=1)
-        return np.vectorize(self.preds_mapper.get)(outputs)
+        return np.vectorize(self.preds_mapper.get)(outputs.astype(str))
 
     def predict_proba(self, X):
         """
@@ -132,6 +132,7 @@ class TabNetRegressor(TabModel):
                   "Use reshape(-1, 1) for single regression."
             raise ValueError(msg)
         self.output_dim = y_train.shape[1]
+        self.preds_mapper = None
 
         self.updated_weights = weights
         filter_weights(self.updated_weights)

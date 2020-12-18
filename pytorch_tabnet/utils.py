@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler
 import torch
 import numpy as np
 import scipy
+import json
 from sklearn.utils import check_array
 
 
@@ -328,3 +329,11 @@ def define_device(device_name):
         return "cpu"
     else:
         return device_name
+
+
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.int64):
+            return int(obj)
+        # Let the base class default method raise the TypeError
+        return json.JSONEncoder.default(self, obj)

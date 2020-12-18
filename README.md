@@ -70,6 +70,8 @@ clf.fit(
 preds = clf.predict(X_test)
 ```
 
+The targets on `y_train/y_valid` should contain a unique type (i.e. they must all be strings or integers).
+
 ### Default eval_metric
 
 A few classical evaluation metrics are implemented (see bellow section for custom ones):
