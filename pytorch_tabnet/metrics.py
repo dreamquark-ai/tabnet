@@ -24,7 +24,7 @@ def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
     y_pred : torch.Tensor or np.array
         Reconstructed prediction (with embeddings)
     embedded_x : torch.Tensor
-        Orginal input embedded by network
+        Original input embedded by network
     obf_vars : torch.Tensor
         Binary mask for obfuscated variables.
         1 means the variable was obfuscated so reconstruction is based on this.
@@ -59,7 +59,7 @@ class UnsupMetricContainer:
     y_pred : torch.Tensor or np.array
         Reconstructed prediction (with embeddings)
     embedded_x : torch.Tensor
-        Orginal input embedded by network
+        Original input embedded by network
     obf_vars : torch.Tensor
         Binary mask for obfuscated variables.
         1 means the variables was obfuscated so reconstruction is based on this.
@@ -351,7 +351,7 @@ class MSE(Metric):
 class RMSLE(Metric):
     """
     Mean squared logarithmic error regression loss.
-    Scikit-imeplementation:
+    Scikit-implementation:
     https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html
     Note: In order to avoid error, negative predictions are clipped to 0.
     This means that you should clip negative predictions manually after calling predict.
@@ -399,7 +399,7 @@ class UnsupervisedMetric(Metric):
         y_pred : torch.Tensor or np.array
             Reconstructed prediction (with embeddings)
         embedded_x : torch.Tensor
-            Orginal input embedded by network
+            Original input embedded by network
         obf_vars : torch.Tensor
             Binary mask for obfuscated variables.
             1 means the variables was obfuscated so reconstruction is based on this.

@@ -104,7 +104,7 @@ def create_dataloaders(
     X_train, y_train, eval_set, weights, batch_size, num_workers, drop_last, pin_memory
 ):
     """
-    Create dataloaders with or wihtout subsampling depending on weights and balanced.
+    Create dataloaders with or without subsampling depending on weights and balanced.
 
     Parameters
     ----------

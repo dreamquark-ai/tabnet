@@ -398,7 +398,7 @@ def infer_multitask_output(y_train):
 
     if len(y_train.shape) < 2:
         raise ValueError(
-            "y_train shoud be of shape (n_examples, n_tasks)"
+            "y_train should be of shape (n_examples, n_tasks)"
             + f"but got {y_train.shape}"
         )
     nb_tasks = y_train.shape[1]

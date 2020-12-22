@@ -107,8 +107,8 @@ class EarlyStopping(Callback):
         minimum change in monitored value to qualify as improvement.
         This number should be positive.
     patience : integer
-        number of epochs to wait for improvment before terminating.
-        the counter be reset after each improvment
+        number of epochs to wait for improvement before terminating.
+        the counter be reset after each improvement
 
     """
 
@@ -154,7 +154,7 @@ class EarlyStopping(Callback):
             self.trainer.network.load_state_dict(self.best_weights)
 
         if self.stopped_epoch > 0:
-            msg = f"\nEarly stopping occured at epoch {self.stopped_epoch}"
+            msg = f"\nEarly stopping occurred at epoch {self.stopped_epoch}"
             msg += (
                 f" with best_epoch = {self.best_epoch} and "
                 + f"best_{self.early_stopping_metric} = {round(self.best_loss, 5)}"

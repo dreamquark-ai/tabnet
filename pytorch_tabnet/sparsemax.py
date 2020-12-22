@@ -161,7 +161,7 @@ class Entmax15Function(Function):
 
 
 class Entmoid15(Function):
-    """ A highly optimized equivalent of labda x: Entmax15([x, 0]) """
+    """ A highly optimized equivalent of lambda x: Entmax15([x, 0]) """
 
     @staticmethod
     def forward(ctx, input):

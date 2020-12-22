@@ -78,7 +78,7 @@ class TabNetPretrainer(TabModel):
             a PyTorch loss function
             should be left to None for self supervised and non experts
         pretraining_ratio : float
-            Between 0 and 1, percentage of featue to mask for reconstruction
+            Between 0 and 1, percentage of feature to mask for reconstruction
         weights : np.array
             Sampling weights for each example.
         max_epochs : int
