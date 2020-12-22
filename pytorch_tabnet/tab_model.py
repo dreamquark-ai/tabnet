@@ -16,7 +16,7 @@ class TabNetClassifier(TabModel):
 
     def weight_updater(self, weights):
         """
-        Updates weights dictionnary according to target_mapper.
+        Updates weights dictionary according to target_mapper.
 
         Parameters
         ----------

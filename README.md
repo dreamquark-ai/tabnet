@@ -146,7 +146,7 @@ clf.fit(
 )
 ```
 
-The loss function has been normalized to be independant of `pretraining_ratio`, `batch_size` and number of features in the problem.
+The loss function has been normalized to be independent of `pretraining_ratio`, `batch_size` and number of features in the problem.
 A self supervised loss greater than 1 means that your model is reconstructing worse than predicting the mean for each feature, a loss bellow 1 means that the model is doing better than predicting the mean.
 
 A complete example can be found within the notebook `pretraining_example.ipynb`.
@@ -302,7 +302,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
     /!\ Only for TabNetClassifier
     Sampling parameter
     0 : no sampling
-    1 : automated sampling with inverse class occurences
+    1 : automated sampling with inverse class occurrences
     dict : keys are classes, values are weights for each class
 
 - `loss_fn` : torch.loss or list of torch.loss
