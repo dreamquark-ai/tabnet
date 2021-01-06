@@ -7,6 +7,54 @@ import json
 from sklearn.utils import check_array
 
 
+class FastTensorDataLoader:
+    """
+    A DataLoader-like object for a set of tensors that can be much faster than
+    TensorDataset + DataLoader because dataloader grabs individual indices of
+    the dataset and calls cat (slow).
+    Source: https://discuss.pytorch.org/t/dataloader-much-slower-than-manual-batching/27014/6
+    """
+
+    def __init__(self, *tensors, batch_size=32, shuffle=False):
+        """
+        Initialize a FastTensorDataLoader.
+        :param *tensors: tensors to store. Must have the same length @ dim 0.
+        :param batch_size: batch size to load.
+        :param shuffle: if True, shuffle the data *in-place* whenever an
+            iterator is created out of this object.
+        :returns: A FastTensorDataLoader.
+        """
+        assert all(t.shape[0] == tensors[0].shape[0] for t in tensors)
+        self.tensors = tensors
+
+        self.dataset_len = self.tensors[0].shape[0]
+        self.batch_size = batch_size
+        self.shuffle = shuffle
+
+        # Calculate # batches
+        n_batches, remainder = divmod(self.dataset_len, self.batch_size)
+        if remainder > 0:
+            n_batches += 1
+        self.n_batches = n_batches
+
+    def __iter__(self):
+        if self.shuffle:
+            r = torch.randperm(self.dataset_len)
+            self.tensors = [t[r] for t in self.tensors]
+        self.i = 0
+        return self
+
+    def __next__(self):
+        if self.i >= self.dataset_len:
+            raise StopIteration
+        batch = tuple(t[self.i : self.i + self.batch_size] for t in self.tensors)
+        self.i += self.batch_size
+        return batch
+
+    def __len__(self):
+        return self.n_batches
+
+
 class TorchDataset(Dataset):
     """
     Format for numpy array
@@ -140,25 +188,21 @@ def create_dataloaders(
     """
     need_shuffle, sampler = create_sampler(weights, y_train)
 
-    train_dataloader = DataLoader(
-        TorchDataset(X_train.astype(np.float32), y_train),
+    train_dataloader = FastTensorDataLoader(
+        torch.tensor(X_train.astype(np.float32)),
+        torch.tensor(y_train),
         batch_size=batch_size,
-        sampler=sampler,
         shuffle=need_shuffle,
-        num_workers=num_workers,
-        drop_last=drop_last,
-        pin_memory=pin_memory,
     )
 
     valid_dataloaders = []
     for X, y in eval_set:
         valid_dataloaders.append(
-            DataLoader(
-                TorchDataset(X.astype(np.float32), y),
+            FastTensorDataLoader(
+                torch.tensor(X.astype(np.float32)),
+                torch.tensor(y),
                 batch_size=batch_size,
                 shuffle=False,
-                num_workers=num_workers,
-                pin_memory=pin_memory,
             )
         )
 
