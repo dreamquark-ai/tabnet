@@ -174,6 +174,7 @@
 <span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">sp</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 
 
 <span class="k">def</span> <span class="nf">_assert_all_finite</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
@@ -502,6 +503,14 @@
         <span class="k">return</span> <span class="s2">&quot;binary&quot;</span>  <span class="c1"># [1, 2] or [[&quot;a&quot;], [&quot;b&quot;]]</span></div>
 
 
+<div class="viewcode-block" id="check_unique_type"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.check_unique_type">[docs]</a><span class="k">def</span> <span class="nf">check_unique_type</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+    <span class="n">target_types</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">y</span><span class="p">)</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span><span class="o">.</span><span class="n">unique</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">target_types</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Values on the target must have the same type. Target has types </span><span class="si">{</span><span class="n">target_types</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span></div>
+
+
 <div class="viewcode-block" id="infer_output_dim"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.infer_output_dim">[docs]</a><span class="k">def</span> <span class="nf">infer_output_dim</span><span class="p">(</span><span class="n">y_train</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer output_dim from targets</span>
@@ -518,6 +527,7 @@
 <span class="sd">    train_labels : list</span>
 <span class="sd">        Sorted list of initial classes</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_unique_type</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
     <span class="n">train_labels</span> <span class="o">=</span> <span class="n">unique_labels</span><span class="p">(</span><span class="n">y_train</span><span class="p">)</span>
     <span class="n">output_dim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_labels</span><span class="p">)</span>
 
@@ -526,6 +536,7 @@
 
 <div class="viewcode-block" id="check_output_dim"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.check_output_dim">[docs]</a><span class="k">def</span> <span class="nf">check_output_dim</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">y</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">check_unique_type</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
         <span class="n">valid_labels</span> <span class="o">=</span> <span class="n">unique_labels</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">set</span><span class="p">(</span><span class="n">valid_labels</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">labels</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -556,7 +567,7 @@
 
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="s2">&quot;y_train shoud be of shape (n_examples, n_tasks)&quot;</span>
+            <span class="s2">&quot;y_train should be of shape (n_examples, n_tasks)&quot;</span>
             <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
     <span class="n">nb_tasks</span> <span class="o">=</span> <span class="n">y_train</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>

@@ -16,6 +16,7 @@ from scipy.sparse import lil_matrix
 import scipy.sparse as sp
 
 import numpy as np
+import pandas as pd
 
 
 def _assert_all_finite(X, allow_nan=False):
@@ -344,6 +345,14 @@ def type_of_target(y):
         return "binary"  # [1, 2] or [["a"], ["b"]]
 
 
+def check_unique_type(y):
+    target_types = pd.Series(y).map(type).unique()
+    if len(target_types) != 1:
+        raise TypeError(
+            f"Values on the target must have the same type. Target has types {target_types}"
+        )
+
+
 def infer_output_dim(y_train):
     """
     Infer output_dim from targets
@@ -360,6 +369,7 @@ def infer_output_dim(y_train):
     train_labels : list
         Sorted list of initial classes
     """
+    check_unique_type(y_train)
     train_labels = unique_labels(y_train)
     output_dim = len(train_labels)
 
@@ -368,6 +378,7 @@ def infer_output_dim(y_train):
 
 def check_output_dim(labels, y):
     if y is not None:
+        check_unique_type(y)
         valid_labels = unique_labels(y)
         if not set(valid_labels).issubset(set(labels)):
             raise ValueError(
@@ -398,7 +409,7 @@ def infer_multitask_output(y_train):
 
     if len(y_train.shape) < 2:
         raise ValueError(
-            "y_train shoud be of shape (n_examples, n_tasks)"
+            "y_train should be of shape (n_examples, n_tasks)"
             + f"but got {y_train.shape}"
         )
     nb_tasks = y_train.shape[1]

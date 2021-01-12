@@ -69,9 +69,9 @@ class TabNetEncoder(torch.nn.Module):
         n_a : int
             Dimension of the attention  layer (usually between 4 and 64)
         n_steps : int
-            Number of sucessive steps in the newtork (usually betwenn 3 and 10)
+            Number of successive steps in the network (usually between 3 and 10)
         gamma : float
-            Float above 1, scaling factor for attention updates (usually betwenn 1.0 to 2.0)
+            Float above 1, scaling factor for attention updates (usually between 1.0 to 2.0)
         n_independent : int
             Number of independent GLU layer in each GLU block (default 2)
         n_shared : int
@@ -224,9 +224,9 @@ class TabNetDecoder(torch.nn.Module):
         n_d : int
             Dimension of the prediction  layer (usually between 4 and 64)
         n_steps : int
-            Number of sucessive steps in the newtork (usually betwenn 3 and 10)
+            Number of successive steps in the network (usually between 3 and 10)
         gamma : float
-            Float above 1, scaling factor for attention updates (usually betwenn 1.0 to 2.0)
+            Float above 1, scaling factor for attention updates (usually between 1.0 to 2.0)
         n_independent : int
             Number of independent GLU layer in each GLU block (default 2)
         n_shared : int
@@ -320,7 +320,7 @@ class TabNetPretraining(torch.nn.Module):
         if self.n_steps <= 0:
             raise ValueError("n_steps should be a positive integer.")
         if self.n_independent == 0 and self.n_shared == 0:
-            raise ValueError("n_shared and n_independant can't be both zero.")
+            raise ValueError("n_shared and n_independent can't be both zero.")
 
         self.virtual_batch_size = virtual_batch_size
         self.embedder = EmbeddingGenerator(input_dim, cat_dims, cat_idxs, cat_emb_dim)
@@ -331,7 +331,7 @@ class TabNetPretraining(torch.nn.Module):
             input_dim=self.post_embed_dim,
             output_dim=self.post_embed_dim,
             n_d=n_d,
-            n_a=n_d,
+            n_a=n_a,
             n_steps=n_steps,
             gamma=gamma,
             n_independent=n_independent,
@@ -407,9 +407,9 @@ class TabNetNoEmbeddings(torch.nn.Module):
         n_a : int
             Dimension of the attention  layer (usually between 4 and 64)
         n_steps : int
-            Number of sucessive steps in the newtork (usually betwenn 3 and 10)
+            Number of successive steps in the network (usually between 3 and 10)
         gamma : float
-            Float above 1, scaling factor for attention updates (usually betwenn 1.0 to 2.0)
+            Float above 1, scaling factor for attention updates (usually between 1.0 to 2.0)
         n_independent : int
             Number of independent GLU layer in each GLU block (default 2)
         n_shared : int
@@ -442,7 +442,7 @@ class TabNetNoEmbeddings(torch.nn.Module):
             input_dim=input_dim,
             output_dim=output_dim,
             n_d=n_d,
-            n_a=n_d,
+            n_a=n_a,
             n_steps=n_steps,
             gamma=gamma,
             n_independent=n_independent,
@@ -515,9 +515,9 @@ class TabNet(torch.nn.Module):
         n_a : int
             Dimension of the attention  layer (usually between 4 and 64)
         n_steps : int
-            Number of sucessive steps in the newtork (usually betwenn 3 and 10)
+            Number of successive steps in the network (usually between 3 and 10)
         gamma : float
-            Float above 1, scaling factor for attention updates (usually betwenn 1.0 to 2.0)
+            Float above 1, scaling factor for attention updates (usually between 1.0 to 2.0)
         cat_idxs : list of int
             Index of each categorical column in the dataset
         cat_dims : list of int
@@ -558,7 +558,7 @@ class TabNet(torch.nn.Module):
         if self.n_steps <= 0:
             raise ValueError("n_steps should be a positive integer.")
         if self.n_independent == 0 and self.n_shared == 0:
-            raise ValueError("n_shared and n_independant can't be both zero.")
+            raise ValueError("n_shared and n_independent can't be both zero.")
 
         self.virtual_batch_size = virtual_batch_size
         self.embedder = EmbeddingGenerator(input_dim, cat_dims, cat_idxs, cat_emb_dim)
@@ -604,7 +604,7 @@ class AttentiveTransformer(torch.nn.Module):
         input_dim : int
             Input size
         output_dim : int
-            Outpu_size
+            Output_size
         virtual_batch_size : int
             Batch size for Ghost Batch Normalization
         momentum : float
@@ -657,10 +657,10 @@ class FeatTransformer(torch.nn.Module):
         input_dim : int
             Input size
         output_dim : int
-            Outpu_size
+            Output_size
         shared_layers : torch.nn.ModuleList
             The shared block that should be common to every step
-        n_glu_independant : int
+        n_glu_independent : int
             Number of independent GLU layers
         virtual_batch_size : int
             Batch size for Ghost Batch Normalization within GLU block(s)
@@ -707,7 +707,7 @@ class FeatTransformer(torch.nn.Module):
 
 class GLU_Block(torch.nn.Module):
     """
-    Independant GLU block, specific to each step
+    Independent GLU block, specific to each step
     """
 
     def __init__(
@@ -778,7 +778,7 @@ class EmbeddingGenerator(torch.nn.Module):
     """
 
     def __init__(self, input_dim, cat_dims, cat_idxs, cat_emb_dim):
-        """This is an embedding module for an entier set of features
+        """This is an embedding module for an entire set of features
 
         Parameters
         ----------
@@ -791,7 +791,7 @@ class EmbeddingGenerator(torch.nn.Module):
             Positional index for each categorical features in inputs
         cat_emb_dim : int or list of int
             Embedding dimension for each categorical features
-            If int, the same embdeding dimension will be used for all categorical features
+            If int, the same embedding dimension will be used for all categorical features
         """
         super(EmbeddingGenerator, self).__init__()
         if cat_dims == [] or cat_idxs == []:
@@ -830,7 +830,7 @@ class EmbeddingGenerator(torch.nn.Module):
 
     def forward(self, x):
         """
-        Apply embdeddings to inputs
+        Apply embeddings to inputs
         Inputs should be (batch_size, input_dim)
         Outputs will be of size (batch_size, self.post_embed_dim)
         """

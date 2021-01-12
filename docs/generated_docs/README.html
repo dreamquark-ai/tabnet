@@ -251,6 +251,7 @@
 <span class="n">preds</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>The targets on <code class="docutils literal notranslate"><span class="pre">y_train/y_valid</span></code> should contain a unique type (i.e. they must all be strings or integers).</p>
 <div class="section" id="default-eval-metric">
 <h2>Default eval_metric<a class="headerlink" href="#default-eval-metric" title="Permalink to this headline">¶</a></h2>
 <p>A few classical evaluation metrics are implemented (see bellow section for custom ones):</p>
@@ -322,7 +323,7 @@ In order to match the given scores, you need to use <code class="docutils litera
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>The loss function has been normalized to be independant of <code class="docutils literal notranslate"><span class="pre">pretraining_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> and number of features in the problem.
+<p>The loss function has been normalized to be independent of <code class="docutils literal notranslate"><span class="pre">pretraining_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> and number of features in the problem.
 A self supervised loss greater than 1 means that your model is reconstructing worse than predicting the mean for each feature, a loss bellow 1 means that the model is doing better than predicting the mean.</p>
 <p>A complete example can be found within the notebook <code class="docutils literal notranslate"><span class="pre">pretraining_example.ipynb</span></code>.</p>
 <p>/!\ : current implementation is trying to reconstruct the original inputs, but Batch Normalization applies a random transformation that can’t be deduced by a single line, making the reconstruction harder. Lowering the <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> might make the pretraining easier.</p>
@@ -443,7 +444,7 @@ Either “sparsemax” or “entmax” : this is the masking function to use for
 <p>/!\ Only for TabNetClassifier
 Sampling parameter
 0 : no sampling
-1 : automated sampling with inverse class occurences
+1 : automated sampling with inverse class occurrences
 dict : keys are classes, values are weights for each class</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">loss_fn</span></code> : torch.loss or list of torch.loss</p>
