@@ -179,6 +179,33 @@
 <div class="section" id="module-pytorch_tabnet.utils">
 <span id="pytorch-tabnet-utils-module"></span><h2>pytorch_tabnet.utils module<a class="headerlink" href="#module-pytorch_tabnet.utils" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
+<dt id="pytorch_tabnet.utils.ComplexEncoder">
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">ComplexEncoder</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">skipkeys=False</em>, <em class="sig-param">ensure_ascii=True</em>, <em class="sig-param">check_circular=True</em>, <em class="sig-param">allow_nan=True</em>, <em class="sig-param">sort_keys=False</em>, <em class="sig-param">indent=None</em>, <em class="sig-param">separators=None</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#ComplexEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.ComplexEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">json.encoder.JSONEncoder</span></code></p>
+<dl class="method">
+<dt id="pytorch_tabnet.utils.ComplexEncoder.default">
+<code class="sig-name descname">default</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#ComplexEncoder.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.ComplexEncoder.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement this method in a subclass such that it returns
+a serializable object for <code class="docutils literal notranslate"><span class="pre">o</span></code>, or calls the base implementation
+(to raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>).</p>
+<p>For example, to support arbitrary iterators, you could
+implement default like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="c1"># Let the base class default method raise the TypeError</span>
+    <span class="k">return</span> <span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="pytorch_tabnet.utils.PredictDataset">
 <em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">PredictDataset</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#PredictDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.PredictDataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code></p>
@@ -208,7 +235,7 @@
 <dl class="function">
 <dt id="pytorch_tabnet.utils.create_dataloaders">
 <code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">create_dataloaders</code><span class="sig-paren">(</span><em class="sig-param">X_train</em>, <em class="sig-param">y_train</em>, <em class="sig-param">eval_set</em>, <em class="sig-param">weights</em>, <em class="sig-param">batch_size</em>, <em class="sig-param">num_workers</em>, <em class="sig-param">drop_last</em>, <em class="sig-param">pin_memory</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#create_dataloaders"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.create_dataloaders" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create dataloaders with or wihtout subsampling depending on weights and balanced.</p>
+<dd><p>Create dataloaders with or without subsampling depending on weights and balanced.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -353,7 +380,7 @@ The last one is used for early stopping</p></li>
 <dl class="function">
 <dt id="pytorch_tabnet.pretraining_utils.create_dataloaders">
 <code class="sig-prename descclassname">pytorch_tabnet.pretraining_utils.</code><code class="sig-name descname">create_dataloaders</code><span class="sig-paren">(</span><em class="sig-param">X_train</em>, <em class="sig-param">eval_set</em>, <em class="sig-param">weights</em>, <em class="sig-param">batch_size</em>, <em class="sig-param">num_workers</em>, <em class="sig-param">drop_last</em>, <em class="sig-param">pin_memory</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/pretraining_utils.html#create_dataloaders"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.pretraining_utils.create_dataloaders" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create dataloaders with or wihtout subsampling depending on weights and balanced.</p>
+<dd><p>Create dataloaders with or without subsampling depending on weights and balanced.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -437,7 +464,7 @@ registered hooks while the latter silently ignores them.</p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.EmbeddingGenerator.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#EmbeddingGenerator.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.EmbeddingGenerator.forward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Apply embdeddings to inputs
+<dd><p>Apply embeddings to inputs
 Inputs should be (batch_size, input_dim)
 Outputs will be of size (batch_size, self.post_embed_dim)</p>
 </dd></dl>
@@ -490,7 +517,7 @@ registered hooks while the latter silently ignores them.</p>
 <dt id="pytorch_tabnet.tab_network.GLU_Block">
 <em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">GLU_Block</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">output_dim</em>, <em class="sig-param">n_glu=2</em>, <em class="sig-param">first=False</em>, <em class="sig-param">shared_layers=None</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#GLU_Block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.GLU_Block" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
-<p>Independant GLU block, specific to each step</p>
+<p>Independent GLU block, specific to each step</p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.GLU_Block.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#GLU_Block.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.GLU_Block.forward" title="Permalink to this definition">¶</a></dt>
@@ -838,6 +865,11 @@ obf_vars : which variable where obfuscated</p>
 <dd></dd></dl>
 
 <dl class="function">
+<dt id="pytorch_tabnet.multiclass_utils.check_unique_type">
+<code class="sig-prename descclassname">pytorch_tabnet.multiclass_utils.</code><code class="sig-name descname">check_unique_type</code><span class="sig-paren">(</span><em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/multiclass_utils.html#check_unique_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.multiclass_utils.check_unique_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
 <dt id="pytorch_tabnet.multiclass_utils.infer_multitask_output">
 <code class="sig-prename descclassname">pytorch_tabnet.multiclass_utils.</code><code class="sig-name descname">infer_multitask_output</code><span class="sig-paren">(</span><em class="sig-param">y_train</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/multiclass_utils.html#infer_multitask_output"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.multiclass_utils.infer_multitask_output" title="Permalink to this definition">¶</a></dt>
 <dd><p>Infer output_dim from targets
@@ -1129,7 +1161,7 @@ because there are no explicit labels)</p></li>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_model.TabNetClassifier.weight_updater">
 <code class="sig-name descname">weight_updater</code><span class="sig-paren">(</span><em class="sig-param">weights</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_model.html#TabNetClassifier.weight_updater"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_model.TabNetClassifier.weight_updater" title="Permalink to this definition">¶</a></dt>
-<dd><p>Updates weights dictionnary according to target_mapper.</p>
+<dd><p>Updates weights dictionary according to target_mapper.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>weights</strong> (<em>bool</em><em> or </em><em>dict</em>) – Given weights for balancing training.</p>
@@ -1358,6 +1390,11 @@ dict for custom weights per class</p></li>
 <dl class="attribute">
 <dt id="pytorch_tabnet.abstract_model.TabModel.lambda_sparse">
 <code class="sig-name descname">lambda_sparse</code><em class="property">: float</em><em class="property"> = 0.001</em><a class="headerlink" href="#pytorch_tabnet.abstract_model.TabModel.lambda_sparse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pytorch_tabnet.abstract_model.TabModel.load_class_attrs">
+<code class="sig-name descname">load_class_attrs</code><span class="sig-paren">(</span><em class="sig-param">class_attrs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/abstract_model.html#TabModel.load_class_attrs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.abstract_model.TabModel.load_class_attrs" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1638,8 +1675,8 @@ number of epochs.</p>
 <li><p><strong>is_maximize</strong> (<em>bool</em>) – Whether to maximize or not early_stopping_metric</p></li>
 <li><p><strong>tol</strong> (<em>float</em>) – minimum change in monitored value to qualify as improvement.
 This number should be positive.</p></li>
-<li><p><strong>patience</strong> (<em>integer</em>) – number of epochs to wait for improvment before terminating.
-the counter be reset after each improvment</p></li>
+<li><p><strong>patience</strong> (<em>integer</em>) – number of epochs to wait for improvement before terminating.
+the counter be reset after each improvement</p></li>
 </ul>
 </dd>
 </dl>
@@ -1829,7 +1866,7 @@ The last one is used for early stopping</p></li>
 The last metric is used for early stopping.</p></li>
 <li><p><strong>loss_fn</strong> (<em>callable</em><em> or </em><em>None</em>) – a PyTorch loss function
 should be left to None for self supervised and non experts</p></li>
-<li><p><strong>pretraining_ratio</strong> (<em>float</em>) – Between 0 and 1, percentage of featue to mask for reconstruction</p></li>
+<li><p><strong>pretraining_ratio</strong> (<em>float</em>) – Between 0 and 1, percentage of feature to mask for reconstruction</p></li>
 <li><p><strong>weights</strong> (<em>np.array</em>) – Sampling weights for each example.</p></li>
 <li><p><strong>max_epochs</strong> (<em>int</em>) – Maximum number of epochs during training</p></li>
 <li><p><strong>patience</strong> (<em>int</em>) – Number of consecutive non improving epoch before early stopping</p></li>
@@ -1977,7 +2014,7 @@ during the backward pass.</p>
 <dt id="pytorch_tabnet.sparsemax.Entmoid15">
 <em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.sparsemax.</code><code class="sig-name descname">Entmoid15</code><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#Entmoid15"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmoid15" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
-<p>A highly optimized equivalent of labda x: Entmax15([x, 0])</p>
+<p>A highly optimized equivalent of lambda x: Entmax15([x, 0])</p>
 <dl class="method">
 <dt id="pytorch_tabnet.sparsemax.Entmoid15.backward">
 <em class="property">static </em><code class="sig-name descname">backward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">grad_output</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#Entmoid15.backward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmoid15.backward" title="Permalink to this definition">¶</a></dt>
@@ -2200,7 +2237,7 @@ output.</p>
 <em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.metrics.</code><code class="sig-name descname">RMSLE</code><a class="reference internal" href="../_modules/pytorch_tabnet/metrics.html#RMSLE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.metrics.RMSLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pytorch_tabnet.metrics.Metric" title="pytorch_tabnet.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytorch_tabnet.metrics.Metric</span></code></a></p>
 <p>Mean squared logarithmic error regression loss.
-Scikit-imeplementation:
+Scikit-implementation:
 <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html">https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html</a>
 Note: In order to avoid error, negative predictions are clipped to 0.
 This means that you should clip negative predictions manually after calling predict.</p>
@@ -2215,7 +2252,7 @@ This means that you should clip negative predictions manually after calling pred
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>y_pred</strong> (<em>torch.Tensor</em><em> or </em><em>np.array</em>) – Reconstructed prediction (with embeddings)</p></li>
-<li><p><strong>embedded_x</strong> (<em>torch.Tensor</em>) – Orginal input embedded by network</p></li>
+<li><p><strong>embedded_x</strong> (<em>torch.Tensor</em>) – Original input embedded by network</p></li>
 <li><p><strong>obf_vars</strong> (<em>torch.Tensor</em>) – Binary mask for obfuscated variables.
 1 means the variables was obfuscated so reconstruction is based on this.</p></li>
 </ul>
@@ -2243,7 +2280,7 @@ and number of features reconstructed independent (by taking the mean)</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>y_pred</strong> (<em>torch.Tensor</em><em> or </em><em>np.array</em>) – Reconstructed prediction (with embeddings)</p></li>
-<li><p><strong>embedded_x</strong> (<em>torch.Tensor</em>) – Orginal input embedded by network</p></li>
+<li><p><strong>embedded_x</strong> (<em>torch.Tensor</em>) – Original input embedded by network</p></li>
 <li><p><strong>obf_vars</strong> (<em>torch.Tensor</em>) – Binary mask for obfuscated variables.
 1 means the variable was obfuscated so reconstruction is based on this.</p></li>
 <li><p><strong>eps</strong> (<em>float</em>) – A small floating point to avoid ZeroDivisionError
