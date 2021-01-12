@@ -1,4 +1,18 @@
 
+# [3.1.0](https://github.com/dreamquark-ai/tabnet/compare/v3.0.0...v3.1.0) (2021-01-12)
+
+
+### Bug Fixes
+
+* n_a not being used ([7ae20c9](https://github.com/dreamquark-ai/tabnet/commit/7ae20c98a601da95040b9ecf79eac19f1d3e4a7b))
+
+
+### Features
+
+* save and load preds_mapper ([cab643b](https://github.com/dreamquark-ai/tabnet/commit/cab643b156fdecfded51d70d29072fc43f397bbb))
+
+
+
 # [3.0.0](https://github.com/dreamquark-ai/tabnet/compare/v2.0.1...v3.0.0) (2020-12-15)
 
 
