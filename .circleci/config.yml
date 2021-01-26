@@ -179,7 +179,20 @@ jobs:
                   shell: bash -leo pipefail
                   command: |
                       make test-nb-customization
-
+    test-nb-pretraining:
+            executor: python-executor
+            steps:
+                - checkout
+                # Download and cache dependencies
+                - restore_cache:
+                    keys:
+                        - v1-dependencies-{{ checksum "poetry.lock" }}
+                - install_poetry
+                - run:
+                    name: run test-nb-pretraining
+                    shell: bash -leo pipefail
+                    command: |
+                        make test-nb-pretraining
 workflows:
     version: 2
     CI-tabnet:
@@ -200,8 +213,14 @@ workflows:
                   requires:
                       - install
             - test-nb-multi-task:
-                        requires:
-                            - install
+                  requires:
+                      - install
+            - test-nb-customization:
+                  requires:
+                      - install
+            - test-nb-pretraining:
+                  requires:
+                      - install
             - lint-code:
                   requires:
                       - install
