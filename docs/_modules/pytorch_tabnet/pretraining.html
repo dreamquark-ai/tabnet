@@ -197,7 +197,8 @@
         <span class="n">weights</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updated_weights</span> <span class="o">=</span> <span class="n">weights</span>
-        <span class="n">filter_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updated_weights</span><span class="p">)</span></div>
+        <span class="n">filter_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updated_weights</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">preds_mapper</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 <div class="viewcode-block" id="TabNetPretrainer.fit"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.pretraining.TabNetPretrainer.fit">[docs]</a>    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
