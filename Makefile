@@ -81,27 +81,31 @@ doc: build ## Build and generate docs
 
 test-nb-census: ## run census income tests using notebooks
 	$(MAKE) _run_notebook NB_FILE="./census_example.ipynb"
-.PHONY: test-obfuscator
+.PHONY: test-nb-census
 
 test-nb-forest: ## run census income tests using notebooks
 	$(MAKE) _run_notebook NB_FILE="./forest_example.ipynb"
-.PHONY: test-obfuscator
+.PHONY: test-nb-forest
 
 test-nb-regression: ## run regression example tests using notebooks
 	$(MAKE) _run_notebook NB_FILE="./regression_example.ipynb"
-.PHONY: test-obfuscator
+.PHONY: test-nb-regression
 
 test-nb-multi-regression: ## run multi regression example tests using notebooks
 	$(MAKE) _run_notebook NB_FILE="./multi_regression_example.ipynb"
-.PHONY: test-obfuscator
+.PHONY: test-nb-multi-regression
 
 test-nb-multi-task: ## run multi task classification example tests using notebooks
 	        $(MAKE) _run_notebook NB_FILE="./multi_task_example.ipynb"
-.PHONY: test-obfuscator
+.PHONY: test-nb-multi-task
 
 test-nb-customization: ## run customization example tests using notebooks
 	        $(MAKE) _run_notebook NB_FILE="./customizing_example.ipynb"
-.PHONY: test-obfuscator
+.PHONY: test-nb-customization
+
+test-nb-pretraining: ## run customization example tests using notebooks
+	        $(MAKE) _run_notebook NB_FILE="./pretraining_example.ipynb"
+.PHONY: test-nb-pretraining
 
 help: ## Display help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

@@ -40,6 +40,7 @@ class TabNetPretrainer(TabModel):
     ):
         self.updated_weights = weights
         filter_weights(self.updated_weights)
+        self.preds_mapper = None
 
     def fit(
         self,
