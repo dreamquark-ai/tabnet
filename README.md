@@ -37,7 +37,7 @@ If you wan to use it locally within a docker container:
 
 - `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
 
-# What problems does pytorch-tabnet handles?
+# What problems does pytorch-tabnet handle?
 
 - TabNetClassifier : binary classification and multi-class classification problems
 - TabNetRegressor : simple and multi-task regression problems
@@ -70,11 +70,11 @@ clf.fit(
 preds = clf.predict(X_test)
 ```
 
-The targets on `y_train/y_valid` should contain a unique type (i.e. they must all be strings or integers).
+The targets on `y_train/y_valid` should contain a unique type (e.g. they must all be strings or integers).
 
 ### Default eval_metric
 
-A few classical evaluation metrics are implemented (see bellow section for custom ones):
+A few classic evaluation metrics are implemented (see further below for custom ones):
 - binary classification metrics : 'auc', 'accuracy', 'balanced_accuracy', 'logloss'
 - multiclass classification : 'accuracy', 'balanced_accuracy', 'logloss'
 - regression: 'mse', 'mae', 'rmse', 'rmsle'
@@ -86,7 +86,7 @@ In order to match the given scores, you need to use `np.clip(clf.predict(X_predi
 
 ### Custom evaluation metrics
 
-It's easy to create a metric that matches your specific need. Here is an example for gini score (note that you need to specifiy whether this metric should be maximized or not):
+You can create a metric for your specific need. Here is an example for gini score (note that you need to specifiy whether this metric should be maximized or not):
 
 ```python
 from pytorch_tabnet.metrics import Metric
@@ -148,7 +148,7 @@ clf.fit(
 )
 ```
 
-The loss function has been normalized to be independent of `pretraining_ratio`, `batch_size` and number of features in the problem.
+The loss function has been normalized to be independent of `pretraining_ratio`, `batch_size` and the number of features in the problem.
 A self supervised loss greater than 1 means that your model is reconstructing worse than predicting the mean for each feature, a loss bellow 1 means that the model is doing better than predicting the mean.
 
 A complete example can be found within the notebook `pretraining_example.ipynb`.
@@ -237,7 +237,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
 - `optimizer_params`: dict (default=dict(lr=2e-2))
 
-    Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning of ```0.02 ```  with decay is a good option.
+    Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning rate of ```0.02 ```  with decay is a good option.
 
 - `scheduler_fn` : torch.optim.lr_scheduler (default=None)
 
@@ -295,9 +295,9 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
     Number of consecutive epochs without improvement before performing early stopping.
 
-    If patience is set to 0 then no early stopping will be performed.
+    If patience is set to 0, then no early stopping will be performed.
 
-    Note that if patience is enabled, best weights from best epoch will automatically be loaded at the end of `fit`.
+    Note that if patience is enabled, then best weights from best epoch will automatically be loaded at the end of `fit`.
 
 - `weights` : int or dict (default=0)
 
@@ -315,7 +315,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
 - `batch_size` : int (default=1024)
 
-    Number of examples per batch, large batch sizes are recommended.
+    Number of examples per batch. Large batch sizes are recommended.
 
 - `virtual_batch_size` : int (default=128)
 
