@@ -165,6 +165,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 - [multi-task regression examples](https://github.com/dreamquark-ai/tabnet/blob/develop/multi_regression_example.ipynb)
 - [multi-task multi-class classification examples](https://www.kaggle.com/optimo/tabnetmultitaskclassifier)
 - [kaggle moa 1st place solution using tabnet](https://www.kaggle.com/c/lish-moa/discussion/201510)
+- [skorch tabnet classifier example](https://github.com/dreamquark-ai/tabnet/blob/develop/skorch_tabnet_classifier.ipynb)
 
 ## Model parameters
 
