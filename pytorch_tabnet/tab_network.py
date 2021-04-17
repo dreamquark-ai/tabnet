@@ -1,6 +1,6 @@
 import torch
-from torch.nn import Linear, BatchNorm1d, ReLU
 import numpy as np
+from torch.nn import Linear, BatchNorm1d, ReLU
 from pytorch_tabnet import sparsemax
 
 
@@ -32,7 +32,7 @@ class GBN(torch.nn.Module):
         self.bn = BatchNorm1d(self.input_dim, momentum=momentum)
 
     def forward(self, x):
-        chunks = x.chunk(int(np.ceil(x.shape[0] / self.virtual_batch_size)), 0)
+        chunks = x.chunk(int(torch.ceil(torch.tensor(x.shape[0] / self.virtual_batch_size))), 0)
         res = [self.bn(x_) for x_ in chunks]
 
         return torch.cat(res, dim=0)
@@ -811,13 +811,13 @@ class EmbeddingGenerator(torch.nn.Module):
                       and {len(cat_dims)}"""
             raise ValueError(msg)
         self.post_embed_dim = int(
-            input_dim + np.sum(self.cat_emb_dims) - len(self.cat_emb_dims)
+            input_dim + sum(self.cat_emb_dims) - len(self.cat_emb_dims)
         )
 
         self.embeddings = torch.nn.ModuleList()
 
         # Sort dims by cat_idx
-        sorted_idxs = np.argsort(cat_idxs)
+        sorted_idxs = torch.argsort(torch.Tensor(cat_idxs))
         cat_dims = [cat_dims[i] for i in sorted_idxs]
         self.cat_emb_dims = [self.cat_emb_dims[i] for i in sorted_idxs]
 
