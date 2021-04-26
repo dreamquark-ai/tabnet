@@ -37,6 +37,12 @@ If you wan to use it locally within a docker container:
 
 - `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
 
+# Contributing
+
+When contributing to the TabNet repository, please make sure to first discuss the change you wish to make via a new or already existing issue.
+
+Our commits follow the rules presented [here](https://www.conventionalcommits.org/en/v1.0.0/).
+
 # What problems does pytorch-tabnet handle?
 
 - TabNetClassifier : binary classification and multi-class classification problems
