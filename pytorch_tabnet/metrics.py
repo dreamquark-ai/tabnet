@@ -50,6 +50,45 @@ def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
     return loss
 
 
+def combined_loss(additional_loss, lambda_, y_true, y_pred, y_pred_embedded, embedded_x, obf_vars, eps=1e-9):
+    """
+    Implements unsupervised loss function.
+    This differs from orginal paper as it's scaled to be batch size independent
+    and number of features reconstructed independent (by taking the mean)
+
+    Parameters
+    ----------
+    y_pred_embedded : torch.Tensor or np.array
+        Reconstructed prediction (with embeddings)
+    embedded_x : torch.Tensor
+        Original input embedded by network
+    obf_vars : torch.Tensor
+        Binary mask for obfuscated variables.
+        1 means the variable was obfuscated so reconstruction is based on this.
+    eps : float
+        A small floating point to avoid ZeroDivisionError
+        This can happen in degenerated case when a feature has only one value
+
+    Returns
+    -------
+    loss : torch float
+        Unsupervised loss, average value over batch samples.
+    """
+    errors = y_pred - embedded_x
+    reconstruction_errors = torch.mul(errors, obf_vars) ** 2
+    batch_stds = torch.std(embedded_x, dim=0) ** 2 + eps
+    features_loss = torch.matmul(reconstruction_errors, 1 / batch_stds)
+    # compute the number of obfuscated variables to reconstruct
+    nb_reconstructed_variables = torch.sum(obf_vars, dim=1)
+    # take the mean of the reconstructed variable errors
+    features_loss = features_loss / (nb_reconstructed_variables + eps)
+    # here we take the mean per batch, contrary to the paper
+    loss = torch.mean(features_loss)
+    main_loss = additional_loss(y_true, y_pred)
+    return main_loss + lambda_ * loss
+
+
+
 @dataclass
 class UnsupMetricContainer:
     """Container holding a list of metrics.
