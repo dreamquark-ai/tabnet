@@ -15,9 +15,9 @@ from pytorch_tabnet.utils import (
 from scipy.special import softmax
 from pytorch_tabnet.metrics import (
     UnsupMetricContainer,
-    check_metrics,
-    combined_loss
+    check_metrics
 )
+from .metrics import combined_loss
 from pytorch_tabnet.multiclass_utils import infer_output_dim, check_output_dim
 from pytorch_tabnet.abstract_model import TabModel
 
