@@ -60,6 +60,7 @@ class TabModel(BaseEstimator):
     input_dim: int = None
     output_dim: int = None
     device_name: str = "auto"
+    lambda_: float = None
 
     def __post_init__(self):
         self.batch_size = 1024
