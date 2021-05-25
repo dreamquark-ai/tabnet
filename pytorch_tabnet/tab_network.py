@@ -206,8 +206,8 @@ class TabNetDecoder(torch.nn.Module):
         input_dim,
         n_d=8,
         n_steps=3,
-        n_independent=2,
-        n_shared=2,
+        n_independent=1,
+        n_shared=1,
         virtual_batch_size=128,
         momentum=0.02,
     ):
@@ -228,9 +228,9 @@ class TabNetDecoder(torch.nn.Module):
         gamma : float
             Float above 1, scaling factor for attention updates (usually between 1.0 to 2.0)
         n_independent : int
-            Number of independent GLU layer in each GLU block (default 2)
+            Number of independent GLU layer in each GLU block (default 1)
         n_shared : int
-            Number of independent GLU layer in each GLU block (default 2)
+            Number of independent GLU layer in each GLU block (default 1)
         virtual_batch_size : int
             Batch size for Ghost Batch Normalization
         momentum : float
@@ -245,7 +245,6 @@ class TabNetDecoder(torch.nn.Module):
         self.virtual_batch_size = virtual_batch_size
 
         self.feat_transformers = torch.nn.ModuleList()
-        self.reconstruction_layers = torch.nn.ModuleList()
 
         if self.n_shared > 0:
             shared_feat_transform = torch.nn.ModuleList()
@@ -268,16 +267,16 @@ class TabNetDecoder(torch.nn.Module):
                 momentum=momentum,
             )
             self.feat_transformers.append(transformer)
-            reconstruction_layer = Linear(n_d, self.input_dim, bias=False)
-            initialize_non_glu(reconstruction_layer, n_d, self.input_dim)
-            self.reconstruction_layers.append(reconstruction_layer)
+
+        self.reconstruction_layer = Linear(n_d, self.input_dim, bias=False)
+        initialize_non_glu(self.reconstruction_layer, n_d, self.input_dim)
 
     def forward(self, steps_output):
         res = 0
         for step_nb, step_output in enumerate(steps_output):
             x = self.feat_transformers[step_nb](step_output)
-            x = self.reconstruction_layers[step_nb](step_output)
             res = torch.add(res, x)
+        res = self.reconstruction_layer(res)
         return res
 
 
@@ -299,6 +298,8 @@ class TabNetPretraining(torch.nn.Module):
         virtual_batch_size=128,
         momentum=0.02,
         mask_type="sparsemax",
+        n_shared_decoder=1,
+        n_indep_decoder=1,
     ):
         super(TabNetPretraining, self).__init__()
 
@@ -316,6 +317,8 @@ class TabNetPretraining(torch.nn.Module):
         self.n_shared = n_shared
         self.mask_type = mask_type
         self.pretraining_ratio = pretraining_ratio
+        self.n_shared_decoder = n_shared_decoder
+        self.n_indep_decoder = n_indep_decoder
 
         if self.n_steps <= 0:
             raise ValueError("n_steps should be a positive integer.")
@@ -345,8 +348,8 @@ class TabNetPretraining(torch.nn.Module):
             self.post_embed_dim,
             n_d=n_d,
             n_steps=n_steps,
-            n_independent=n_independent,
-            n_shared=n_shared,
+            n_independent=self.n_indep_decoder,
+            n_shared=self.n_shared_decoder,
             virtual_batch_size=virtual_batch_size,
             momentum=momentum,
         )
