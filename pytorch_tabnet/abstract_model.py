@@ -471,7 +471,7 @@ class TabModel(BaseEstimator):
 
         loss = self.compute_loss(output, y)
         # Add the overall sparsity loss
-        loss -= self.lambda_sparse * M_loss
+        loss = loss - self.lambda_sparse * M_loss
 
         # Perform backward pass and optimization
         loss.backward()
