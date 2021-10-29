@@ -235,6 +235,9 @@ workflows:
             - test-nb-pretraining:
                   requires:
                       - install
+            - test-nb-hyperparameter-optimization:
+                  requires:
+                      - install
             - lint-code:
                   requires:
                       - install
