@@ -107,6 +107,10 @@ test-nb-pretraining: ## run customization example tests using notebooks
 	        $(MAKE) _run_notebook NB_FILE="./pretraining_example.ipynb"
 .PHONY: test-nb-pretraining
 
+test-nb-hyperparameter-optimization: ## run hyperparameter optimization example tests using notebooks
+	        $(MAKE) _run_notebook NB_FILE="./hyperparameter_optimization_example.ipynb"
+.PHONY: test-nb-hyperparameter-optimization
+
 help: ## Display help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 .PHONY: help

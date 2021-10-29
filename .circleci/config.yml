@@ -22,7 +22,7 @@ executors:
             - image: dreamquark/docker:latest@sha256:0dfd1a7a7b519e33fde3f2285f19cdb81c9a9f01e457f1940bac36a7b5ca8347
         working_directory: /work
         resource_class: small
-    
+
 commands:
     # here we can define steps that will be shared across different jobs
     install_poetry:
@@ -193,6 +193,20 @@ jobs:
                     shell: bash -leo pipefail
                     command: |
                         make test-nb-pretraining
+    test-nb-hyperparameter-optimization:
+        executor: python-executor
+        steps:
+            - checkout
+            # Download and cache dependencies
+            -   restore_cache:
+                    keys:
+                        - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            -   run:
+                    name: run test-nb-hyperparameter-optimization
+                    shell: bash -leo pipefail
+                    command: |
+                        make test-nb-hyperparameter-optimization
 workflows:
     version: 2
     CI-tabnet:
