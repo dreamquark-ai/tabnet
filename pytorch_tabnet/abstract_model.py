@@ -71,7 +71,7 @@ class TabModel(BaseEstimator):
         # Defining device
         self.device = torch.device(define_device(self.device_name))
         if self.verbose != 0:
-            print(f"Device used : {self.device}")
+            warnings.warn(f"Device used : {self.device}")
 
     def __update__(self, **kwargs):
         """
@@ -211,9 +211,8 @@ class TabModel(BaseEstimator):
         self._set_callbacks(callbacks)
 
         if from_unsupervised is not None:
-            print("Loading weights from unsupervised pretraining")
             self.load_weights_from_unsupervised(from_unsupervised)
-
+            warnings.warn("Loading weights from unsupervised pretraining")
         # Call method on_train_begin for all callbacks
         self._callback_container.on_train_begin()
 
@@ -623,9 +622,9 @@ class TabModel(BaseEstimator):
             )
             callbacks.append(early_stopping)
         else:
-            print(
-                "No early stopping will be performed, last training weights will be used."
-            )
+            wrn_msg = "No early stopping will be performed, last training weights will be used."
+            warnings.warn(wrn_msg)
+
         if self.scheduler_fn is not None:
             # Add LR Scheduler call_back
             is_batch_level = self.scheduler_params.pop("is_batch_level", False)
