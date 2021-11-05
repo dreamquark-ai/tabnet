@@ -13,6 +13,7 @@ from pytorch_tabnet.utils import (
     create_dataloaders,
     define_device,
     ComplexEncoder,
+    check_input
 )
 from pytorch_tabnet.callbacks import (
     CallbackContainer,
@@ -22,7 +23,7 @@ from pytorch_tabnet.callbacks import (
 )
 from pytorch_tabnet.metrics import MetricContainer, check_metrics
 from sklearn.base import BaseEstimator
-from sklearn.utils import check_array
+
 from torch.utils.data import DataLoader
 import io
 import json
@@ -115,7 +116,7 @@ class TabModel(BaseEstimator):
         batch_size=1024,
         virtual_batch_size=128,
         num_workers=0,
-        drop_last=False,
+        drop_last=True,
         callbacks=None,
         pin_memory=True,
         from_unsupervised=None,
@@ -182,7 +183,7 @@ class TabModel(BaseEstimator):
         else:
             self.loss_fn = loss_fn
 
-        check_array(X_train)
+        check_input(X_train)
 
         self.update_fit_params(
             X_train,

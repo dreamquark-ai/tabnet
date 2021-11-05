@@ -2,8 +2,8 @@ from torch.utils.data import DataLoader
 from pytorch_tabnet.utils import (
     create_sampler,
     PredictDataset,
+    check_input
 )
-from sklearn.utils import check_array
 
 
 def create_dataloaders(
@@ -93,7 +93,7 @@ def validate_eval_set(eval_set, eval_name, X_train):
     ), "eval_set and eval_name have not the same length"
 
     for set_nb, X in enumerate(eval_set):
-        check_array(X)
+        check_input(X)
         msg = (
             f"Number of columns is different between eval set {set_nb}"
             + f"({X.shape[1]}) and X_train ({X_train.shape[1]})"
