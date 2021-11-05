@@ -5,6 +5,7 @@ import numpy as np
 import scipy
 import json
 from sklearn.utils import check_array
+import pandas as pd
 
 
 class TorchDataset(Dataset):
@@ -271,7 +272,7 @@ def validate_eval_set(eval_set, eval_name, X_train, y_train):
             len(elem) == 2 for elem in eval_set
         ), "Each tuple of eval_set need to have two elements"
     for name, (X, y) in zip(eval_name, eval_set):
-        check_array(X)
+        check_input(X)
         msg = (
             f"Dimension mismatch between X_{name} "
             + f"{X.shape} and X_train {X_train.shape}"
@@ -337,3 +338,15 @@ class ComplexEncoder(json.JSONEncoder):
             return int(obj)
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
+
+
+def check_input(X):
+    """
+    Raise a clear error if X is a pandas dataframe
+    and check array according to scikit rules
+    """
+    if isinstance(X, (pd.DataFrame, pd.Series)):
+        err_message = "Pandas DataFrame are not supported: apply X.values when calling fit"
+        raise(ValueError, err_message)
+    check_array(X)
+    return

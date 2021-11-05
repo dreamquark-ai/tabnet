@@ -1,12 +1,12 @@
 import torch
 import numpy as np
-from sklearn.utils import check_array
 from torch.utils.data import DataLoader
 from pytorch_tabnet import tab_network
 from pytorch_tabnet.utils import (
     create_explain_matrix,
     filter_weights,
-    PredictDataset
+    PredictDataset,
+    check_input
 )
 from torch.nn.utils import clip_grad_norm_
 from pytorch_tabnet.pretraining_utils import (
@@ -55,7 +55,7 @@ class TabNetPretrainer(TabModel):
         batch_size=1024,
         virtual_batch_size=128,
         num_workers=0,
-        drop_last=False,
+        drop_last=True,
         callbacks=None,
         pin_memory=True,
     ):
@@ -118,7 +118,7 @@ class TabNetPretrainer(TabModel):
         else:
             self.loss_fn = loss_fn
 
-        check_array(X_train)
+        check_input(X_train)
 
         self.update_fit_params(
             weights,
