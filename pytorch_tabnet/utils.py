@@ -6,6 +6,7 @@ import scipy
 import json
 from sklearn.utils import check_array
 import pandas as pd
+import warnings
 
 
 class TorchDataset(Dataset):
@@ -349,4 +350,14 @@ def check_input(X):
         err_message = "Pandas DataFrame are not supported: apply X.values when calling fit"
         raise(ValueError, err_message)
     check_array(X)
+
+
+def check_warm_start(warm_start, from_unsupervised):
+    """
+    Gives a warning about ambiguous usage of the two parameters.
+    """
+    if warm_start and from_unsupervised is not None:
+        warn_msg = "warm_start=True and from_unsupervised != None: "
+        warn_msg = "warm_start will be ignore, training will start from unsupervised weights"
+        warnings.warn(warn_msg)
     return

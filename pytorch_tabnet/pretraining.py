@@ -58,6 +58,7 @@ class TabNetPretrainer(TabModel):
         drop_last=True,
         callbacks=None,
         pin_memory=True,
+        warm_start=False
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -130,8 +131,10 @@ class TabNetPretrainer(TabModel):
             X_train, eval_set
         )
 
-        if not hasattr(self, 'network'):
+        if not hasattr(self, "network") or not warm_start:
+            # model has never been fitted before of warm_start is False
             self._set_network()
+
         self._update_network_params()
         self._set_metrics(eval_names)
         self._set_optimizer()
@@ -168,6 +171,7 @@ class TabNetPretrainer(TabModel):
         """Setup the network and explain matrix."""
         if not hasattr(self, 'pretraining_ratio'):
             self.pretraining_ratio = 0.5
+        torch.manual_seed(self.seed)
         self.network = tab_network.TabNetPretraining(
             self.input_dim,
             pretraining_ratio=self.pretraining_ratio,
