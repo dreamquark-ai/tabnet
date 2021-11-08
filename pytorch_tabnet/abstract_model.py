@@ -13,7 +13,8 @@ from pytorch_tabnet.utils import (
     create_dataloaders,
     define_device,
     ComplexEncoder,
-    check_input
+    check_input,
+    check_warm_start
 )
 from pytorch_tabnet.callbacks import (
     CallbackContainer,
@@ -73,6 +74,10 @@ class TabModel(BaseEstimator):
         if self.verbose != 0:
             warnings.warn(f"Device used : {self.device}")
 
+        # create deep copies of mutable parameters
+        self.optimizer_fn = copy.deepcopy(self.optimizer_fn)
+        self.scheduler_fn = copy.deepcopy(self.scheduler_fn)
+
     def __update__(self, **kwargs):
         """
         Updates parameters.
@@ -120,6 +125,7 @@ class TabModel(BaseEstimator):
         callbacks=None,
         pin_memory=True,
         from_unsupervised=None,
+        warm_start=False
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -163,6 +169,8 @@ class TabModel(BaseEstimator):
             Whether to set pin_memory to True or False during training
         from_unsupervised: unsupervised trained model
             Use a previously self supervised model as starting weights
+        warm_start: bool
+            If True, current model parameters are used to start training
         """
         # update model name
 
@@ -184,6 +192,7 @@ class TabModel(BaseEstimator):
             self.loss_fn = loss_fn
 
         check_input(X_train)
+        check_warm_start(warm_start, from_unsupervised)
 
         self.update_fit_params(
             X_train,
@@ -203,7 +212,8 @@ class TabModel(BaseEstimator):
             # Update parameters to match self pretraining
             self.__update__(**from_unsupervised.get_params())
 
-        if not hasattr(self, "network"):
+        if not hasattr(self, "network") or not warm_start:
+            # model has never been fitted before of warm_start is False
             self._set_network()
         self._update_network_params()
         self._set_metrics(eval_metric, eval_names)
@@ -542,6 +552,7 @@ class TabModel(BaseEstimator):
 
     def _set_network(self):
         """Setup the network and explain matrix."""
+        torch.manual_seed(self.seed)
         self.network = tab_network.TabNet(
             self.input_dim,
             self.output_dim,

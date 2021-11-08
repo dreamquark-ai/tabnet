@@ -360,3 +360,7 @@ loaded_clf.load_model(saved_filepath)
         /!\ TabNetPretrainer Only : Percentage of input features to mask during pretraining.
 
         Should be between 0 and 1. The bigger the harder the reconstruction task is.
+
+- `warm_start` : bool (default=False)
+    In order to match scikit-learn API, this is set to False.
+    It allows to fit twice the same model and start from a warm start.
