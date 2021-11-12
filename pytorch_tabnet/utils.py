@@ -348,7 +348,7 @@ def check_input(X):
     """
     if isinstance(X, (pd.DataFrame, pd.Series)):
         err_message = "Pandas DataFrame are not supported: apply X.values when calling fit"
-        raise(ValueError, err_message)
+        raise TypeError(err_message)
     check_array(X)
 
 
