@@ -4,6 +4,7 @@ import copy
 import numpy as np
 from dataclasses import dataclass, field
 from typing import List, Any
+import warnings
 
 
 class Callback:
@@ -167,7 +168,8 @@ class EarlyStopping(Callback):
                 + f"best_{self.early_stopping_metric} = {round(self.best_loss, 5)}"
             )
             print(msg)
-        print("Best weights from best epoch are automatically used!")
+        wrn_msg = "Best weights from best epoch are automatically used!"
+        warnings.warn(wrn_msg)
 
 
 @dataclass

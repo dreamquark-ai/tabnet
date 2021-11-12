@@ -37,6 +37,12 @@ If you wan to use it locally within a docker container:
 
 - `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
 
+# Contributing
+
+When contributing to the TabNet repository, please make sure to first discuss the change you wish to make via a new or already existing issue.
+
+Our commits follow the rules presented [here](https://www.conventionalcommits.org/en/v1.0.0/).
+
 # What problems does pytorch-tabnet handle?
 
 - TabNetClassifier : binary classification and multi-class classification problems
@@ -155,6 +161,18 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
 /!\ : current implementation is trying to reconstruct the original inputs, but Batch Normalization applies a random transformation that can't be deduced by a single line, making the reconstruction harder. Lowering the `batch_size` might make the pretraining easier.
 
+# Easy saving and loading
+
+It's really easy to save and re-load a trained model, this makes TabNet production ready.
+```
+# save tabnet model
+saving_path_name = "./tabnet_model_test_1"
+saved_filepath = clf.save_model(saving_path_name)
+
+# define new model with basic parameters and load state dict weights
+loaded_clf = TabNetClassifier()
+loaded_clf.load_model(saved_filepath)
+```
 
 # Useful links
 
@@ -252,10 +270,6 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
     Name of the model used for saving in disk, you can customize this to easily retrieve and reuse your trained models.
 
-- `saving_path` : str (default = './')
-
-    Path defining where to save models.
-
 - `verbose` : int (default=1)
 
     Verbosity for notebooks plots, set to 1 to see every epoch, 0 to get None.
@@ -264,7 +278,15 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
     'cpu' for cpu training, 'gpu' for gpu training, 'auto' to automatically detect gpu.
 
 - `mask_type: str` (default='sparsemax')
-    Either "sparsemax" or "entmax" : this is the masking function to use for selecting features
+    Either "sparsemax" or "entmax" : this is the masking function to use for selecting features.
+
+- `n_shared_decoder` : int (default=1)
+
+    Number of shared GLU block in decoder, this is only useful for `TabNetPretrainer`.
+
+- `n_indep_decoder` : int (default=1)
+
+    Number of independent GLU block in decoder, this is only useful for `TabNetPretrainer`.
 
 ## Fit parameters
 
@@ -339,3 +361,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
         /!\ TabNetPretrainer Only : Percentage of input features to mask during pretraining.
 
         Should be between 0 and 1. The bigger the harder the reconstruction task is.
+
+- `warm_start` : bool (default=False)
+    In order to match scikit-learn API, this is set to False.
+    It allows to fit twice the same model and start from a warm start.
