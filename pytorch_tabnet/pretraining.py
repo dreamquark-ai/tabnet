@@ -26,7 +26,7 @@ class TabNetPretrainer(TabModel):
         super(TabNetPretrainer, self).__post_init__()
         self._task = 'unsupervised'
         self._default_loss = UnsupervisedLoss
-        self._default_metric = 'unsup_loss'
+        self._default_metric = 'unsup_loss_numpy'
 
     def prepare_target(self, y):
         return y
@@ -341,9 +341,9 @@ class TabNetPretrainer(TabModel):
         # Main loop
         for batch_idx, X in enumerate(loader):
             output, embedded_x, obf_vars = self._predict_batch(X)
-            list_output.append(output)
-            list_embedded_x.append(embedded_x)
-            list_obfuscation.append(obf_vars)
+            list_output.append(output.cpu().detach().numpy())
+            list_embedded_x.append(embedded_x.cpu().detach().numpy())
+            list_obfuscation.append(obf_vars.cpu().detach().numpy())
 
         output, embedded_x, obf_vars = self.stack_batches(list_output,
                                                           list_embedded_x,
@@ -372,9 +372,9 @@ class TabNetPretrainer(TabModel):
         return self.network(X)
 
     def stack_batches(self, list_output, list_embedded_x, list_obfuscation):
-        output = torch.cat(list_output, axis=0)
-        embedded_x = torch.cat(list_embedded_x, axis=0)
-        obf_vars = torch.cat(list_obfuscation, axis=0)
+        output = np.vstack(list_output)
+        embedded_x = np.vstack(list_embedded_x)
+        obf_vars = np.vstack(list_obfuscation)
         return output, embedded_x, obf_vars
 
     def predict(self, X):

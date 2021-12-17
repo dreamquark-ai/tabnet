@@ -50,6 +50,21 @@ def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
     return loss
 
 
+def UnsupervisedLossNumpy(y_pred, embedded_x, obf_vars, eps=1e-9):
+    errors = y_pred - embedded_x
+    reconstruction_errors = np.multiply(errors, obf_vars) ** 2
+    batch_stds = np.std(embedded_x, axis=0) ** 2 + eps
+    features_loss = np.matmul(reconstruction_errors, 1 / batch_stds)
+    # compute the number of obfuscated variables to reconstruct
+    nb_reconstructed_variables = np.sum(obf_vars, axis=1)
+    # take the mean of the reconstructed variable errors
+    features_loss = features_loss / (nb_reconstructed_variables + eps)
+    # here we take the mean per batch, contrary to the paper
+    loss = np.mean(features_loss)
+    return loss
+
+
+
 @dataclass
 class UnsupMetricContainer:
     """Container holding a list of metrics.
@@ -411,6 +426,41 @@ class UnsupervisedMetric(Metric):
         """
         loss = UnsupervisedLoss(y_pred, embedded_x, obf_vars)
         return loss.item()
+
+
+class UnsupervisedNumpyMetric(Metric):
+    """
+    Unsupervised metric
+    """
+
+    def __init__(self):
+        self._name = "unsup_loss_numpy"
+        self._maximize = False
+
+    def __call__(self, y_pred, embedded_x, obf_vars):
+        """
+        Compute MSE (Mean Squared Error) of predictions.
+
+        Parameters
+        ----------
+        y_pred : torch.Tensor or np.array
+            Reconstructed prediction (with embeddings)
+        embedded_x : torch.Tensor
+            Original input embedded by network
+        obf_vars : torch.Tensor
+            Binary mask for obfuscated variables.
+            1 means the variables was obfuscated so reconstruction is based on this.
+
+        Returns
+        -------
+        float
+            MSE of predictions vs targets.
+        """
+        return UnsupervisedLossNumpy(
+            y_pred,
+            embedded_x,
+            obf_vars
+        )
 
 
 class RMSE(Metric):
