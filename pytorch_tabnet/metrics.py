@@ -53,7 +53,7 @@ def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
 def UnsupervisedLossNumpy(y_pred, embedded_x, obf_vars, eps=1e-9):
     errors = y_pred - embedded_x
     reconstruction_errors = np.multiply(errors, obf_vars) ** 2
-    batch_stds = np.std(embedded_x, axis=0) ** 2 + eps
+    batch_stds = np.std(embedded_x, axis=0, ddof=1) ** 2 + eps
     features_loss = np.matmul(reconstruction_errors, 1 / batch_stds)
     # compute the number of obfuscated variables to reconstruct
     nb_reconstructed_variables = np.sum(obf_vars, axis=1)
@@ -62,7 +62,6 @@ def UnsupervisedLossNumpy(y_pred, embedded_x, obf_vars, eps=1e-9):
     # here we take the mean per batch, contrary to the paper
     loss = np.mean(features_loss)
     return loss
-
 
 
 @dataclass
