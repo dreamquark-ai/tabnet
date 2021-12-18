@@ -4,21 +4,48 @@
 
 This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). TabNet: Attentive Interpretable Tabular Learning. arXiv preprint arXiv:1908.07442.) https://arxiv.org/pdf/1908.07442.pdf.
 
+<!--- BADGES: START --->
 [![CircleCI](https://circleci.com/gh/dreamquark-ai/tabnet.svg?style=svg)](https://circleci.com/gh/dreamquark-ai/tabnet)
 
 [![PyPI version](https://badge.fury.io/py/pytorch-tabnet.svg)](https://badge.fury.io/py/pytorch-tabnet)
 
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pytorch-tabnet)
 
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytorch-tabnet?logo=pypi&style=flat&color=blue)][#pypi-package]
+
+[![Conda - Platform](https://img.shields.io/conda/pn/conda-forge/pytorch-tabnet?logo=anaconda&style=flat)][#conda-forge-package]
+
+[![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/pytorch-tabnet?logo=anaconda&style=flat&color=orange)][#conda-forge-package]
+
+[![GitHub - License](https://img.shields.io/github/license/dreamquark-ai/tabnet?logo=github&style=flat&color=green)][#github-license]
+
+[#github-license]: https://github.com/dreamquark-ai/tabnet/blob/main/LICENSE
+[#pypi-package]: https://pypi.org/project/pytorch-tabnet/
+[#conda-forge-package]: https://anaconda.org/conda-forge/pytorch-tabnet
+<!--- BADGES: END --->
+
 Any questions ? Want to contribute ? To talk with us ? You can join us on [Slack](https://join.slack.com/t/mltooling/shared_invite/zt-fxaj0qk7-SWy2_~EWyhj4x9SD6gbRvg)
 
 # Installation
 
 ## Easy installation
-You can install using pip by running:
-`pip install pytorch-tabnet`
+
+You can install using `pip` or `conda` as follows.
+
+**with pip**
+
+```sh
+pip install pytorch-tabnet
+```
+
+**with conda**
+
+```sh
+conda install -c conda-forge pytorch-tabnet
+```
 
 ## Source code
+
 If you wan to use it locally within a docker container:
 
 - `git clone git@github.com:dreamquark-ai/tabnet.git`
@@ -26,13 +53,17 @@ If you wan to use it locally within a docker container:
 - `cd tabnet` to get inside the repository
 
 -----------------
+
 #### CPU only
+
 - `make start` to build and get inside the container
 
 #### GPU
+
 - `make start-gpu` to build and get inside the GPU container
 
 -----------------
+
 - `poetry install` to install all the dependencies, including jupyter
 
 - `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
