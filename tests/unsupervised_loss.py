@@ -1,15 +1,27 @@
 import numpy as np
 import torch
+import pytest
 from pytorch_tabnet.metrics import UnsupervisedLoss, UnsupervisedLossNumpy
 
 torch.set_printoptions(precision=10)
 
 
-def test_equal_losses():
-    y_pred = np.random.uniform(low=-2, high=2, size=(20, 100))
-    embedded_x = np.random.uniform(low=-2, high=2, size=(20, 100))
-    obf_vars = np.random.choice([0, 1], size=(20, 100), replace=True)
-
+@pytest.mark.parametrize(
+    "y_pred,embedded_x,obf_vars",
+    [
+        (
+            np.random.uniform(low=-2, high=2, size=(20, 100)),
+            np.random.uniform(low=-2, high=2, size=(20, 100)),
+            np.random.choice([0, 1], size=(20, 100), replace=True)
+        ),
+        (
+            np.random.uniform(low=-2, high=2, size=(30, 50)),
+            np.ones((30, 50)),
+            np.random.choice([0, 1], size=(30, 50), replace=True)
+        )
+    ]
+)
+def test_equal_losses(y_pred, embedded_x, obf_vars):
     numpy_loss = UnsupervisedLossNumpy(
         y_pred=y_pred,
         embedded_x=embedded_x,
