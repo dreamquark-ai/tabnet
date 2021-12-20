@@ -39,7 +39,11 @@ def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
     """
     errors = y_pred - embedded_x
     reconstruction_errors = torch.mul(errors, obf_vars) ** 2
-    batch_stds = torch.std(embedded_x, dim=0) ** 2 + eps
+    batch_means = torch.mean(embedded_x, dim=0)
+    batch_means[batch_means == 0] = 1
+
+    batch_stds = torch.std(embedded_x, dim=0) ** 2
+    batch_stds[batch_stds == 0] = batch_means[batch_stds == 0]
     features_loss = torch.matmul(reconstruction_errors, 1 / batch_stds)
     # compute the number of obfuscated variables to reconstruct
     nb_reconstructed_variables = torch.sum(obf_vars, dim=1)
@@ -53,7 +57,11 @@ def UnsupervisedLoss(y_pred, embedded_x, obf_vars, eps=1e-9):
 def UnsupervisedLossNumpy(y_pred, embedded_x, obf_vars, eps=1e-9):
     errors = y_pred - embedded_x
     reconstruction_errors = np.multiply(errors, obf_vars) ** 2
-    batch_stds = np.std(embedded_x, axis=0, ddof=1) ** 2 + eps
+    batch_means = np.mean(embedded_x, axis=0)
+    batch_means = np.where(batch_means == 0, 1, batch_means)
+
+    batch_stds = np.std(embedded_x, axis=0, ddof=1) ** 2
+    batch_stds = np.where(batch_stds == 0, batch_means, batch_stds)
     features_loss = np.matmul(reconstruction_errors, 1 / batch_stds)
     # compute the number of obfuscated variables to reconstruct
     nb_reconstructed_variables = np.sum(obf_vars, axis=1)
