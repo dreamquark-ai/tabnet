@@ -11,10 +11,10 @@ keywords = ["tabnet", "pytorch", "neural-networks" ]
 exclude = ["tabnet/*.ipynb"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = ">3.6.2"
 
 numpy="^1.17"
-torch="^1.2"
+torch=">1.6"
 tqdm="^4.36"
 scikit_learn=">0.21"
 scipy=">1.4"
