@@ -1,6 +1,8 @@
 # set default shell
 SHELL := $(shell which bash)
 FOLDER=$$(pwd)
+# for Windows users
+# FOLDER=$(CURDIR)
 # default shell options
 .SHELLFLAGS = -c
 NO_COLOR=\\e[39m
@@ -106,6 +108,10 @@ test-nb-customization: ## run customization example tests using notebooks
 test-nb-pretraining: ## run customization example tests using notebooks
 	        $(MAKE) _run_notebook NB_FILE="./pretraining_example.ipynb"
 .PHONY: test-nb-pretraining
+
+unit-tests: ## run all unitary tests
+	poetry run pytest -s tests/
+.PHONY: unit-tests
 
 help: ## Display help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
