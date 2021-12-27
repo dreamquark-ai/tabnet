@@ -25,6 +25,7 @@ from pytorch_tabnet.callbacks import (
 from pytorch_tabnet.metrics import MetricContainer, check_metrics
 from sklearn.base import BaseEstimator
 
+from torch.cuda.amp import GradScaler, autocast
 from torch.utils.data import DataLoader
 import io
 import json
@@ -125,7 +126,8 @@ class TabModel(BaseEstimator):
         callbacks=None,
         pin_memory=True,
         from_unsupervised=None,
-        warm_start=False
+        warm_start=False,
+        mixed_precision=False,
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -171,6 +173,10 @@ class TabModel(BaseEstimator):
             Use a previously self supervised model as starting weights
         warm_start: bool
             If True, current model parameters are used to start training
+        mixed_precision : bool
+            Whether to use torch automatic precision module.
+            Setting this to True should speed up the training.
+            Only works with GPU
         """
         # update model name
 
@@ -183,6 +189,7 @@ class TabModel(BaseEstimator):
         self.input_dim = X_train.shape[1]
         self._stop_training = False
         self.pin_memory = pin_memory and (self.device.type != "cpu")
+        self.mixed_precision = mixed_precision and (self.device.type != "cpu")
 
         eval_set = eval_set if eval_set else []
 
@@ -478,17 +485,34 @@ class TabModel(BaseEstimator):
         for param in self.network.parameters():
             param.grad = None
 
-        output, M_loss = self.network(X)
-
-        loss = self.compute_loss(output, y)
-        # Add the overall sparsity loss
-        loss = loss - self.lambda_sparse * M_loss
+        if self.mixed_precision:
+            with autocast():
+                output, M_loss = self.network(X)
+                loss = self.compute_loss(output, y)
+                # Add the overall sparsity loss
+                loss = loss - self.lambda_sparse * M_loss
+        else:
+            output, M_loss = self.network(X)
+            loss = self.compute_loss(output, y)
+            # Add the overall sparsity loss
+            loss = loss - self.lambda_sparse * M_loss
 
         # Perform backward pass and optimization
-        loss.backward()
+        if self.mixed_precision:
+            self.scaler.scale(loss).backward()
+            self.scaler.unscale_(self._optimizer)
+        else:
+            loss.backward()
+
         if self.clip_value:
             clip_grad_norm_(self.network.parameters(), self.clip_value)
-        self._optimizer.step()
+
+        if self.mixed_precision:
+            self.scaler.step(self._optimizer)
+            # Updates the scale for next iteration.
+            self.scaler.update()
+        else:
+            self._optimizer.step()
 
         batch_logs["loss"] = loss.cpu().detach().numpy().item()
 
@@ -658,6 +682,8 @@ class TabModel(BaseEstimator):
         self._optimizer = self.optimizer_fn(
             self.network.parameters(), **self.optimizer_params
         )
+        if self.mixed_precision:
+            self.scaler = GradScaler()
 
     def _construct_loaders(self, X_train, y_train, eval_set):
         """Generate dataloaders for train and eval set.
