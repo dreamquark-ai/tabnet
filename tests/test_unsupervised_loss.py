@@ -3,8 +3,6 @@ import torch
 import pytest
 from pytorch_tabnet.metrics import UnsupervisedLoss, UnsupervisedLossNumpy
 
-torch.set_printoptions(precision=10)
-
 
 @pytest.mark.parametrize(
     "y_pred,embedded_x,obf_vars",
