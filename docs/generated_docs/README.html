@@ -4,7 +4,8 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>README &mdash; pytorch_tabnet  documentation</title>
@@ -84,7 +85,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
@@ -97,13 +98,15 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#how-to-use-it">How to use it?</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#default-eval-metric">Default eval_metric</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#custom-evaluation-metrics">Custom evaluation metrics</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#easy-saving-and-loading">Easy saving and loading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#useful-links">Useful links</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#model-parameters">Model parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#fit-parameters">Fit parameters</a></li>
@@ -175,25 +178,36 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="readme">
+  <section id="readme">
 <h1>README<a class="headerlink" href="#readme" title="Permalink to this headline">¶</a></h1>
-</div>
-<div class="section" id="tabnet-attentive-interpretable-tabular-learning">
+</section>
+<section id="tabnet-attentive-interpretable-tabular-learning">
 <h1>TabNet : Attentive Interpretable Tabular Learning<a class="headerlink" href="#tabnet-attentive-interpretable-tabular-learning" title="Permalink to this headline">¶</a></h1>
 <p>This is a pyTorch implementation of Tabnet (Arik, S. O., &amp; Pfister, T. (2019). TabNet: Attentive Interpretable Tabular Learning. arXiv preprint arXiv:1908.07442.) https://arxiv.org/pdf/1908.07442.pdf.</p>
-<p><a class="reference external" href="https://circleci.com/gh/dreamquark-ai/tabnet"><img alt="CircleCI" src="https://circleci.com/gh/dreamquark-ai/tabnet.svg?style=svg" /></a></p>
+<!--- BADGES: START ---><p><a class="reference external" href="https://circleci.com/gh/dreamquark-ai/tabnet"><img alt="CircleCI" src="https://circleci.com/gh/dreamquark-ai/tabnet.svg?style=svg" /></a></p>
 <p><a class="reference external" href="https://badge.fury.io/py/pytorch-tabnet"><img alt="PyPI version" src="https://badge.fury.io/py/pytorch-tabnet.svg" /></a></p>
 <p><img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/pytorch-tabnet" /></p>
-<p>Any questions ? Want to contribute ? To talk with us ? You can join us on <a class="reference external" href="https://join.slack.com/t/mltooling/shared_invite/zt-fxaj0qk7-SWy2_~EWyhj4x9SD6gbRvg">Slack</a></p>
-</div>
-<div class="section" id="installation">
+<p><a class="reference external" href="https://pypi.org/project/pytorch-tabnet/"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/pytorch-tabnet?logo=pypi&amp;style=flat&amp;color=blue" /></a></p>
+<p><a class="reference external" href="https://anaconda.org/conda-forge/pytorch-tabnet"><img alt="Conda - Platform" src="https://img.shields.io/conda/pn/conda-forge/pytorch-tabnet?logo=anaconda&amp;style=flat" /></a></p>
+<p><a class="reference external" href="https://anaconda.org/conda-forge/pytorch-tabnet"><img alt="Conda (channel only)" src="https://img.shields.io/conda/vn/conda-forge/pytorch-tabnet?logo=anaconda&amp;style=flat&amp;color=orange" /></a></p>
+<p><a class="reference external" href="https://github.com/dreamquark-ai/tabnet/blob/main/LICENSE"><img alt="GitHub - License" src="https://img.shields.io/github/license/dreamquark-ai/tabnet?logo=github&amp;style=flat&amp;color=green" /></a></p>
+<!--- BADGES: END ---><p>Any questions ? Want to contribute ? To talk with us ? You can join us on <a class="reference external" href="https://join.slack.com/t/mltooling/shared_invite/zt-fxaj0qk7-SWy2_~EWyhj4x9SD6gbRvg">Slack</a></p>
+</section>
+<section id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="easy-installation">
+<section id="easy-installation">
 <h2>Easy installation<a class="headerlink" href="#easy-installation" title="Permalink to this headline">¶</a></h2>
-<p>You can install using pip by running:
-<code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">pytorch-tabnet</span></code></p>
+<p>You can install using <code class="docutils literal notranslate"><span class="pre">pip</span></code> or <code class="docutils literal notranslate"><span class="pre">conda</span></code> as follows.</p>
+<p><strong>with pip</strong></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install pytorch-tabnet
+</pre></div>
 </div>
-<div class="section" id="source-code">
+<p><strong>with conda</strong></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda install -c conda-forge pytorch-tabnet
+</pre></div>
+</div>
+</section>
+<section id="source-code">
 <h2>Source code<a class="headerlink" href="#source-code" title="Permalink to this headline">¶</a></h2>
 <p>If you wan to use it locally within a docker container:</p>
 <ul class="simple">
@@ -201,13 +215,13 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">tabnet</span></code> to get inside the repository</p></li>
 </ul>
 <hr class="docutils" />
-<div class="section" id="cpu-only">
+<section id="cpu-only">
 <h3>CPU only<a class="headerlink" href="#cpu-only" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">start</span></code> to build and get inside the container</p></li>
 </ul>
-</div>
-<div class="section" id="gpu">
+</section>
+<section id="gpu">
 <h3>GPU<a class="headerlink" href="#gpu" title="Permalink to this headline">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">start-gpu</span></code> to build and get inside the GPU container</p></li>
@@ -217,18 +231,23 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">poetry</span> <span class="pre">install</span></code> to install all the dependencies, including jupyter</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">notebook</span></code> inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.</p></li>
 </ul>
-</div>
-</div>
-</div>
-<div class="section" id="what-problems-does-pytorch-tabnet-handles">
-<h1>What problems does pytorch-tabnet handles?<a class="headerlink" href="#what-problems-does-pytorch-tabnet-handles" title="Permalink to this headline">¶</a></h1>
+</section>
+</section>
+</section>
+<section id="contributing">
+<h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
+<p>When contributing to the TabNet repository, please make sure to first discuss the change you wish to make via a new or already existing issue.</p>
+<p>Our commits follow the rules presented <a class="reference external" href="https://www.conventionalcommits.org/en/v1.0.0/">here</a>.</p>
+</section>
+<section id="what-problems-does-pytorch-tabnet-handle">
+<h1>What problems does pytorch-tabnet handle?<a class="headerlink" href="#what-problems-does-pytorch-tabnet-handle" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p>TabNetClassifier : binary classification and multi-class classification problems</p></li>
 <li><p>TabNetRegressor : simple and multi-task regression problems</p></li>
 <li><p>TabNetMultiTaskClassifier:  multi-task multi-classification problems</p></li>
 </ul>
-</div>
-<div class="section" id="how-to-use-it">
+</section>
+<section id="how-to-use-it">
 <h1>How to use it?<a class="headerlink" href="#how-to-use-it" title="Permalink to this headline">¶</a></h1>
 <p>TabNet is now scikit-compatible, training a TabNetClassifier or TabNetRegressor is really easy.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.tab_model</span> <span class="kn">import</span> <span class="n">TabNetClassifier</span><span class="p">,</span> <span class="n">TabNetRegressor</span>
@@ -251,10 +270,10 @@
 <span class="n">preds</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X_test</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The targets on <code class="docutils literal notranslate"><span class="pre">y_train/y_valid</span></code> should contain a unique type (i.e. they must all be strings or integers).</p>
-<div class="section" id="default-eval-metric">
+<p>The targets on <code class="docutils literal notranslate"><span class="pre">y_train/y_valid</span></code> should contain a unique type (e.g. they must all be strings or integers).</p>
+<section id="default-eval-metric">
 <h2>Default eval_metric<a class="headerlink" href="#default-eval-metric" title="Permalink to this headline">¶</a></h2>
-<p>A few classical evaluation metrics are implemented (see bellow section for custom ones):</p>
+<p>A few classic evaluation metrics are implemented (see further below for custom ones):</p>
 <ul class="simple">
 <li><p>binary classification metrics : ‘auc’, ‘accuracy’, ‘balanced_accuracy’, ‘logloss’</p></li>
 <li><p>multiclass classification : ‘accuracy’, ‘balanced_accuracy’, ‘logloss’</p></li>
@@ -262,10 +281,10 @@
 </ul>
 <p>Important Note : ‘rmsle’ will automatically clip negative predictions to 0, because the model can predict negative values.
 In order to match the given scores, you need to use <code class="docutils literal notranslate"><span class="pre">np.clip(clf.predict(X_predict),</span> <span class="pre">a_min=0,</span> <span class="pre">a_max=None)</span></code> when doing predictions.</p>
-</div>
-<div class="section" id="custom-evaluation-metrics">
+</section>
+<section id="custom-evaluation-metrics">
 <h2>Custom evaluation metrics<a class="headerlink" href="#custom-evaluation-metrics" title="Permalink to this headline">¶</a></h2>
-<p>It’s easy to create a metric that matches your specific need. Here is an example for gini score (note that you need to specifiy whether this metric should be maximized or not):</p>
+<p>You can create a metric for your specific need. Here is an example for gini score (note that you need to specifiy whether this metric should be maximized or not):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_tabnet.metrics</span> <span class="kn">import</span> <span class="n">Metric</span>
 <span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">roc_auc_score</span>
 
@@ -287,9 +306,9 @@ In order to match the given scores, you need to use <code class="docutils litera
 </pre></div>
 </div>
 <p>A specific customization example notebook is available here : https://github.com/dreamquark-ai/tabnet/blob/develop/customizing_example.ipynb</p>
-</div>
-</div>
-<div class="section" id="semi-supervised-pre-training">
+</section>
+</section>
+<section id="semi-supervised-pre-training">
 <h1>Semi-supervised pre-training<a class="headerlink" href="#semi-supervised-pre-training" title="Permalink to this headline">¶</a></h1>
 <p>Added later to TabNet’s original paper, semi-supervised pre-training is now available via the class <code class="docutils literal notranslate"><span class="pre">TabNetPretrainer</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># TabNetPretrainer</span>
@@ -323,12 +342,25 @@ In order to match the given scores, you need to use <code class="docutils litera
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>The loss function has been normalized to be independent of <code class="docutils literal notranslate"><span class="pre">pretraining_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> and number of features in the problem.
+<p>The loss function has been normalized to be independent of <code class="docutils literal notranslate"><span class="pre">pretraining_ratio</span></code>, <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> and the number of features in the problem.
 A self supervised loss greater than 1 means that your model is reconstructing worse than predicting the mean for each feature, a loss bellow 1 means that the model is doing better than predicting the mean.</p>
 <p>A complete example can be found within the notebook <code class="docutils literal notranslate"><span class="pre">pretraining_example.ipynb</span></code>.</p>
 <p>/!\ : current implementation is trying to reconstruct the original inputs, but Batch Normalization applies a random transformation that can’t be deduced by a single line, making the reconstruction harder. Lowering the <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> might make the pretraining easier.</p>
+</section>
+<section id="easy-saving-and-loading">
+<h1>Easy saving and loading<a class="headerlink" href="#easy-saving-and-loading" title="Permalink to this headline">¶</a></h1>
+<p>It’s really easy to save and re-load a trained model, this makes TabNet production ready.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># save tabnet model</span>
+<span class="n">saving_path_name</span> <span class="o">=</span> <span class="s2">&quot;./tabnet_model_test_1&quot;</span>
+<span class="n">saved_filepath</span> <span class="o">=</span> <span class="n">clf</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">saving_path_name</span><span class="p">)</span>
+
+<span class="c1"># define new model with basic parameters and load state dict weights</span>
+<span class="n">loaded_clf</span> <span class="o">=</span> <span class="n">TabNetClassifier</span><span class="p">()</span>
+<span class="n">loaded_clf</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">saved_filepath</span><span class="p">)</span>
+</pre></div>
 </div>
-<div class="section" id="useful-links">
+</section>
+<section id="useful-links">
 <h1>Useful links<a class="headerlink" href="#useful-links" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference external" href="https://youtu.be/ysBaZO8YmX8">explanatory video</a></p></li>
@@ -339,7 +371,7 @@ A self supervised loss greater than 1 means that your model is reconstructing wo
 <li><p><a class="reference external" href="https://www.kaggle.com/optimo/tabnetmultitaskclassifier">multi-task multi-class classification examples</a></p></li>
 <li><p><a class="reference external" href="https://www.kaggle.com/c/lish-moa/discussion/201510">kaggle moa 1st place solution using tabnet</a></p></li>
 </ul>
-<div class="section" id="model-parameters">
+<section id="model-parameters">
 <h2>Model parameters<a class="headerlink" href="#model-parameters" title="Permalink to this headline">¶</a></h2>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_d</span></code> : int (default=8)</p>
@@ -395,19 +427,16 @@ Usual values range from 1 to 5</p>
 <p>Pytorch optimizer function</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">optimizer_params</span></code>: dict (default=dict(lr=2e-2))</p>
-<p>Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning of <code class="docutils literal notranslate"><span class="pre">0.02</span> </code>  with decay is a good option.</p>
+<p>Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning rate of <code class="docutils literal notranslate"><span class="pre">0.02</span> </code>  with decay is a good option.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">scheduler_fn</span></code> : torch.optim.lr_scheduler (default=None)</p>
 <p>Pytorch Scheduler to change learning rates during training.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">scheduler_params</span></code> : dict</p>
-<p>Dictionnary of parameters to apply to the scheduler_fn. Ex : {“gamma”: 0.95, “step_size”: 10}</p>
+<p>Dictionnary of parameters to apply to the scheduler_fn. Ex : {”gamma”: 0.95, “step_size”: 10}</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">model_name</span></code> : str (default = ‘DreamQuarkTabNet’)</p>
 <p>Name of the model used for saving in disk, you can customize this to easily retrieve and reuse your trained models.</p>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">saving_path</span></code> : str (default = ‘./’)</p>
-<p>Path defining where to save models.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">verbose</span></code> : int (default=1)</p>
 <p>Verbosity for notebooks plots, set to 1 to see every epoch, 0 to get None.</p>
@@ -415,10 +444,16 @@ Usual values range from 1 to 5</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">device_name</span></code> : str (default=’auto’)
 ‘cpu’ for cpu training, ‘gpu’ for gpu training, ‘auto’ to automatically detect gpu.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">mask_type:</span> <span class="pre">str</span></code> (default=’sparsemax’)
-Either “sparsemax” or “entmax” : this is the masking function to use for selecting features</p></li>
+Either “sparsemax” or “entmax” : this is the masking function to use for selecting features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_shared_decoder</span></code> : int (default=1)</p>
+<p>Number of shared GLU block in decoder, this is only useful for <code class="docutils literal notranslate"><span class="pre">TabNetPretrainer</span></code>.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">n_indep_decoder</span></code> : int (default=1)</p>
+<p>Number of independent GLU block in decoder, this is only useful for <code class="docutils literal notranslate"><span class="pre">TabNetPretrainer</span></code>.</p>
+</li>
 </ul>
-</div>
-<div class="section" id="fit-parameters">
+</section>
+<section id="fit-parameters">
 <h2>Fit parameters<a class="headerlink" href="#fit-parameters" title="Permalink to this headline">¶</a></h2>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code> : np.array</p>
@@ -437,8 +472,8 @@ Either “sparsemax” or “entmax” : this is the masking function to use for
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">patience</span></code> : int (default = 15)</p>
 <p>Number of consecutive epochs without improvement before performing early stopping.</p>
-<p>If patience is set to 0 then no early stopping will be performed.</p>
-<p>Note that if patience is enabled, best weights from best epoch will automatically be loaded at the end of <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p>
+<p>If patience is set to 0, then no early stopping will be performed.</p>
+<p>Note that if patience is enabled, then best weights from best epoch will automatically be loaded at the end of <code class="docutils literal notranslate"><span class="pre">fit</span></code>.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">weights</span></code> : int or dict (default=0)</p>
 <p>/!\ Only for TabNetClassifier
@@ -453,7 +488,7 @@ When using TabNetMultiTaskClassifier you can set a list of same length as number
 each task will be assigned its own loss function</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">batch_size</span></code> : int (default=1024)</p>
-<p>Number of examples per batch, large batch sizes are recommended.</p>
+<p>Number of examples per batch. Large batch sizes are recommended.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">virtual_batch_size</span></code> : int (default=128)</p>
 <p>Size of the mini batches used for “Ghost Batch Normalization”.
@@ -473,9 +508,12 @@ each task will be assigned its own loss function</p>
 </pre></div>
 </div>
 </li>
+<li><p><code class="docutils literal notranslate"><span class="pre">warm_start</span></code> : bool (default=False)
+In order to match scikit-learn API, this is set to False.
+It allows to fit twice the same model and start from a warm start.</p></li>
 </ul>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

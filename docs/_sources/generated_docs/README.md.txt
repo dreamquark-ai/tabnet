@@ -4,21 +4,48 @@
 
 This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). TabNet: Attentive Interpretable Tabular Learning. arXiv preprint arXiv:1908.07442.) https://arxiv.org/pdf/1908.07442.pdf.
 
+<!--- BADGES: START --->
 [![CircleCI](https://circleci.com/gh/dreamquark-ai/tabnet.svg?style=svg)](https://circleci.com/gh/dreamquark-ai/tabnet)
 
 [![PyPI version](https://badge.fury.io/py/pytorch-tabnet.svg)](https://badge.fury.io/py/pytorch-tabnet)
 
 ![PyPI - Downloads](https://img.shields.io/pypi/dm/pytorch-tabnet)
 
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytorch-tabnet?logo=pypi&style=flat&color=blue)][#pypi-package]
+
+[![Conda - Platform](https://img.shields.io/conda/pn/conda-forge/pytorch-tabnet?logo=anaconda&style=flat)][#conda-forge-package]
+
+[![Conda (channel only)](https://img.shields.io/conda/vn/conda-forge/pytorch-tabnet?logo=anaconda&style=flat&color=orange)][#conda-forge-package]
+
+[![GitHub - License](https://img.shields.io/github/license/dreamquark-ai/tabnet?logo=github&style=flat&color=green)][#github-license]
+
+[#github-license]: https://github.com/dreamquark-ai/tabnet/blob/main/LICENSE
+[#pypi-package]: https://pypi.org/project/pytorch-tabnet/
+[#conda-forge-package]: https://anaconda.org/conda-forge/pytorch-tabnet
+<!--- BADGES: END --->
+
 Any questions ? Want to contribute ? To talk with us ? You can join us on [Slack](https://join.slack.com/t/mltooling/shared_invite/zt-fxaj0qk7-SWy2_~EWyhj4x9SD6gbRvg)
 
 # Installation
 
 ## Easy installation
-You can install using pip by running:
-`pip install pytorch-tabnet`
+
+You can install using `pip` or `conda` as follows.
+
+**with pip**
+
+```sh
+pip install pytorch-tabnet
+```
+
+**with conda**
+
+```sh
+conda install -c conda-forge pytorch-tabnet
+```
 
 ## Source code
+
 If you wan to use it locally within a docker container:
 
 - `git clone git@github.com:dreamquark-ai/tabnet.git`
@@ -26,18 +53,28 @@ If you wan to use it locally within a docker container:
 - `cd tabnet` to get inside the repository
 
 -----------------
+
 #### CPU only
+
 - `make start` to build and get inside the container
 
 #### GPU
+
 - `make start-gpu` to build and get inside the GPU container
 
 -----------------
+
 - `poetry install` to install all the dependencies, including jupyter
 
 - `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
 
-# What problems does pytorch-tabnet handles?
+# Contributing
+
+When contributing to the TabNet repository, please make sure to first discuss the change you wish to make via a new or already existing issue.
+
+Our commits follow the rules presented [here](https://www.conventionalcommits.org/en/v1.0.0/).
+
+# What problems does pytorch-tabnet handle?
 
 - TabNetClassifier : binary classification and multi-class classification problems
 - TabNetRegressor : simple and multi-task regression problems
@@ -70,11 +107,11 @@ clf.fit(
 preds = clf.predict(X_test)
 ```
 
-The targets on `y_train/y_valid` should contain a unique type (i.e. they must all be strings or integers).
+The targets on `y_train/y_valid` should contain a unique type (e.g. they must all be strings or integers).
 
 ### Default eval_metric
 
-A few classical evaluation metrics are implemented (see bellow section for custom ones):
+A few classic evaluation metrics are implemented (see further below for custom ones):
 - binary classification metrics : 'auc', 'accuracy', 'balanced_accuracy', 'logloss'
 - multiclass classification : 'accuracy', 'balanced_accuracy', 'logloss'
 - regression: 'mse', 'mae', 'rmse', 'rmsle'
@@ -86,7 +123,7 @@ In order to match the given scores, you need to use `np.clip(clf.predict(X_predi
 
 ### Custom evaluation metrics
 
-It's easy to create a metric that matches your specific need. Here is an example for gini score (note that you need to specifiy whether this metric should be maximized or not):
+You can create a metric for your specific need. Here is an example for gini score (note that you need to specifiy whether this metric should be maximized or not):
 
 ```python
 from pytorch_tabnet.metrics import Metric
@@ -148,13 +185,25 @@ clf.fit(
 )
 ```
 
-The loss function has been normalized to be independent of `pretraining_ratio`, `batch_size` and number of features in the problem.
+The loss function has been normalized to be independent of `pretraining_ratio`, `batch_size` and the number of features in the problem.
 A self supervised loss greater than 1 means that your model is reconstructing worse than predicting the mean for each feature, a loss bellow 1 means that the model is doing better than predicting the mean.
 
 A complete example can be found within the notebook `pretraining_example.ipynb`.
 
 /!\ : current implementation is trying to reconstruct the original inputs, but Batch Normalization applies a random transformation that can't be deduced by a single line, making the reconstruction harder. Lowering the `batch_size` might make the pretraining easier.
 
+# Easy saving and loading
+
+It's really easy to save and re-load a trained model, this makes TabNet production ready.
+```
+# save tabnet model
+saving_path_name = "./tabnet_model_test_1"
+saved_filepath = clf.save_model(saving_path_name)
+
+# define new model with basic parameters and load state dict weights
+loaded_clf = TabNetClassifier()
+loaded_clf.load_model(saved_filepath)
+```
 
 # Useful links
 
@@ -237,7 +286,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
 - `optimizer_params`: dict (default=dict(lr=2e-2))
 
-    Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning of ```0.02 ```  with decay is a good option.
+    Parameters compatible with optimizer_fn used initialize the optimizer. Since we have Adam as our default optimizer, we use this to define the initial learning rate used for training. As mentionned in the original paper, a large initial learning rate of ```0.02 ```  with decay is a good option.
 
 - `scheduler_fn` : torch.optim.lr_scheduler (default=None)
 
@@ -251,10 +300,6 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
     Name of the model used for saving in disk, you can customize this to easily retrieve and reuse your trained models.
 
-- `saving_path` : str (default = './')
-
-    Path defining where to save models.
-
 - `verbose` : int (default=1)
 
     Verbosity for notebooks plots, set to 1 to see every epoch, 0 to get None.
@@ -263,7 +308,15 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
     'cpu' for cpu training, 'gpu' for gpu training, 'auto' to automatically detect gpu.
 
 - `mask_type: str` (default='sparsemax')
-    Either "sparsemax" or "entmax" : this is the masking function to use for selecting features
+    Either "sparsemax" or "entmax" : this is the masking function to use for selecting features.
+
+- `n_shared_decoder` : int (default=1)
+
+    Number of shared GLU block in decoder, this is only useful for `TabNetPretrainer`.
+
+- `n_indep_decoder` : int (default=1)
+
+    Number of independent GLU block in decoder, this is only useful for `TabNetPretrainer`.
 
 ## Fit parameters
 
@@ -295,9 +348,9 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
     Number of consecutive epochs without improvement before performing early stopping.
 
-    If patience is set to 0 then no early stopping will be performed.
+    If patience is set to 0, then no early stopping will be performed.
 
-    Note that if patience is enabled, best weights from best epoch will automatically be loaded at the end of `fit`.
+    Note that if patience is enabled, then best weights from best epoch will automatically be loaded at the end of `fit`.
 
 - `weights` : int or dict (default=0)
 
@@ -315,7 +368,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
 - `batch_size` : int (default=1024)
 
-    Number of examples per batch, large batch sizes are recommended.
+    Number of examples per batch. Large batch sizes are recommended.
 
 - `virtual_batch_size` : int (default=128)
 
@@ -338,3 +391,7 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
         /!\ TabNetPretrainer Only : Percentage of input features to mask during pretraining.
 
         Should be between 0 and 1. The bigger the harder the reconstruction task is.
+
+- `warm_start` : bool (default=False)
+    In order to match scikit-learn API, this is set to False.
+    It allows to fit twice the same model and start from a warm start.

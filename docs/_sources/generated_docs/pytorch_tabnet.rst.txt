@@ -2,15 +2,6 @@ pytorch_tabnet package
 ======================
 
 
-pytorch_tabnet.utils module
-.............................
-
-.. automodule:: pytorch_tabnet.utils
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
 pytorch_tabnet.pretraining_utils module
 .........................................
 
@@ -29,19 +20,10 @@ pytorch_tabnet.tab_network module
     :show-inheritance:
 
 
-pytorch_tabnet.multitask module
-.................................
+pytorch_tabnet.metrics module
+...............................
 
-.. automodule:: pytorch_tabnet.multitask
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-pytorch_tabnet.multiclass_utils module
-........................................
-
-.. automodule:: pytorch_tabnet.multiclass_utils
+.. automodule:: pytorch_tabnet.metrics
     :members:
     :undoc-members:
     :show-inheritance:
@@ -56,10 +38,10 @@ pytorch_tabnet.tab_model module
     :show-inheritance:
 
 
-pytorch_tabnet.abstract_model module
-......................................
+pytorch_tabnet.sparsemax module
+.................................
 
-.. automodule:: pytorch_tabnet.abstract_model
+.. automodule:: pytorch_tabnet.sparsemax
     :members:
     :undoc-members:
     :show-inheritance:
@@ -74,6 +56,15 @@ pytorch_tabnet.callbacks module
     :show-inheritance:
 
 
+pytorch_tabnet.abstract_model module
+......................................
+
+.. automodule:: pytorch_tabnet.abstract_model
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 pytorch_tabnet.pretraining module
 ...................................
 
@@ -83,19 +74,28 @@ pytorch_tabnet.pretraining module
     :show-inheritance:
 
 
-pytorch_tabnet.sparsemax module
-.................................
+pytorch_tabnet.utils module
+.............................
 
-.. automodule:: pytorch_tabnet.sparsemax
+.. automodule:: pytorch_tabnet.utils
     :members:
     :undoc-members:
     :show-inheritance:
 
 
-pytorch_tabnet.metrics module
-...............................
+pytorch_tabnet.multitask module
+.................................
 
-.. automodule:: pytorch_tabnet.metrics
+.. automodule:: pytorch_tabnet.multitask
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
+pytorch_tabnet.multiclass_utils module
+........................................
+
+.. automodule:: pytorch_tabnet.multiclass_utils
     :members:
     :undoc-members:
     :show-inheritance:

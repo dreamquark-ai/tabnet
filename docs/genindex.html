@@ -83,14 +83,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#installation">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#how-to-use-it">How to use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#easy-saving-and-loading">Easy saving and loading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -253,15 +255,19 @@
         <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetRegressor.cat_idxs">(pytorch_tabnet.tab_model.TabNetRegressor attribute)</a>
 </li>
       </ul></li>
+      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.check_classification_targets">check_classification_targets() (in module pytorch_tabnet.multiclass_utils)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.check_classification_targets">check_classification_targets() (in module pytorch_tabnet.multiclass_utils)</a>
+      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.check_input">check_input() (in module pytorch_tabnet.utils)</a>
 </li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.check_metrics">check_metrics() (in module pytorch_tabnet.metrics)</a>
 </li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.check_output_dim">check_output_dim() (in module pytorch_tabnet.multiclass_utils)</a>
 </li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.check_unique_type">check_unique_type() (in module pytorch_tabnet.multiclass_utils)</a>
+</li>
+      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.check_warm_start">check_warm_start() (in module pytorch_tabnet.utils)</a>
 </li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.clip_value">clip_value (pytorch_tabnet.abstract_model.TabModel attribute)</a>
 </li>
@@ -505,11 +511,15 @@
 </li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.n_d">n_d (pytorch_tabnet.abstract_model.TabModel attribute)</a>
 </li>
+      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.n_indep_decoder">n_indep_decoder (pytorch_tabnet.abstract_model.TabModel attribute)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.n_independent">n_independent (pytorch_tabnet.abstract_model.TabModel attribute)</a>
 </li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.n_shared">n_shared (pytorch_tabnet.abstract_model.TabModel attribute)</a>
+</li>
+      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.n_shared_decoder">n_shared_decoder (pytorch_tabnet.abstract_model.TabModel attribute)</a>
 </li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.n_steps">n_steps (pytorch_tabnet.abstract_model.TabModel attribute)</a>
 </li>
@@ -783,12 +793,16 @@
 </li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedLoss">UnsupervisedLoss() (in module pytorch_tabnet.metrics)</a>
 </li>
+      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedLossNumpy">UnsupervisedLossNumpy() (in module pytorch_tabnet.metrics)</a>
+</li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedMetric">UnsupervisedMetric (class in pytorch_tabnet.metrics)</a>
 </li>
-      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupMetricContainer">UnsupMetricContainer (class in pytorch_tabnet.metrics)</a>
+      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedNumpyMetric">UnsupervisedNumpyMetric (class in pytorch_tabnet.metrics)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupMetricContainer">UnsupMetricContainer (class in pytorch_tabnet.metrics)</a>
+</li>
       <li><a href="generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.update_fit_params">update_fit_params() (pytorch_tabnet.abstract_model.TabModel method)</a>
 
       <ul>

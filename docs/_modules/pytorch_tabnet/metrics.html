@@ -82,14 +82,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#easy-saving-and-loading">Easy saving and loading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -197,7 +199,11 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">errors</span> <span class="o">=</span> <span class="n">y_pred</span> <span class="o">-</span> <span class="n">embedded_x</span>
     <span class="n">reconstruction_errors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
-    <span class="n">batch_stds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">eps</span>
+    <span class="n">batch_means</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">batch_means</span><span class="p">[</span><span class="n">batch_means</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">batch_stds</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">batch_stds</span><span class="p">[</span><span class="n">batch_stds</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">batch_means</span><span class="p">[</span><span class="n">batch_stds</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
     <span class="n">features_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">reconstruction_errors</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">batch_stds</span><span class="p">)</span>
     <span class="c1"># compute the number of obfuscated variables to reconstruct</span>
     <span class="n">nb_reconstructed_variables</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">obf_vars</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -205,6 +211,24 @@
     <span class="n">features_loss</span> <span class="o">=</span> <span class="n">features_loss</span> <span class="o">/</span> <span class="p">(</span><span class="n">nb_reconstructed_variables</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
     <span class="c1"># here we take the mean per batch, contrary to the paper</span>
     <span class="n">loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">features_loss</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">loss</span></div>
+
+
+<div class="viewcode-block" id="UnsupervisedLossNumpy"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedLossNumpy">[docs]</a><span class="k">def</span> <span class="nf">UnsupervisedLossNumpy</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">):</span>
+    <span class="n">errors</span> <span class="o">=</span> <span class="n">y_pred</span> <span class="o">-</span> <span class="n">embedded_x</span>
+    <span class="n">reconstruction_errors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">errors</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">batch_means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">batch_means</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">batch_means</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">batch_means</span><span class="p">)</span>
+
+    <span class="n">batch_stds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="n">batch_stds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">batch_stds</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">batch_means</span><span class="p">,</span> <span class="n">batch_stds</span><span class="p">)</span>
+    <span class="n">features_loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">reconstruction_errors</span><span class="p">,</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">batch_stds</span><span class="p">)</span>
+    <span class="c1"># compute the number of obfuscated variables to reconstruct</span>
+    <span class="n">nb_reconstructed_variables</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">obf_vars</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># take the mean of the reconstructed variable errors</span>
+    <span class="n">features_loss</span> <span class="o">=</span> <span class="n">features_loss</span> <span class="o">/</span> <span class="p">(</span><span class="n">nb_reconstructed_variables</span> <span class="o">+</span> <span class="n">eps</span><span class="p">)</span>
+    <span class="c1"># here we take the mean per batch, contrary to the paper</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">features_loss</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">loss</span></div>
 
 
@@ -569,6 +593,41 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">loss</span> <span class="o">=</span> <span class="n">UnsupervisedLoss</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="UnsupervisedNumpyMetric"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedNumpyMetric">[docs]</a><span class="k">class</span> <span class="nc">UnsupervisedNumpyMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unsupervised metric</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="s2">&quot;unsup_loss_numpy&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute MSE (Mean Squared Error) of predictions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        y_pred : torch.Tensor or np.array</span>
+<span class="sd">            Reconstructed prediction (with embeddings)</span>
+<span class="sd">        embedded_x : torch.Tensor</span>
+<span class="sd">            Original input embedded by network</span>
+<span class="sd">        obf_vars : torch.Tensor</span>
+<span class="sd">            Binary mask for obfuscated variables.</span>
+<span class="sd">            1 means the variables was obfuscated so reconstruction is based on this.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        float</span>
+<span class="sd">            MSE of predictions vs targets.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">UnsupervisedLossNumpy</span><span class="p">(</span>
+            <span class="n">y_pred</span><span class="p">,</span>
+            <span class="n">embedded_x</span><span class="p">,</span>
+            <span class="n">obf_vars</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RMSE"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.RMSE">[docs]</a><span class="k">class</span> <span class="nc">RMSE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>

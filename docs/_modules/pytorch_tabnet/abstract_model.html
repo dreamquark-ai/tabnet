@@ -82,14 +82,16 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#easy-saving-and-loading">Easy saving and loading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -171,6 +173,8 @@
     <span class="n">create_dataloaders</span><span class="p">,</span>
     <span class="n">define_device</span><span class="p">,</span>
     <span class="n">ComplexEncoder</span><span class="p">,</span>
+    <span class="n">check_input</span><span class="p">,</span>
+    <span class="n">check_warm_start</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.callbacks</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CallbackContainer</span><span class="p">,</span>
@@ -180,7 +184,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.metrics</span> <span class="kn">import</span> <span class="n">MetricContainer</span><span class="p">,</span> <span class="n">check_metrics</span>
 <span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span>
-<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">check_array</span>
+
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
 <span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">json</span>
@@ -218,6 +222,8 @@
     <span class="n">input_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">output_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">device_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span>
+    <span class="n">n_shared_decoder</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">n_indep_decoder</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">1024</span>
@@ -226,7 +232,11 @@
         <span class="c1"># Defining device</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">define_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">))</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device used : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Device used : </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># create deep copies of mutable parameters</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_fn</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_fn</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_fn</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheduler_fn</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__update__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -271,10 +281,11 @@
         <span class="n">batch_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
         <span class="n">virtual_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
         <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">from_unsupervised</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">warm_start</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Train a neural network stored in self.network</span>
 <span class="sd">        Using train_dataloader for training data and</span>
@@ -318,6 +329,8 @@
 <span class="sd">            Whether to set pin_memory to True or False during training</span>
 <span class="sd">        from_unsupervised: unsupervised trained model</span>
 <span class="sd">            Use a previously self supervised model as starting weights</span>
+<span class="sd">        warm_start: bool</span>
+<span class="sd">            If True, current model parameters are used to start training</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># update model name</span>
 
@@ -338,7 +351,8 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">loss_fn</span>
 
-        <span class="n">check_array</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+        <span class="n">check_input</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+        <span class="n">check_warm_start</span><span class="p">(</span><span class="n">warm_start</span><span class="p">,</span> <span class="n">from_unsupervised</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">update_fit_params</span><span class="p">(</span>
             <span class="n">X_train</span><span class="p">,</span>
@@ -358,7 +372,8 @@
             <span class="c1"># Update parameters to match self pretraining</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__update__</span><span class="p">(</span><span class="o">**</span><span class="n">from_unsupervised</span><span class="o">.</span><span class="n">get_params</span><span class="p">())</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;network&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;network&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">warm_start</span><span class="p">:</span>
+            <span class="c1"># model has never been fitted before of warm_start is False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_network</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_network_params</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_metrics</span><span class="p">(</span><span class="n">eval_metric</span><span class="p">,</span> <span class="n">eval_names</span><span class="p">)</span>
@@ -366,9 +381,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_callbacks</span><span class="p">(</span><span class="n">callbacks</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">from_unsupervised</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loading weights from unsupervised pretraining&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">load_weights_from_unsupervised</span><span class="p">(</span><span class="n">from_unsupervised</span><span class="p">)</span>
-
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Loading weights from unsupervised pretraining&quot;</span><span class="p">)</span>
         <span class="c1"># Call method on_train_begin for all callbacks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_train_begin</span><span class="p">()</span>
 
@@ -628,7 +642,7 @@
 
         <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_loss</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
         <span class="c1"># Add the overall sparsity loss</span>
-        <span class="n">loss</span> <span class="o">-=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_sparse</span> <span class="o">*</span> <span class="n">M_loss</span>
+        <span class="n">loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">lambda_sparse</span> <span class="o">*</span> <span class="n">M_loss</span>
 
         <span class="c1"># Perform backward pass and optimization</span>
         <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
@@ -698,6 +712,7 @@
 
     <span class="k">def</span> <span class="nf">_set_network</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Setup the network and explain matrix.&quot;&quot;&quot;</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="n">tab_network</span><span class="o">.</span><span class="n">TabNet</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_dim</span><span class="p">,</span>
@@ -778,9 +793,9 @@
             <span class="p">)</span>
             <span class="n">callbacks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">early_stopping</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;No early stopping will be performed, last training weights will be used.&quot;</span>
-            <span class="p">)</span>
+            <span class="n">wrn_msg</span> <span class="o">=</span> <span class="s2">&quot;No early stopping will be performed, last training weights will be used.&quot;</span>
+            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">wrn_msg</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_fn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># Add LR Scheduler call_back</span>
             <span class="n">is_batch_level</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_params</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;is_batch_level&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
