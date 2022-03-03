@@ -9,7 +9,7 @@ NO_COLOR=\\e[39m
 OK_COLOR=\\e[32m
 ERROR_COLOR=\\e[31m
 WARN_COLOR=\\e[33m
-PORT=8889
+PORT=8887
 .SILENT: ;
 default: help;   # default target
 
