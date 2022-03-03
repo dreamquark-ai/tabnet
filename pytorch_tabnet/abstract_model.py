@@ -125,7 +125,8 @@ class TabModel(BaseEstimator):
         callbacks=None,
         pin_memory=True,
         from_unsupervised=None,
-        warm_start=False
+        warm_start=False,
+        augmentations=None,
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -183,6 +184,11 @@ class TabModel(BaseEstimator):
         self.input_dim = X_train.shape[1]
         self._stop_training = False
         self.pin_memory = pin_memory and (self.device.type != "cpu")
+        self.augmentations = augmentations
+
+        if self.augmentations is not None:
+            # This ensure reproducibility
+            self.augmentations._set_seed()
 
         eval_set = eval_set if eval_set else []
 
@@ -472,8 +478,11 @@ class TabModel(BaseEstimator):
         """
         batch_logs = {"batch_size": X.shape[0]}
 
-        X = X.to(self.device).float()
+        X = X.to(self.device).float() # Is this .float() needed ?
         y = y.to(self.device).float()
+
+        if self.augmentations is not None:
+            X, y = self.augmentations(X, y)           
 
         for param in self.network.parameters():
             param.grad = None
