@@ -192,6 +192,12 @@ A complete example can be found within the notebook `pretraining_example.ipynb`.
 
 /!\ : current implementation is trying to reconstruct the original inputs, but Batch Normalization applies a random transformation that can't be deduced by a single line, making the reconstruction harder. Lowering the `batch_size` might make the pretraining easier.
 
+# Data augmentation on the fly
+
+It is now possible to apply custom data augmentation pipeline during training.
+Templates for ClassificationSMOTE and RegressionSMOTE have been added in `pytorch-tabnet/augmentations.py` and can be used as is.
+
+
 # Easy saving and loading
 
 It's really easy to save and re-load a trained model, this makes TabNet production ready.
