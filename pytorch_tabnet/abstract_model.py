@@ -257,7 +257,7 @@ class TabModel(BaseEstimator):
         self.network.eval()
 
         # compute feature importance once the best model is defined
-        self._compute_feature_importances(train_dataloader)
+        self.feature_importances_ = self._compute_feature_importances(X_train)
 
     def predict(self, X):
         """
@@ -289,7 +289,7 @@ class TabModel(BaseEstimator):
         res = np.vstack(results)
         return self.predict_func(res)
 
-    def explain(self, X):
+    def explain(self, X, normalize=False):
         """
         Return local explanation
 
@@ -297,6 +297,8 @@ class TabModel(BaseEstimator):
         ----------
         X : tensor: `torch.Tensor`
             Input data
+        normalize : bool (default False)
+            Wheter to normalize so that sum of features are equal to 1
 
         Returns
         -------
@@ -324,9 +326,9 @@ class TabModel(BaseEstimator):
                     value.cpu().detach().numpy(), self.reducing_matrix
                 )
 
-            res_explain.append(
-                csc_matrix.dot(M_explain.cpu().detach().numpy(), self.reducing_matrix)
-            )
+            original_feat_explain = csc_matrix.dot(M_explain.cpu().detach().numpy(),
+                                                   self.reducing_matrix)
+            res_explain.append(original_feat_explain)
 
             if batch_nb == 0:
                 res_masks = masks
@@ -335,6 +337,9 @@ class TabModel(BaseEstimator):
                     res_masks[key] = np.vstack([res_masks[key], value])
 
         res_explain = np.vstack(res_explain)
+
+        if normalize:
+            res_explain /= np.sum(res_explain, axis=1)[:, None]
 
         return res_explain, res_masks
 
@@ -706,7 +711,7 @@ class TabModel(BaseEstimator):
         )
         return train_dataloader, valid_dataloaders
 
-    def _compute_feature_importances(self, loader):
+    def _compute_feature_importances(self, X):
         """Compute global feature importance.
 
         Parameters
@@ -715,17 +720,10 @@ class TabModel(BaseEstimator):
             Pytorch dataloader.
 
         """
-        self.network.eval()
-        feature_importances_ = np.zeros((self.network.post_embed_dim))
-        for data, targets in loader:
-            data = data.to(self.device).float()
-            M_explain, masks = self.network.forward_masks(data)
-            feature_importances_ += M_explain.sum(dim=0).cpu().detach().numpy()
-
-        feature_importances_ = csc_matrix.dot(
-            feature_importances_, self.reducing_matrix
-        )
-        self.feature_importances_ = feature_importances_ / np.sum(feature_importances_)
+        M_explain, _ = self.explain(X, normalize=False)
+        sum_explain = M_explain.sum(axis=0)
+        feature_importances_ = sum_explain / np.sum(sum_explain)
+        return feature_importances_
 
     def _update_network_params(self):
         self.network.virtual_batch_size = self.virtual_batch_size
