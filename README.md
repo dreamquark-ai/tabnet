@@ -350,7 +350,7 @@ loaded_clf.load_model(saved_filepath)
 
     Maximum number of epochs for trainng.
     
-- `patience` : int (default = 15)
+- `patience` : int (default = 10)
 
     Number of consecutive epochs without improvement before performing early stopping.
 
