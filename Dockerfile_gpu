@@ -1,5 +1,5 @@
 # GENERATED FROM SCRIPTS
-FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04@sha256:14175ed97d841be1a11c42ff9dcc5a8e50edacc00ce15dce4141a683986e7425
+FROM nvidia/cuda:10.1-cudnn7-runtime-ubuntu18.04@sha256:5f16bff6a7272eed75d070b13020c98f89fc5be4ebf6cdc95adffa2b5dce4a31
 # Avoiding tzdata configuration
 ENV DEBIAN_FRONTEND noninteractive
 # Adding Python to image
