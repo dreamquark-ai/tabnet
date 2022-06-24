@@ -1,7 +1,6 @@
-FROM node:10.16.0-alpine@sha256:07897ec27318d8e43cfc6b1762e7a28ed01479ba4927aca0cdff53c1de9ea6fd
+FROM node:lts-alpine@sha256:c785e617c8d7015190c0d41af52cc69be8a16e3d9eb7cb21f0bb58bcfca14d6b
 
 RUN apk add git
 
-RUN npm i -g conventional-changelog-cli
-RUN npm i -g conventional-github-releaser@3.1.3
+RUN npm i -g conventional-github-releaser@3.1.3 conventional-changelog-cli
 

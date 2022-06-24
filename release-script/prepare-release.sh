@@ -28,11 +28,12 @@ git add pyproject.toml docs/
 git commit -m "chore: release v${version}"
 # Create tag for changelog generation
 git tag v${version}
-docker run -v ${PWD}:/work -w /work --entrypoint "" release-changelog:latest conventional-changelog -p angular -i CHANGELOG.md -s -r 0
-docker run -v ${PWD}:/work -w /work --entrypoint "" release-changelog:latest chmod 777 CHANGELOG.md
+docker run -v ${PWD}:/work -w /work --entrypoint "" release-changelog:latest git config --global --add safe.directory /work &&\
+ conventional-changelog -p angular -i CHANGELOG.md -s -r 0 && \
+ chmod 777 CHANGELOG.md
 # Removing 4 first line of the file
 echo "$(tail -n +4 CHANGELOG.md)" > CHANGELOG.md
-# Deleting tag 
+# Deleting tag
 git tag -d v${version}
 # Adding CHANGELOG to commit
 git add CHANGELOG.md
