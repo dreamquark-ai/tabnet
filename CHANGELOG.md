@@ -1,7 +1,4 @@
 
-## [3.1.1](https://github.com/dreamquark-ai/tabnet/compare/v3.1.0...v3.1.1) (2021-02-02)
-
-
 ### Bug Fixes
 
 * add preds_mapper to pretraining ([76f2c85](https://github.com/dreamquark-ai/tabnet/commit/76f2c852f59c6ed2c5dc5f0766cb99310bae5f2c))

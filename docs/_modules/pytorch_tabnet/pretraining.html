@@ -82,14 +82,17 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#data-augmentation-on-the-fly">Data augmentation on the fly</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#easy-saving-and-loading">Easy saving and loading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -158,13 +161,13 @@
   <h1>Source code for pytorch_tabnet.pretraining</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">sklearn.utils</span> <span class="kn">import</span> <span class="n">check_array</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet</span> <span class="kn">import</span> <span class="n">tab_network</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">create_explain_matrix</span><span class="p">,</span>
     <span class="n">filter_weights</span><span class="p">,</span>
-    <span class="n">PredictDataset</span>
+    <span class="n">PredictDataset</span><span class="p">,</span>
+    <span class="n">check_input</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">torch.nn.utils</span> <span class="kn">import</span> <span class="n">clip_grad_norm_</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.pretraining_utils</span> <span class="kn">import</span> <span class="p">(</span>
@@ -184,7 +187,7 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">TabNetPretrainer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_task</span> <span class="o">=</span> <span class="s1">&#39;unsupervised&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_loss</span> <span class="o">=</span> <span class="n">UnsupervisedLoss</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_default_metric</span> <span class="o">=</span> <span class="s1">&#39;unsup_loss&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_default_metric</span> <span class="o">=</span> <span class="s1">&#39;unsup_loss_numpy&#39;</span>
 
 <div class="viewcode-block" id="TabNetPretrainer.prepare_target"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.pretraining.TabNetPretrainer.prepare_target">[docs]</a>    <span class="k">def</span> <span class="nf">prepare_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">y</span></div>
@@ -213,9 +216,10 @@
         <span class="n">batch_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span>
         <span class="n">virtual_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
         <span class="n">num_workers</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-        <span class="n">drop_last</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">drop_last</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">callbacks</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">pin_memory</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">warm_start</span><span class="o">=</span><span class="kc">False</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Train a neural network stored in self.network</span>
 <span class="sd">        Using train_dataloader for training data and</span>
@@ -276,7 +280,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">loss_fn</span>
 
-        <span class="n">check_array</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
+        <span class="n">check_input</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">update_fit_params</span><span class="p">(</span>
             <span class="n">weights</span><span class="p">,</span>
@@ -288,8 +292,10 @@
             <span class="n">X_train</span><span class="p">,</span> <span class="n">eval_set</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;network&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;network&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">warm_start</span><span class="p">:</span>
+            <span class="c1"># model has never been fitted before of warm_start is False</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_set_network</span><span class="p">()</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_network_params</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_metrics</span><span class="p">(</span><span class="n">eval_names</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_set_optimizer</span><span class="p">()</span>
@@ -326,6 +332,7 @@
         <span class="sd">&quot;&quot;&quot;Setup the network and explain matrix.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;pretraining_ratio&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pretraining_ratio</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="n">tab_network</span><span class="o">.</span><span class="n">TabNetPretraining</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span><span class="p">,</span>
             <span class="n">pretraining_ratio</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_ratio</span><span class="p">,</span>
@@ -495,9 +502,9 @@
         <span class="c1"># Main loop</span>
         <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="n">X</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">loader</span><span class="p">):</span>
             <span class="n">output</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict_batch</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
-            <span class="n">list_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
-            <span class="n">list_embedded_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">)</span>
-            <span class="n">list_obfuscation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obf_vars</span><span class="p">)</span>
+            <span class="n">list_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+            <span class="n">list_embedded_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">embedded_x</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+            <span class="n">list_obfuscation</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obf_vars</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
 
         <span class="n">output</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stack_batches</span><span class="p">(</span><span class="n">list_output</span><span class="p">,</span>
                                                           <span class="n">list_embedded_x</span><span class="p">,</span>
@@ -526,9 +533,9 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TabNetPretrainer.stack_batches"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.pretraining.TabNetPretrainer.stack_batches">[docs]</a>    <span class="k">def</span> <span class="nf">stack_batches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_output</span><span class="p">,</span> <span class="n">list_embedded_x</span><span class="p">,</span> <span class="n">list_obfuscation</span><span class="p">):</span>
-        <span class="n">output</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">list_output</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">embedded_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">list_embedded_x</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-        <span class="n">obf_vars</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">list_obfuscation</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">list_output</span><span class="p">)</span>
+        <span class="n">embedded_x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">list_embedded_x</span><span class="p">)</span>
+        <span class="n">obf_vars</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">list_obfuscation</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">output</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span></div>
 
 <div class="viewcode-block" id="TabNetPretrainer.predict"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.pretraining.TabNetPretrainer.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
