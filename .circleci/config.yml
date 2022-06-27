@@ -95,6 +95,20 @@ jobs:
                   paths:
                       - /work/.cache/poetry
                   key: v1-dependencies-{{ checksum "poetry.lock" }}
+    unit-tests:
+        executor: python-executor
+        steps:
+            - checkout
+            # Download and cache dependencies
+            - restore_cache:
+                  keys:
+                      - v1-dependencies-{{ checksum "poetry.lock" }}
+            - install_poetry
+            - run:
+                  name: run unit-tests
+                  shell: bash -leo pipefail
+                  command: |
+                      make unit-tests
     test-nb-census:
         executor: python-executor
         steps:
@@ -200,6 +214,9 @@ workflows:
             - test-build-docker
             - test-build-docker-gpu
             - install
+            - unit-tests:
+                  requires:
+                      - install
             - test-nb-census:
                   requires:
                       - install

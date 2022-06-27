@@ -13,6 +13,8 @@ from pytorch_tabnet.utils import (
     create_dataloaders,
     define_device,
     ComplexEncoder,
+    check_input,
+    check_warm_start
 )
 from pytorch_tabnet.callbacks import (
     CallbackContainer,
@@ -22,7 +24,7 @@ from pytorch_tabnet.callbacks import (
 )
 from pytorch_tabnet.metrics import MetricContainer, check_metrics
 from sklearn.base import BaseEstimator
-from sklearn.utils import check_array
+
 from torch.utils.data import DataLoader
 import io
 import json
@@ -60,6 +62,8 @@ class TabModel(BaseEstimator):
     input_dim: int = None
     output_dim: int = None
     device_name: str = "auto"
+    n_shared_decoder: int = 1
+    n_indep_decoder: int = 1
 
     def __post_init__(self):
         self.batch_size = 1024
@@ -68,7 +72,11 @@ class TabModel(BaseEstimator):
         # Defining device
         self.device = torch.device(define_device(self.device_name))
         if self.verbose != 0:
-            print(f"Device used : {self.device}")
+            warnings.warn(f"Device used : {self.device}")
+
+        # create deep copies of mutable parameters
+        self.optimizer_fn = copy.deepcopy(self.optimizer_fn)
+        self.scheduler_fn = copy.deepcopy(self.scheduler_fn)
 
     def __update__(self, **kwargs):
         """
@@ -113,10 +121,12 @@ class TabModel(BaseEstimator):
         batch_size=1024,
         virtual_batch_size=128,
         num_workers=0,
-        drop_last=False,
+        drop_last=True,
         callbacks=None,
         pin_memory=True,
         from_unsupervised=None,
+        warm_start=False,
+        augmentations=None,
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -160,6 +170,8 @@ class TabModel(BaseEstimator):
             Whether to set pin_memory to True or False during training
         from_unsupervised: unsupervised trained model
             Use a previously self supervised model as starting weights
+        warm_start: bool
+            If True, current model parameters are used to start training
         """
         # update model name
 
@@ -172,6 +184,11 @@ class TabModel(BaseEstimator):
         self.input_dim = X_train.shape[1]
         self._stop_training = False
         self.pin_memory = pin_memory and (self.device.type != "cpu")
+        self.augmentations = augmentations
+
+        if self.augmentations is not None:
+            # This ensure reproducibility
+            self.augmentations._set_seed()
 
         eval_set = eval_set if eval_set else []
 
@@ -180,7 +197,8 @@ class TabModel(BaseEstimator):
         else:
             self.loss_fn = loss_fn
 
-        check_array(X_train)
+        check_input(X_train)
+        check_warm_start(warm_start, from_unsupervised)
 
         self.update_fit_params(
             X_train,
@@ -200,7 +218,8 @@ class TabModel(BaseEstimator):
             # Update parameters to match self pretraining
             self.__update__(**from_unsupervised.get_params())
 
-        if not hasattr(self, "network"):
+        if not hasattr(self, "network") or not warm_start:
+            # model has never been fitted before of warm_start is False
             self._set_network()
         self._update_network_params()
         self._set_metrics(eval_metric, eval_names)
@@ -208,9 +227,8 @@ class TabModel(BaseEstimator):
         self._set_callbacks(callbacks)
 
         if from_unsupervised is not None:
-            print("Loading weights from unsupervised pretraining")
             self.load_weights_from_unsupervised(from_unsupervised)
-
+            warnings.warn("Loading weights from unsupervised pretraining")
         # Call method on_train_begin for all callbacks
         self._callback_container.on_train_begin()
 
@@ -239,7 +257,7 @@ class TabModel(BaseEstimator):
         self.network.eval()
 
         # compute feature importance once the best model is defined
-        self._compute_feature_importances(train_dataloader)
+        self.feature_importances_ = self._compute_feature_importances(X_train)
 
     def predict(self, X):
         """
@@ -271,7 +289,7 @@ class TabModel(BaseEstimator):
         res = np.vstack(results)
         return self.predict_func(res)
 
-    def explain(self, X):
+    def explain(self, X, normalize=False):
         """
         Return local explanation
 
@@ -279,6 +297,8 @@ class TabModel(BaseEstimator):
         ----------
         X : tensor: `torch.Tensor`
             Input data
+        normalize : bool (default False)
+            Wheter to normalize so that sum of features are equal to 1
 
         Returns
         -------
@@ -306,9 +326,9 @@ class TabModel(BaseEstimator):
                     value.cpu().detach().numpy(), self.reducing_matrix
                 )
 
-            res_explain.append(
-                csc_matrix.dot(M_explain.cpu().detach().numpy(), self.reducing_matrix)
-            )
+            original_feat_explain = csc_matrix.dot(M_explain.cpu().detach().numpy(),
+                                                   self.reducing_matrix)
+            res_explain.append(original_feat_explain)
 
             if batch_nb == 0:
                 res_masks = masks
@@ -317,6 +337,9 @@ class TabModel(BaseEstimator):
                     res_masks[key] = np.vstack([res_masks[key], value])
 
         res_explain = np.vstack(res_explain)
+
+        if normalize:
+            res_explain /= np.sum(res_explain, axis=1)[:, None]
 
         return res_explain, res_masks
 
@@ -463,6 +486,9 @@ class TabModel(BaseEstimator):
         X = X.to(self.device).float()
         y = y.to(self.device).float()
 
+        if self.augmentations is not None:
+            X, y = self.augmentations(X, y)
+
         for param in self.network.parameters():
             param.grad = None
 
@@ -470,7 +496,7 @@ class TabModel(BaseEstimator):
 
         loss = self.compute_loss(output, y)
         # Add the overall sparsity loss
-        loss -= self.lambda_sparse * M_loss
+        loss = loss - self.lambda_sparse * M_loss
 
         # Perform backward pass and optimization
         loss.backward()
@@ -540,6 +566,7 @@ class TabModel(BaseEstimator):
 
     def _set_network(self):
         """Setup the network and explain matrix."""
+        torch.manual_seed(self.seed)
         self.network = tab_network.TabNet(
             self.input_dim,
             self.output_dim,
@@ -620,9 +647,9 @@ class TabModel(BaseEstimator):
             )
             callbacks.append(early_stopping)
         else:
-            print(
-                "No early stopping will be performed, last training weights will be used."
-            )
+            wrn_msg = "No early stopping will be performed, last training weights will be used."
+            warnings.warn(wrn_msg)
+
         if self.scheduler_fn is not None:
             # Add LR Scheduler call_back
             is_batch_level = self.scheduler_params.pop("is_batch_level", False)
@@ -684,7 +711,7 @@ class TabModel(BaseEstimator):
         )
         return train_dataloader, valid_dataloaders
 
-    def _compute_feature_importances(self, loader):
+    def _compute_feature_importances(self, X):
         """Compute global feature importance.
 
         Parameters
@@ -693,17 +720,10 @@ class TabModel(BaseEstimator):
             Pytorch dataloader.
 
         """
-        self.network.eval()
-        feature_importances_ = np.zeros((self.network.post_embed_dim))
-        for data, targets in loader:
-            data = data.to(self.device).float()
-            M_explain, masks = self.network.forward_masks(data)
-            feature_importances_ += M_explain.sum(dim=0).cpu().detach().numpy()
-
-        feature_importances_ = csc_matrix.dot(
-            feature_importances_, self.reducing_matrix
-        )
-        self.feature_importances_ = feature_importances_ / np.sum(feature_importances_)
+        M_explain, _ = self.explain(X, normalize=False)
+        sum_explain = M_explain.sum(axis=0)
+        feature_importances_ = sum_explain / np.sum(sum_explain)
+        return feature_importances_
 
     def _update_network_params(self):
         self.network.virtual_batch_size = self.virtual_batch_size

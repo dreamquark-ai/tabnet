@@ -4,7 +4,8 @@
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
-  
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Welcome to pytorch_tabnet’s documentation! &mdash; pytorch_tabnet  documentation</title>
@@ -83,14 +84,17 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#installation">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#how-to-use-it">How to use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#data-augmentation-on-the-fly">Data augmentation on the fly</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#easy-saving-and-loading">Easy saving and loading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -158,10 +162,10 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="welcome-to-pytorch-tabnet-s-documentation">
+  <section id="welcome-to-pytorch-tabnet-s-documentation">
 <h1>Welcome to pytorch_tabnet’s documentation!<a class="headerlink" href="#welcome-to-pytorch-tabnet-s-documentation" title="Permalink to this headline">¶</a></h1>
 <div class="toctree-wrapper compound">
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
@@ -170,43 +174,47 @@
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/README.html#source-code">Source code</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#how-to-use-it">How to use it?</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/README.html#default-eval-metric">Default eval_metric</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/README.html#custom-evaluation-metrics">Custom evaluation metrics</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#data-augmentation-on-the-fly">Data augmentation on the fly</a></li>
+<li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#easy-saving-and-loading">Easy saving and loading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/README.html#useful-links">Useful links</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/README.html#model-parameters">Model parameters</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/README.html#fit-parameters">Fit parameters</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.utils">pytorch_tabnet.utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.pretraining_utils">pytorch_tabnet.pretraining_utils module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.augmentations">pytorch_tabnet.augmentations module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.tab_network">pytorch_tabnet.tab_network module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.metrics">pytorch_tabnet.metrics module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.tab_model">pytorch_tabnet.tab_model module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.sparsemax">pytorch_tabnet.sparsemax module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.callbacks">pytorch_tabnet.callbacks module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.abstract_model">pytorch_tabnet.abstract_model module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.pretraining">pytorch_tabnet.pretraining module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.utils">pytorch_tabnet.utils module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.multitask">pytorch_tabnet.multitask module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.multiclass_utils">pytorch_tabnet.multiclass_utils module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.tab_model">pytorch_tabnet.tab_model module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.abstract_model">pytorch_tabnet.abstract_model module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.callbacks">pytorch_tabnet.callbacks module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.pretraining">pytorch_tabnet.pretraining module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.sparsemax">pytorch_tabnet.sparsemax module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="generated_docs/pytorch_tabnet.html#module-pytorch_tabnet.metrics">pytorch_tabnet.metrics module</a></li>
 </ul>
 </li>
 </ul>
 </div>
-</div>
-<div class="section" id="indices-and-tables">
+</section>
+<section id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
 <li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
 </ul>
-</div>
+</section>
 
 
            </div>

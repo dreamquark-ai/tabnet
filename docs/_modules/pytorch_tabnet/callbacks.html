@@ -82,14 +82,17 @@
               
             
             
-              <p class="caption"><span class="caption-text">Contents:</span></p>
+              <p><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handles">What problems does pytorch-tabnet handles?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#semi-supervised-pre-training">Semi-supervised pre-training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#data-augmentation-on-the-fly">Data augmentation on the fly</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#easy-saving-and-loading">Easy saving and loading</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#useful-links">Useful links</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/pytorch_tabnet.html">pytorch_tabnet package</a></li>
 </ul>
@@ -162,6 +165,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 
 <div class="viewcode-block" id="Callback"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.callbacks.Callback">[docs]</a><span class="k">class</span> <span class="nc">Callback</span><span class="p">:</span>
@@ -325,7 +329,8 @@
                 <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;best_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">early_stopping_metric</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">best_loss</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Best weights from best epoch are automatically used!&quot;</span><span class="p">)</span></div></div>
+        <span class="n">wrn_msg</span> <span class="o">=</span> <span class="s2">&quot;Best weights from best epoch are automatically used!&quot;</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">wrn_msg</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="History"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.callbacks.History">[docs]</a><span class="nd">@dataclass</span>
