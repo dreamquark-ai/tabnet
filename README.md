@@ -154,6 +154,10 @@ A specific customization example notebook is available here : https://github.com
 Added later to TabNet's original paper, semi-supervised pre-training is now available via the class `TabNetPretrainer`:
 
 ```python
+import torch
+from pytorch_tabnet.pretraining import TabNetPretrainer
+from pytorch_tabnet.tab_model import TabNetClassifier
+
 # TabNetPretrainer
 unsupervised_model = TabNetPretrainer(
     optimizer_fn=torch.optim.Adam,
