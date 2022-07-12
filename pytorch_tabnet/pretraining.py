@@ -47,6 +47,7 @@ class TabNetPretrainer(TabModel):
         X_train,
         eval_set=None,
         eval_name=None,
+        eval_metric=None,
         loss_fn=None,
         pretraining_ratio=0.5,
         weights=0,
