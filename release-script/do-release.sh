@@ -43,8 +43,9 @@ git push origin master
 echo "Pushing tag"
 git push origin --tags
 
-echo "Making github release"
-docker run -v ${PWD}:/work -w /work --entrypoint "" release-changelog:latest conventional-github-releaser -p angular --token ${token}
+# This created an error : you should do the release by hand on github
+# echo "Making github release"
+# docker run -v ${PWD}:/work -w /work --entrypoint "" release-changelog:latest sh -c "git config --global --add safe.directory /work && conventional-github-releaser -p angular --token ${token}"
 
 # Build release
 echo "Building latest build"
