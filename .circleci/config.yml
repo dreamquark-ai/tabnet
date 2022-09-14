@@ -32,8 +32,8 @@ commands:
                   name: Install prerequisites and poetry
                   command: |
                       apt update && apt install curl make git libopenblas-base build-essential -y
-                      curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
-                      source $HOME/.poetry/env
+                      curl -sSL https://install.python-poetry.org | python3 -
+                      export PATH="/root/.local/bin:$PATH"
                       poetry config virtualenvs.path $POETRY_CACHE
                       poetry run pip install --upgrade --no-cache-dir pip==20.1;
 
@@ -87,7 +87,7 @@ jobs:
                   name: Install dependencies
                   shell: bash -leo pipefail
                   command: |
-                      source $HOME/.poetry/env
+                      export PATH="/root/.local/bin:$PATH"
                       poetry config virtualenvs.path $POETRY_CACHE
                       poetry run pip install torch==1.4.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
                       poetry install
