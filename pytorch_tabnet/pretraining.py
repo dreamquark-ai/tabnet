@@ -6,7 +6,8 @@ from pytorch_tabnet.utils import (
     create_explain_matrix,
     filter_weights,
     PredictDataset,
-    check_input
+    check_input,
+    create_group_matrix,
 )
 from torch.nn.utils import clip_grad_norm_
 from pytorch_tabnet.pretraining_utils import (
@@ -172,6 +173,9 @@ class TabNetPretrainer(TabModel):
         if not hasattr(self, 'pretraining_ratio'):
             self.pretraining_ratio = 0.5
         torch.manual_seed(self.seed)
+
+        self.group_matrix = create_group_matrix(self.grouped_features, self.input_dim)
+
         self.network = tab_network.TabNetPretraining(
             self.input_dim,
             pretraining_ratio=self.pretraining_ratio,
@@ -188,6 +192,7 @@ class TabNetPretrainer(TabModel):
             virtual_batch_size=self.virtual_batch_size,
             momentum=self.momentum,
             mask_type=self.mask_type,
+            group_attention_matrix=self.group_matrix.to(self.device),
         ).to(self.device)
 
         self.reducing_matrix = create_explain_matrix(
