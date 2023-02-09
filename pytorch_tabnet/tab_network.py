@@ -263,11 +263,7 @@ class TabNetDecoder(torch.nn.Module):
         if self.n_shared > 0:
             shared_feat_transform = torch.nn.ModuleList()
             for i in range(self.n_shared):
-                if i == 0:
-                    shared_feat_transform.append(Linear(n_d, 2 * n_d, bias=False))
-                else:
-                    shared_feat_transform.append(Linear(n_d, 2 * n_d, bias=False))
-
+                shared_feat_transform.append(Linear(n_d, 2 * n_d, bias=False))
         else:
             shared_feat_transform = None
 
