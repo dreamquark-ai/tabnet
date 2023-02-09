@@ -422,8 +422,8 @@ def define_device(device_name):
 
 class ComplexEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, np.int64):
-            return int(obj)
+        if isinstance(obj, (np.generic, np.ndarray)):
+            return obj.tolist()
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 
