@@ -21,7 +21,7 @@ executors:
         docker:
             - image: dreamquark/docker:latest@sha256:0dfd1a7a7b519e33fde3f2285f19cdb81c9a9f01e457f1940bac36a7b5ca8347
         working_directory: /work
-        resource_class: small
+        resource_class: medium
     
 commands:
     # here we can define steps that will be shared across different jobs
@@ -58,7 +58,7 @@ jobs:
                       make build-gpu
     lint-code:
         executor: python-executor
-        resource_class: small
+        resource_class: medium
         steps:
             - checkout
             # Download and cache dependencies
@@ -74,7 +74,7 @@ jobs:
                       poetry run flake8
     install:
         executor: python-executor
-        resource_class: small
+        resource_class: medium
         steps:
             - checkout
             # Download and cache dependencies
