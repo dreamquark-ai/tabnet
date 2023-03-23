@@ -74,7 +74,7 @@ jobs:
                       poetry run flake8
     install:
         executor: python-executor
-        resource_class: small
+        resource_class: medium
         steps:
             - checkout
             # Download and cache dependencies
