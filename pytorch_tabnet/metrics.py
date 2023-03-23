@@ -400,7 +400,7 @@ class RMSLE(Metric):
             RMSLE of predictions vs targets.
         """
         y_score = np.clip(y_score, a_min=0, a_max=None)
-        return mean_squared_log_error(y_true, y_score, squared=False)
+        return np.sqrt(mean_squared_log_error(y_true, y_score))
 
 
 class UnsupervisedMetric(Metric):
