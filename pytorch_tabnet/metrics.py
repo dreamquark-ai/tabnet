@@ -372,7 +372,7 @@ class MSE(Metric):
 
 class RMSLE(Metric):
     """
-    Mean squared logarithmic error regression loss.
+    Root Mean squared logarithmic error regression loss.
     Scikit-implementation:
     https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html
     Note: In order to avoid error, negative predictions are clipped to 0.
@@ -400,7 +400,7 @@ class RMSLE(Metric):
             RMSLE of predictions vs targets.
         """
         y_score = np.clip(y_score, a_min=0, a_max=None)
-        return mean_squared_log_error(y_true, y_score)
+        return np.sqrt(mean_squared_log_error(y_true, y_score))
 
 
 class UnsupervisedMetric(Metric):
