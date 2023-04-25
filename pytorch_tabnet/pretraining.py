@@ -188,6 +188,8 @@ class TabNetPretrainer(TabModel):
             cat_emb_dim=self.cat_emb_dim,
             n_independent=self.n_independent,
             n_shared=self.n_shared,
+            n_shared_decoder=self.n_shared_decoder,
+            n_indep_decoder=self.n_indep_decoder,
             epsilon=self.epsilon,
             virtual_batch_size=self.virtual_batch_size,
             momentum=self.momentum,
