@@ -406,6 +406,8 @@ class RMSLE(Metric):
 class ClassificationReport(Metric):
     """
     Classification Report: Precision, Recall and F1 scores.
+    Scikit-implementation:
+    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
     """
 
     def __init__(self):
@@ -425,10 +427,10 @@ class ClassificationReport(Metric):
 
         Returns
         -------
-        float
-            AUC of predictions vs targets.
+        str
+            table of precision, recall, and f1 score as well as supports
         """
-        return classification_report(y_true, y_score[:, 1])
+        return classification_report(y_true, y_score)
 
 class UnsupervisedMetric(Metric):
     """
