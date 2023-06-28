@@ -9,6 +9,7 @@ from sklearn.metrics import (
     log_loss,
     balanced_accuracy_score,
     mean_squared_log_error,
+    classification_report
 )
 import torch
 
@@ -402,6 +403,32 @@ class RMSLE(Metric):
         y_score = np.clip(y_score, a_min=0, a_max=None)
         return np.sqrt(mean_squared_log_error(y_true, y_score))
 
+class ClassificationReport(Metric):
+    """
+    Classification Report: Precision, Recall and F1 scores.
+    """
+
+    def __init__(self):
+        self._name = "classification_report"
+        self._maximize = False
+
+    def __call__(self, y_true, y_score):
+        """
+        Compute precision, recall and F1 scores of predictions for each target class.
+
+        Parameters
+        ----------
+        y_true : np.ndarray
+            Target matrix or vector
+        y_score : np.ndarray
+            Score matrix or vector
+
+        Returns
+        -------
+        float
+            AUC of predictions vs targets.
+        """
+        return classification_report(y_true, y_score[:, 1])
 
 class UnsupervisedMetric(Metric):
     """
