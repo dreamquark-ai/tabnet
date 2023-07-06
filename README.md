@@ -411,3 +411,7 @@ loaded_clf.load_model(saved_filepath)
 - `warm_start` : bool (default=False)
     In order to match scikit-learn API, this is set to False.
     It allows to fit twice the same model and start from a warm start.
+
+- `compute_importance` : bool (default=True)
+
+    Whether to compute feature importance
