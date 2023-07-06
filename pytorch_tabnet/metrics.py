@@ -403,6 +403,7 @@ class RMSLE(Metric):
         y_score = np.clip(y_score, a_min=0, a_max=None)
         return np.sqrt(mean_squared_log_error(y_true, y_score))
 
+
 class ClassificationReport(Metric):
     """
     Classification Report: Precision, Recall and F1 scores.
@@ -431,6 +432,7 @@ class ClassificationReport(Metric):
             table of precision, recall, and f1 score as well as supports
         """
         return classification_report(y_true, y_score)
+
 
 class UnsupervisedMetric(Metric):
     """
