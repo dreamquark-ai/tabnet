@@ -138,6 +138,7 @@ class TabModel(BaseEstimator):
         from_unsupervised=None,
         warm_start=False,
         augmentations=None,
+        compute_importance=True
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -183,6 +184,8 @@ class TabModel(BaseEstimator):
             Use a previously self supervised model as starting weights
         warm_start: bool
             If True, current model parameters are used to start training
+        compute_importance : bool
+            Whether to compute feature importance
         """
         # update model name
 
@@ -196,6 +199,7 @@ class TabModel(BaseEstimator):
         self._stop_training = False
         self.pin_memory = pin_memory and (self.device.type != "cpu")
         self.augmentations = augmentations
+        self.compute_importance = compute_importance
 
         if self.augmentations is not None:
             # This ensure reproducibility
@@ -267,8 +271,9 @@ class TabModel(BaseEstimator):
         self._callback_container.on_train_end()
         self.network.eval()
 
-        # compute feature importance once the best model is defined
-        self.feature_importances_ = self._compute_feature_importances(X_train)
+        if self.compute_importance:
+            # compute feature importance once the best model is defined
+            self.feature_importances_ = self._compute_feature_importances(X_train)
 
     def predict(self, X):
         """
