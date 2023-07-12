@@ -59,7 +59,6 @@ def create_dataloaders(
             DataLoader(
                 PredictDataset(X),
                 batch_size=batch_size,
-                sampler=sampler,
                 shuffle=need_shuffle,
                 num_workers=num_workers,
                 drop_last=drop_last,
