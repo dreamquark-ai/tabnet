@@ -336,7 +336,7 @@ loaded_clf.load_model(saved_filepath)
 
 ## Fit parameters
 
-- `X_train` : np.array
+- `X_train` : np.array or scipy.sparse.csr_matrix
 
     Training features
 

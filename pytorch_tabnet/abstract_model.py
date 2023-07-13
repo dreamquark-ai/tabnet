@@ -7,6 +7,7 @@ from scipy.sparse import csc_matrix
 from abc import abstractmethod
 from pytorch_tabnet import tab_network
 from pytorch_tabnet.utils import (
+    SparsePredictDataset,
     PredictDataset,
     create_explain_matrix,
     validate_eval_set,
@@ -35,6 +36,7 @@ import shutil
 import zipfile
 import warnings
 import copy
+import scipy
 
 
 @dataclass
@@ -281,7 +283,7 @@ class TabModel(BaseEstimator):
 
         Parameters
         ----------
-        X : a :tensor: `torch.Tensor`
+        X : a :tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`
             Input data
 
         Returns
@@ -290,11 +292,19 @@ class TabModel(BaseEstimator):
             Predictions of the regression problem
         """
         self.network.eval()
-        dataloader = DataLoader(
-            PredictDataset(X),
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
+
+        if scipy.sparse.issparse(X):
+            dataloader = DataLoader(
+                SparsePredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
+        else:
+            dataloader = DataLoader(
+                PredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
 
         results = []
         for batch_nb, data in enumerate(dataloader):
@@ -311,7 +321,7 @@ class TabModel(BaseEstimator):
 
         Parameters
         ----------
-        X : tensor: `torch.Tensor`
+        X : tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`
             Input data
         normalize : bool (default False)
             Wheter to normalize so that sum of features are equal to 1
@@ -325,11 +335,18 @@ class TabModel(BaseEstimator):
         """
         self.network.eval()
 
-        dataloader = DataLoader(
-            PredictDataset(X),
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
+        if scipy.sparse.issparse(X):
+            dataloader = DataLoader(
+                SparsePredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
+        else:
+            dataloader = DataLoader(
+                PredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
 
         res_explain = []
 

@@ -1,10 +1,11 @@
 import torch
 import numpy as np
 from scipy.special import softmax
-from pytorch_tabnet.utils import PredictDataset, filter_weights
+from pytorch_tabnet.utils import SparsePredictDataset, PredictDataset, filter_weights
 from pytorch_tabnet.abstract_model import TabModel
 from pytorch_tabnet.multiclass_utils import infer_output_dim, check_output_dim
 from torch.utils.data import DataLoader
+import scipy
 
 
 class TabNetClassifier(TabModel):
@@ -79,7 +80,7 @@ class TabNetClassifier(TabModel):
 
         Parameters
         ----------
-        X : a :tensor: `torch.Tensor`
+        X : a :tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`
             Input data
 
         Returns
@@ -89,11 +90,18 @@ class TabNetClassifier(TabModel):
         """
         self.network.eval()
 
-        dataloader = DataLoader(
-            PredictDataset(X),
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
+        if scipy.sparse.issparse(X):
+            dataloader = DataLoader(
+                SparsePredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
+        else:
+            dataloader = DataLoader(
+                PredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
 
         results = []
         for batch_nb, data in enumerate(dataloader):
