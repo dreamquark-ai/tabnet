@@ -5,6 +5,7 @@ from pytorch_tabnet import tab_network
 from pytorch_tabnet.utils import (
     create_explain_matrix,
     filter_weights,
+    SparsePredictDataset,
     PredictDataset,
     check_input,
     create_group_matrix,
@@ -20,6 +21,7 @@ from pytorch_tabnet.metrics import (
     UnsupervisedLoss,
 )
 from pytorch_tabnet.abstract_model import TabModel
+import scipy
 
 
 class TabNetPretrainer(TabModel):
@@ -390,7 +392,7 @@ class TabNetPretrainer(TabModel):
 
         Parameters
         ----------
-        X : a :tensor: `torch.Tensor`
+        X : a :tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`
             Input data
 
         Returns
@@ -399,11 +401,19 @@ class TabNetPretrainer(TabModel):
             Predictions of the regression problem
         """
         self.network.eval()
-        dataloader = DataLoader(
-            PredictDataset(X),
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
+
+        if scipy.sparse.issparse(X):
+            dataloader = DataLoader(
+                SparsePredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
+        else:
+            dataloader = DataLoader(
+                PredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
 
         results = []
         embedded_res = []
