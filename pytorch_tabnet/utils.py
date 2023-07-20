@@ -33,6 +33,31 @@ class TorchDataset(Dataset):
         return x, y
 
 
+class SparseTorchDataset(Dataset):
+    """
+    Format for csr_matrix
+
+    Parameters
+    ----------
+    X : CSR matrix
+        The input matrix
+    y : 2D array
+        The one-hot encoded target
+    """
+
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def __len__(self):
+        return self.x.shape[0]
+
+    def __getitem__(self, index):
+        x = torch.from_numpy(self.x[index].toarray()[0]).float()
+        y = self.y[index]
+        return x, y
+
+
 class PredictDataset(Dataset):
     """
     Format for numpy array
@@ -51,6 +76,27 @@ class PredictDataset(Dataset):
 
     def __getitem__(self, index):
         x = self.x[index]
+        return x
+
+
+class SparsePredictDataset(Dataset):
+    """
+    Format for csr_matrix
+
+    Parameters
+    ----------
+    X : CSR matrix
+        The input matrix
+    """
+
+    def __init__(self, x):
+        self.x = x
+
+    def __len__(self):
+        return self.x.shape[0]
+
+    def __getitem__(self, index):
+        x = torch.from_numpy(self.x[index].toarray()[0]).float()
         return x
 
 
@@ -142,27 +188,49 @@ def create_dataloaders(
     """
     need_shuffle, sampler = create_sampler(weights, y_train)
 
-    train_dataloader = DataLoader(
-        TorchDataset(X_train.astype(np.float32), y_train),
-        batch_size=batch_size,
-        sampler=sampler,
-        shuffle=need_shuffle,
-        num_workers=num_workers,
-        drop_last=drop_last,
-        pin_memory=pin_memory,
-    )
+    if scipy.sparse.issparse(X_train):
+        train_dataloader = DataLoader(
+            SparseTorchDataset(X_train.astype(np.float32), y_train),
+            batch_size=batch_size,
+            sampler=sampler,
+            shuffle=need_shuffle,
+            num_workers=num_workers,
+            drop_last=drop_last,
+            pin_memory=pin_memory,
+        )
+    else:
+        train_dataloader = DataLoader(
+            TorchDataset(X_train.astype(np.float32), y_train),
+            batch_size=batch_size,
+            sampler=sampler,
+            shuffle=need_shuffle,
+            num_workers=num_workers,
+            drop_last=drop_last,
+            pin_memory=pin_memory,
+        )
 
     valid_dataloaders = []
     for X, y in eval_set:
-        valid_dataloaders.append(
-            DataLoader(
-                TorchDataset(X.astype(np.float32), y),
-                batch_size=batch_size,
-                shuffle=False,
-                num_workers=num_workers,
-                pin_memory=pin_memory,
+        if scipy.sparse.issparse(X):
+            valid_dataloaders.append(
+                DataLoader(
+                    SparseTorchDataset(X.astype(np.float32), y),
+                    batch_size=batch_size,
+                    shuffle=False,
+                    num_workers=num_workers,
+                    pin_memory=pin_memory,
+                )
             )
-        )
+        else:
+            valid_dataloaders.append(
+                DataLoader(
+                    TorchDataset(X.astype(np.float32), y),
+                    batch_size=batch_size,
+                    shuffle=False,
+                    num_workers=num_workers,
+                    pin_memory=pin_memory,
+                )
+            )
 
     return train_dataloader, valid_dataloaders
 
@@ -436,7 +504,7 @@ def check_input(X):
     if isinstance(X, (pd.DataFrame, pd.Series)):
         err_message = "Pandas DataFrame are not supported: apply X.values when calling fit"
         raise TypeError(err_message)
-    check_array(X)
+    check_array(X, accept_sparse=True)
 
 
 def check_warm_start(warm_start, from_unsupervised):
