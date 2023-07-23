@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
@@ -162,22 +163,24 @@
 <span></span><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">create_sampler</span><span class="p">,</span>
+    <span class="n">SparsePredictDataset</span><span class="p">,</span>
     <span class="n">PredictDataset</span><span class="p">,</span>
     <span class="n">check_input</span>
 <span class="p">)</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
 
 
 <div class="viewcode-block" id="create_dataloaders"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.pretraining_utils.create_dataloaders">[docs]</a><span class="k">def</span> <span class="nf">create_dataloaders</span><span class="p">(</span>
     <span class="n">X_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">pin_memory</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create dataloaders with or without subsampling depending on weights and balanced.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    X_train : np.ndarray</span>
+<span class="sd">    X_train : np.ndarray or scipy.sparse.csr_matrix</span>
 <span class="sd">        Training data</span>
-<span class="sd">    eval_set : list of np.array</span>
+<span class="sd">    eval_set : list of np.array (for Xs and ys) or scipy.sparse.csr_matrix (for Xs)</span>
 <span class="sd">        List of eval sets</span>
 <span class="sd">    weights : either 0, 1, dict or iterable</span>
 <span class="sd">        if 0 (default) : no weights will be applied</span>
@@ -204,35 +207,59 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">need_shuffle</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">create_sampler</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">X_train</span><span class="p">)</span>
 
-    <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-        <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X_train</span><span class="p">),</span>
-        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-        <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
-        <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
-        <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-        <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
-        <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X_train</span><span class="p">):</span>
+        <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">SparsePredictDataset</span><span class="p">(</span><span class="n">X_train</span><span class="p">),</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
+            <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X_train</span><span class="p">),</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
+            <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="n">valid_dataloaders</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">X</span> <span class="ow">in</span> <span class="n">eval_set</span><span class="p">:</span>
-        <span class="n">valid_dataloaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">DataLoader</span><span class="p">(</span>
-                <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
-                <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-                <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
-                <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">valid_dataloaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">DataLoader</span><span class="p">(</span>
+                    <span class="n">SparsePredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+                    <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                    <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
+                    <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">valid_dataloaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">DataLoader</span><span class="p">(</span>
+                    <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+                    <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                    <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
+                    <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">valid_dataloaders</span></div>
 
 
 <div class="viewcode-block" id="validate_eval_set"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.pretraining_utils.validate_eval_set">[docs]</a><span class="k">def</span> <span class="nf">validate_eval_set</span><span class="p">(</span><span class="n">eval_set</span><span class="p">,</span> <span class="n">eval_name</span><span class="p">,</span> <span class="n">X_train</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check if the shapes of eval_set are compatible with X_train.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the shapes of eval_set are compatible with X_train.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

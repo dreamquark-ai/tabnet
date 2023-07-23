@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
@@ -180,7 +181,7 @@
 
 
 <div class="viewcode-block" id="GBN"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.GBN">[docs]</a><span class="k">class</span> <span class="nc">GBN</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ghost Batch Normalization</span>
 <span class="sd">    https://arxiv.org/abs/1705.08741</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -214,8 +215,9 @@
         <span class="n">virtual_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
         <span class="n">momentum</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
         <span class="n">mask_type</span><span class="o">=</span><span class="s2">&quot;sparsemax&quot;</span><span class="p">,</span>
+        <span class="n">group_attention_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Defines main part of the TabNet network without the embedding layers.</span>
 
 <span class="sd">        Parameters</span>
@@ -245,6 +247,8 @@
 <span class="sd">            Float value between 0 and 1 which will be used for momentum in all batch norm</span>
 <span class="sd">        mask_type : str</span>
 <span class="sd">            Either &quot;sparsemax&quot; or &quot;entmax&quot; : this is the masking function to use</span>
+<span class="sd">        group_attention_matrix : torch matrix</span>
+<span class="sd">            Matrix of size (n_groups, input_dim), m_ij = importance within group i of feature j</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">TabNetEncoder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span> <span class="o">=</span> <span class="n">input_dim</span>
@@ -260,6 +264,14 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="n">virtual_batch_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span> <span class="o">=</span> <span class="n">mask_type</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">initial_bn</span> <span class="o">=</span> <span class="n">BatchNorm1d</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_attention_matrix</span> <span class="o">=</span> <span class="n">group_attention_matrix</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_attention_matrix</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># no groups</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group_attention_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attention_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">attention_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_attention_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_shared</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">shared_feat_transform</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
@@ -299,7 +311,8 @@
             <span class="p">)</span>
             <span class="n">attention</span> <span class="o">=</span> <span class="n">AttentiveTransformer</span><span class="p">(</span>
                 <span class="n">n_a</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">attention_dim</span><span class="p">,</span>
+                <span class="n">group_matrix</span><span class="o">=</span><span class="n">group_attention_matrix</span><span class="p">,</span>
                 <span class="n">virtual_batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span><span class="p">,</span>
                 <span class="n">momentum</span><span class="o">=</span><span class="n">momentum</span><span class="p">,</span>
                 <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
@@ -310,12 +323,12 @@
 <div class="viewcode-block" id="TabNetEncoder.forward"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.TabNetEncoder.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_bn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
 
+        <span class="n">bs</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># batch size</span>
         <span class="k">if</span> <span class="n">prior</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">prior</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">bs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention_dim</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="n">M_loss</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">att</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_splitter</span><span class="p">(</span><span class="n">x</span><span class="p">)[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_d</span> <span class="p">:]</span>
-
         <span class="n">steps_output</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">):</span>
             <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">att_transformers</span><span class="p">[</span><span class="n">step</span><span class="p">](</span><span class="n">prior</span><span class="p">,</span> <span class="n">att</span><span class="p">)</span>
@@ -325,7 +338,8 @@
             <span class="c1"># update prior</span>
             <span class="n">prior</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">-</span> <span class="n">M</span><span class="p">,</span> <span class="n">prior</span><span class="p">)</span>
             <span class="c1"># output</span>
-            <span class="n">masked_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">M_feature_level</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_attention_matrix</span><span class="p">)</span>
+            <span class="n">masked_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">M_feature_level</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
             <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feat_transformers</span><span class="p">[</span><span class="n">step</span><span class="p">](</span><span class="n">masked_x</span><span class="p">)</span>
             <span class="n">d</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">()(</span><span class="n">out</span><span class="p">[:,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_d</span><span class="p">])</span>
             <span class="n">steps_output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
@@ -337,24 +351,25 @@
 
 <div class="viewcode-block" id="TabNetEncoder.forward_masks"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.TabNetEncoder.forward_masks">[docs]</a>    <span class="k">def</span> <span class="nf">forward_masks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_bn</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
-
-        <span class="n">prior</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># batch size</span>
+        <span class="n">prior</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">bs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention_dim</span><span class="p">))</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">M_explain</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
         <span class="n">att</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_splitter</span><span class="p">(</span><span class="n">x</span><span class="p">)[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_d</span> <span class="p">:]</span>
         <span class="n">masks</span> <span class="o">=</span> <span class="p">{}</span>
 
         <span class="k">for</span> <span class="n">step</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_steps</span><span class="p">):</span>
             <span class="n">M</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">att_transformers</span><span class="p">[</span><span class="n">step</span><span class="p">](</span><span class="n">prior</span><span class="p">,</span> <span class="n">att</span><span class="p">)</span>
-            <span class="n">masks</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">M</span>
+            <span class="n">M_feature_level</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_attention_matrix</span><span class="p">)</span>
+            <span class="n">masks</span><span class="p">[</span><span class="n">step</span><span class="p">]</span> <span class="o">=</span> <span class="n">M_feature_level</span>
             <span class="c1"># update prior</span>
             <span class="n">prior</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gamma</span> <span class="o">-</span> <span class="n">M</span><span class="p">,</span> <span class="n">prior</span><span class="p">)</span>
             <span class="c1"># output</span>
-            <span class="n">masked_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="n">masked_x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">M_feature_level</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
             <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">feat_transformers</span><span class="p">[</span><span class="n">step</span><span class="p">](</span><span class="n">masked_x</span><span class="p">)</span>
             <span class="n">d</span> <span class="o">=</span> <span class="n">ReLU</span><span class="p">()(</span><span class="n">out</span><span class="p">[:,</span> <span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_d</span><span class="p">])</span>
             <span class="c1"># explain</span>
             <span class="n">step_importance</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="n">M_explain</span> <span class="o">+=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">M</span><span class="p">,</span> <span class="n">step_importance</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">M_explain</span> <span class="o">+=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="n">M_feature_level</span><span class="p">,</span> <span class="n">step_importance</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
             <span class="c1"># update attention</span>
             <span class="n">att</span> <span class="o">=</span> <span class="n">out</span><span class="p">[:,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_d</span> <span class="p">:]</span>
 
@@ -372,7 +387,7 @@
         <span class="n">virtual_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
         <span class="n">momentum</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Defines main part of the TabNet network without the embedding layers.</span>
 
 <span class="sd">        Parameters</span>
@@ -410,11 +425,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_shared</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">shared_feat_transform</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
             <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_shared</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                    <span class="n">shared_feat_transform</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_d</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_d</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">shared_feat_transform</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_d</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_d</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
-
+                <span class="n">shared_feat_transform</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Linear</span><span class="p">(</span><span class="n">n_d</span><span class="p">,</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n_d</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">shared_feat_transform</span> <span class="o">=</span> <span class="kc">None</span>
 
@@ -461,6 +472,7 @@
         <span class="n">mask_type</span><span class="o">=</span><span class="s2">&quot;sparsemax&quot;</span><span class="p">,</span>
         <span class="n">n_shared_decoder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
         <span class="n">n_indep_decoder</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">group_attention_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">TabNetPretraining</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
@@ -487,10 +499,15 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n_shared and n_independent can&#39;t be both zero.&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="n">virtual_batch_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">embedder</span> <span class="o">=</span> <span class="n">EmbeddingGenerator</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">cat_dims</span><span class="p">,</span> <span class="n">cat_idxs</span><span class="p">,</span> <span class="n">cat_emb_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedder</span> <span class="o">=</span> <span class="n">EmbeddingGenerator</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span>
+                                           <span class="n">cat_dims</span><span class="p">,</span>
+                                           <span class="n">cat_idxs</span><span class="p">,</span>
+                                           <span class="n">cat_emb_dim</span><span class="p">,</span>
+                                           <span class="n">group_attention_matrix</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedder</span><span class="o">.</span><span class="n">post_embed_dim</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">masker</span> <span class="o">=</span> <span class="n">RandomObfuscator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_ratio</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">masker</span> <span class="o">=</span> <span class="n">RandomObfuscator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pretraining_ratio</span><span class="p">,</span>
+                                       <span class="n">group_matrix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">embedder</span><span class="o">.</span><span class="n">embedding_group_matrix</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="n">TabNetEncoder</span><span class="p">(</span>
             <span class="n">input_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span><span class="p">,</span>
             <span class="n">output_dim</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span><span class="p">,</span>
@@ -504,6 +521,7 @@
             <span class="n">virtual_batch_size</span><span class="o">=</span><span class="n">virtual_batch_size</span><span class="p">,</span>
             <span class="n">momentum</span><span class="o">=</span><span class="n">momentum</span><span class="p">,</span>
             <span class="n">mask_type</span><span class="o">=</span><span class="n">mask_type</span><span class="p">,</span>
+            <span class="n">group_attention_matrix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">embedder</span><span class="o">.</span><span class="n">embedding_group_matrix</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span> <span class="o">=</span> <span class="n">TabNetDecoder</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span><span class="p">,</span>
@@ -516,7 +534,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="TabNetPretraining.forward"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.TabNetPretraining.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns: res, embedded_x, obf_vars</span>
 <span class="sd">            res : output of reconstruction</span>
 <span class="sd">            embedded_x : embedded input</span>
@@ -524,12 +542,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">embedded_x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedder</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
-            <span class="n">masked_x</span><span class="p">,</span> <span class="n">obf_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masker</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">)</span>
-            <span class="c1"># set prior of encoder with obf_mask</span>
-            <span class="n">prior</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">obf_vars</span>
+            <span class="n">masked_x</span><span class="p">,</span> <span class="n">obfuscated_groups</span><span class="p">,</span> <span class="n">obfuscated_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">masker</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">)</span>
+            <span class="c1"># set prior of encoder with obfuscated groups</span>
+            <span class="n">prior</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">obfuscated_groups</span>
             <span class="n">steps_out</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">masked_x</span><span class="p">,</span> <span class="n">prior</span><span class="o">=</span><span class="n">prior</span><span class="p">)</span>
             <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">steps_out</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span>
+            <span class="k">return</span> <span class="n">res</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obfuscated_vars</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">steps_out</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">embedded_x</span><span class="p">)</span>
             <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">steps_out</span><span class="p">)</span>
@@ -555,8 +573,9 @@
         <span class="n">virtual_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
         <span class="n">momentum</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
         <span class="n">mask_type</span><span class="o">=</span><span class="s2">&quot;sparsemax&quot;</span><span class="p">,</span>
+        <span class="n">group_attention_matrix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Defines main part of the TabNet network without the embedding layers.</span>
 
 <span class="sd">        Parameters</span>
@@ -586,6 +605,8 @@
 <span class="sd">            Float value between 0 and 1 which will be used for momentum in all batch norm</span>
 <span class="sd">        mask_type : str</span>
 <span class="sd">            Either &quot;sparsemax&quot; or &quot;entmax&quot; : this is the masking function to use</span>
+<span class="sd">        group_attention_matrix : torch matrix</span>
+<span class="sd">            Matrix of size (n_groups, input_dim), m_ij = importance within group i of feature j</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">TabNetNoEmbeddings</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span> <span class="o">=</span> <span class="n">input_dim</span>
@@ -615,6 +636,7 @@
             <span class="n">virtual_batch_size</span><span class="o">=</span><span class="n">virtual_batch_size</span><span class="p">,</span>
             <span class="n">momentum</span><span class="o">=</span><span class="n">momentum</span><span class="p">,</span>
             <span class="n">mask_type</span><span class="o">=</span><span class="n">mask_type</span><span class="p">,</span>
+            <span class="n">group_attention_matrix</span><span class="o">=</span><span class="n">group_attention_matrix</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_multi_task</span><span class="p">:</span>
@@ -663,8 +685,9 @@
         <span class="n">virtual_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
         <span class="n">momentum</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
         <span class="n">mask_type</span><span class="o">=</span><span class="s2">&quot;sparsemax&quot;</span><span class="p">,</span>
+        <span class="n">group_attention_matrix</span><span class="o">=</span><span class="p">[],</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Defines TabNet network</span>
 
 <span class="sd">        Parameters</span>
@@ -702,6 +725,8 @@
 <span class="sd">            Float value between 0 and 1 which will be used for momentum in all batch norm</span>
 <span class="sd">        mask_type : str</span>
 <span class="sd">            Either &quot;sparsemax&quot; or &quot;entmax&quot; : this is the masking function to use</span>
+<span class="sd">        group_attention_matrix : torch matrix</span>
+<span class="sd">            Matrix of size (n_groups, input_dim), m_ij = importance within group i of feature j</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">TabNet</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cat_idxs</span> <span class="o">=</span> <span class="n">cat_idxs</span> <span class="ow">or</span> <span class="p">[]</span>
@@ -725,8 +750,13 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;n_shared and n_independent can&#39;t be both zero.&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="n">virtual_batch_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">embedder</span> <span class="o">=</span> <span class="n">EmbeddingGenerator</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">cat_dims</span><span class="p">,</span> <span class="n">cat_idxs</span><span class="p">,</span> <span class="n">cat_emb_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedder</span> <span class="o">=</span> <span class="n">EmbeddingGenerator</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span>
+                                           <span class="n">cat_dims</span><span class="p">,</span>
+                                           <span class="n">cat_idxs</span><span class="p">,</span>
+                                           <span class="n">cat_emb_dim</span><span class="p">,</span>
+                                           <span class="n">group_attention_matrix</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">embedder</span><span class="o">.</span><span class="n">post_embed_dim</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">tabnet</span> <span class="o">=</span> <span class="n">TabNetNoEmbeddings</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span><span class="p">,</span>
             <span class="n">output_dim</span><span class="p">,</span>
@@ -740,6 +770,7 @@
             <span class="n">virtual_batch_size</span><span class="p">,</span>
             <span class="n">momentum</span><span class="p">,</span>
             <span class="n">mask_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">embedder</span><span class="o">.</span><span class="n">embedding_group_matrix</span>
         <span class="p">)</span>
 
 <div class="viewcode-block" id="TabNet.forward"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.TabNet.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
@@ -755,20 +786,21 @@
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_dim</span><span class="p">,</span>
-        <span class="n">output_dim</span><span class="p">,</span>
+        <span class="n">group_dim</span><span class="p">,</span>
+        <span class="n">group_matrix</span><span class="p">,</span>
         <span class="n">virtual_batch_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
         <span class="n">momentum</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
         <span class="n">mask_type</span><span class="o">=</span><span class="s2">&quot;sparsemax&quot;</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize an attention transformer.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        input_dim : int</span>
 <span class="sd">            Input size</span>
-<span class="sd">        output_dim : int</span>
-<span class="sd">            Output_size</span>
+<span class="sd">        group_dim : int</span>
+<span class="sd">            Number of groups for features</span>
 <span class="sd">        virtual_batch_size : int</span>
 <span class="sd">            Batch size for Ghost Batch Normalization</span>
 <span class="sd">        momentum : float</span>
@@ -777,10 +809,10 @@
 <span class="sd">            Either &quot;sparsemax&quot; or &quot;entmax&quot; : this is the masking function to use</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">AttentiveTransformer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">output_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">initialize_non_glu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">,</span> <span class="n">output_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fc</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">group_dim</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">initialize_non_glu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fc</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">,</span> <span class="n">group_dim</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">bn</span> <span class="o">=</span> <span class="n">GBN</span><span class="p">(</span>
-            <span class="n">output_dim</span><span class="p">,</span> <span class="n">virtual_batch_size</span><span class="o">=</span><span class="n">virtual_batch_size</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="n">momentum</span>
+            <span class="n">group_dim</span><span class="p">,</span> <span class="n">virtual_batch_size</span><span class="o">=</span><span class="n">virtual_batch_size</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="n">momentum</span>
         <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">mask_type</span> <span class="o">==</span> <span class="s2">&quot;sparsemax&quot;</span><span class="p">:</span>
@@ -813,7 +845,7 @@
         <span class="n">momentum</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FeatTransformer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Initialize a feature transformer.</span>
 
 <span class="sd">        Parameters</span>
@@ -870,7 +902,7 @@
 
 
 <div class="viewcode-block" id="GLU_Block"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.GLU_Block">[docs]</a><span class="k">class</span> <span class="nc">GLU_Block</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Independent GLU block, specific to each step</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -937,12 +969,12 @@
 
 
 <div class="viewcode-block" id="EmbeddingGenerator"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.EmbeddingGenerator">[docs]</a><span class="k">class</span> <span class="nc">EmbeddingGenerator</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Classical embeddings generator</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">,</span> <span class="n">cat_dims</span><span class="p">,</span> <span class="n">cat_idxs</span><span class="p">,</span> <span class="n">cat_emb_dim</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;This is an embedding module for an entire set of features</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">,</span> <span class="n">cat_dims</span><span class="p">,</span> <span class="n">cat_idxs</span><span class="p">,</span> <span class="n">cat_emb_dims</span><span class="p">,</span> <span class="n">group_matrix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is an embedding module for an entire set of features</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -953,56 +985,54 @@
 <span class="sd">            If the list is empty, no embeddings will be done</span>
 <span class="sd">        cat_idxs : list of int</span>
 <span class="sd">            Positional index for each categorical features in inputs</span>
-<span class="sd">        cat_emb_dim : int or list of int</span>
+<span class="sd">        cat_emb_dim : list of int</span>
 <span class="sd">            Embedding dimension for each categorical features</span>
 <span class="sd">            If int, the same embedding dimension will be used for all categorical features</span>
+<span class="sd">        group_matrix : torch matrix</span>
+<span class="sd">            Original group matrix before embeddings</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">EmbeddingGenerator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="n">cat_dims</span> <span class="o">==</span> <span class="p">[]</span> <span class="ow">and</span> <span class="n">cat_idxs</span> <span class="o">==</span> <span class="p">[]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">skip_embedding</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span> <span class="o">=</span> <span class="n">input_dim</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">embedding_group_matrix</span> <span class="o">=</span> <span class="n">group_matrix</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">group_matrix</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
             <span class="k">return</span>
-        <span class="k">elif</span> <span class="p">(</span><span class="n">cat_dims</span> <span class="o">==</span> <span class="p">[])</span> <span class="o">^</span> <span class="p">(</span><span class="n">cat_idxs</span> <span class="o">==</span> <span class="p">[]):</span>
-            <span class="k">if</span> <span class="n">cat_dims</span> <span class="o">==</span> <span class="p">[]:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;If cat_idxs is non-empty, cat_dims must be defined as a list of same length.&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;If cat_dims is non-empty, cat_idxs must be defined as a list of same length.&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_idxs</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The lists cat_dims and cat_idxs must have the same length.&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">skip_embedding</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cat_emb_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat_emb_dim</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_idxs</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span> <span class="o">=</span> <span class="n">cat_emb_dim</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">skip_embedding</span> <span class="o">=</span> <span class="kc">False</span>
 
-        <span class="c1"># check that all embeddings are provided</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;cat_emb_dim and cat_dims must be lists of same length, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span><span class="p">)</span><span class="si">}</span><span class="s2"></span>
-<span class="s2">                      and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
-            <span class="n">input_dim</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span><span class="p">)</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">input_dim</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">cat_emb_dims</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_emb_dims</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
 
-        <span class="c1"># Sort dims by cat_idx</span>
-        <span class="n">sorted_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">cat_idxs</span><span class="p">)</span>
-        <span class="n">cat_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat_dims</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_idxs</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_idxs</span><span class="p">]</span>
-
-        <span class="k">for</span> <span class="n">cat_dim</span><span class="p">,</span> <span class="n">emb_dim</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dims</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">cat_dim</span><span class="p">,</span> <span class="n">emb_dim</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">,</span> <span class="n">cat_emb_dims</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">(</span><span class="n">cat_dim</span><span class="p">,</span> <span class="n">emb_dim</span><span class="p">))</span>
 
         <span class="c1"># record continuous indices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">continuous_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">continuous_idx</span><span class="p">[</span><span class="n">cat_idxs</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 
+        <span class="c1"># update group matrix</span>
+        <span class="n">n_groups</span> <span class="o">=</span> <span class="n">group_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embedding_group_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">n_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">post_embed_dim</span><span class="p">),</span>
+                                                  <span class="n">device</span><span class="o">=</span><span class="n">group_matrix</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">group_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_groups</span><span class="p">):</span>
+            <span class="n">post_emb_idx</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">cat_feat_counter</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">init_feat_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">input_dim</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">continuous_idx</span><span class="p">[</span><span class="n">init_feat_idx</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="c1"># this means that no embedding is applied to this column</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">embedding_group_matrix</span><span class="p">[</span><span class="n">group_idx</span><span class="p">,</span> <span class="n">post_emb_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_matrix</span><span class="p">[</span><span class="n">group_idx</span><span class="p">,</span> <span class="n">init_feat_idx</span><span class="p">]</span>  <span class="c1"># noqa</span>
+                    <span class="n">post_emb_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># this is a categorical feature which creates multiple embeddings</span>
+                    <span class="n">n_embeddings</span> <span class="o">=</span> <span class="n">cat_emb_dims</span><span class="p">[</span><span class="n">cat_feat_counter</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">embedding_group_matrix</span><span class="p">[</span><span class="n">group_idx</span><span class="p">,</span> <span class="n">post_emb_idx</span><span class="p">:</span><span class="n">post_emb_idx</span><span class="o">+</span><span class="n">n_embeddings</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_matrix</span><span class="p">[</span><span class="n">group_idx</span><span class="p">,</span> <span class="n">init_feat_idx</span><span class="p">]</span> <span class="o">/</span> <span class="n">n_embeddings</span>  <span class="c1"># noqa</span>
+                    <span class="n">post_emb_idx</span> <span class="o">+=</span> <span class="n">n_embeddings</span>
+                    <span class="n">cat_feat_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+
 <div class="viewcode-block" id="EmbeddingGenerator.forward"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.EmbeddingGenerator.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Apply embeddings to inputs</span>
 <span class="sd">        Inputs should be (batch_size, input_dim)</span>
 <span class="sd">        Outputs will be of size (batch_size, self.post_embed_dim)</span>
@@ -1028,34 +1058,42 @@
 
 
 <div class="viewcode-block" id="RandomObfuscator"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.RandomObfuscator">[docs]</a><span class="k">class</span> <span class="nc">RandomObfuscator</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Create and applies obfuscation masks</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create and applies obfuscation masks.</span>
+<span class="sd">    The obfuscation is done at group level to match attention.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretraining_ratio</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pretraining_ratio</span><span class="p">,</span> <span class="n">group_matrix</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        This create random obfuscation for self suppervised pretraining</span>
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        pretraining_ratio : float</span>
 <span class="sd">            Ratio of feature to randomly discard for reconstruction</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">RandomObfuscator</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pretraining_ratio</span> <span class="o">=</span> <span class="n">pretraining_ratio</span>
+        <span class="c1"># group matrix is set to boolean here to pass all posssible information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_matrix</span> <span class="o">=</span> <span class="p">(</span><span class="n">group_matrix</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_groups</span> <span class="o">=</span> <span class="n">group_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <div class="viewcode-block" id="RandomObfuscator.forward"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_network.RandomObfuscator.forward">[docs]</a>    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate random obfuscation mask.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        masked input and obfuscated variables.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">obfuscated_vars</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">pretraining_ratio</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">bs</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">obfuscated_groups</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bernoulli</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pretraining_ratio</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">bs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_groups</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">obfuscated_vars</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">obfuscated_groups</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">group_matrix</span><span class="p">)</span>
         <span class="n">masked_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mul</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">obfuscated_vars</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">masked_input</span><span class="p">,</span> <span class="n">obfuscated_vars</span></div></div>
+        <span class="k">return</span> <span class="n">masked_input</span><span class="p">,</span> <span class="n">obfuscated_groups</span><span class="p">,</span> <span class="n">obfuscated_vars</span></div></div>
 </pre></div>
 
            </div>
