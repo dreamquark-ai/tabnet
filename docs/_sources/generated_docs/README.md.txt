@@ -2,7 +2,7 @@
 
 # TabNet : Attentive Interpretable Tabular Learning
 
-This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). TabNet: Attentive Interpretable Tabular Learning. arXiv preprint arXiv:1908.07442.) https://arxiv.org/pdf/1908.07442.pdf.
+This is a pyTorch implementation of Tabnet (Arik, S. O., & Pfister, T. (2019). TabNet: Attentive Interpretable Tabular Learning. arXiv preprint arXiv:1908.07442.) https://arxiv.org/pdf/1908.07442.pdf. Please note that some different choices have been made overtime to improve the library which can differ from the orginal paper.
 
 <!--- BADGES: START --->
 [![CircleCI](https://circleci.com/gh/dreamquark-ai/tabnet.svg?style=svg)](https://circleci.com/gh/dreamquark-ai/tabnet)
@@ -67,6 +67,10 @@ If you wan to use it locally within a docker container:
 - `poetry install` to install all the dependencies, including jupyter
 
 - `make notebook` inside the same terminal. You can then follow the link to a jupyter notebook with tabnet installed.
+
+# What is new ?
+
+- from version **> 4.0** attention is now embedding aware. This aims to maintain a good attention mechanism even with large number of embedding. It is also now possible to specify attention groups (using `grouped_features`). Attention is now done at the group level and not feature level. This is especially useful if a dataset has a lot of columns coming from on single source of data (exemple: a text column transformed using TD-IDF).
 
 # Contributing
 
@@ -316,6 +320,12 @@ loaded_clf.load_model(saved_filepath)
 - `mask_type: str` (default='sparsemax')
     Either "sparsemax" or "entmax" : this is the masking function to use for selecting features.
 
+- `grouped_features: list of list of ints` (default=None)
+    This allows the model to share it's attention accross feature inside a same group.
+    This can be especially useful when your preprocessing generates correlated or dependant features: like if you use a TF-IDF or a PCA on a text column.
+    Note that feature importance will be exactly the same between features on a same group.
+    Please also note that embeddings generated for a categorical variable are always inside a same group. 
+
 - `n_shared_decoder` : int (default=1)
 
     Number of shared GLU block in decoder, this is only useful for `TabNetPretrainer`.
@@ -326,7 +336,7 @@ loaded_clf.load_model(saved_filepath)
 
 ## Fit parameters
 
-- `X_train` : np.array
+- `X_train` : np.array or scipy.sparse.csr_matrix
 
     Training features
 
@@ -401,3 +411,7 @@ loaded_clf.load_model(saved_filepath)
 - `warm_start` : bool (default=False)
     In order to match scikit-learn API, this is set to False.
     It allows to fit twice the same model and start from a warm start.
+
+- `compute_importance` : bool (default=True)
+
+    Whether to compute feature importance

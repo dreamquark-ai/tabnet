@@ -1,4 +1,40 @@
 
+# [4.1.0](https://github.com/dreamquark-ai/tabnet/compare/v3.1.1...v4.1.0) (2023-07-23)
+
+
+### Bug Fixes
+
+* 424 allow any np.intX as training target ([63a8dba](https://github.com/dreamquark-ai/tabnet/commit/63a8dba99e4853b9be5d3e6c14909a30685c7532))
+* compute unsupervised loss using numpy ([49bd61b](https://github.com/dreamquark-ai/tabnet/commit/49bd61be4e8faa98ef3b46b4f0115379407e8475))
+* custom loss using inplace operations ([423f7c4](https://github.com/dreamquark-ai/tabnet/commit/423f7c43647f8be53f28c9c6061031b7a2644d20))
+* disable ansi ([60ec6bf](https://github.com/dreamquark-ai/tabnet/commit/60ec6bf7b27795da44e608d6848573bd0fd4ecd5))
+* feature importance not dependent from dataloader ([5b19091](https://github.com/dreamquark-ai/tabnet/commit/5b190916515793114ffa1a9ac4f3869222a14c11))
+* README patience to 10 ([fd2c73a](https://github.com/dreamquark-ai/tabnet/commit/fd2c73a4300a745f540a2a789716ec4cabe90a7c))
+* replace std 0 by the mean or 1 if mean is 0 ([ddf02da](https://github.com/dreamquark-ai/tabnet/commit/ddf02dab9bdc41c6d7736f0be509950e907909a4))
+* try to disable parallel install ([c4963ad](https://github.com/dreamquark-ai/tabnet/commit/c4963ad61e479997c912db816736d073106bcc20))
+* typo in pandas error ([5ac5583](https://github.com/dreamquark-ai/tabnet/commit/5ac55834b32693abc4b22028a74475ee0440c2a5))
+* update gpg key in docker file gpu ([709fcb1](https://github.com/dreamquark-ai/tabnet/commit/709fcb1ab31f8ac232594877a0d2b3922a02360b))
+* upgrade the ressource size ([fc59ea6](https://github.com/dreamquark-ai/tabnet/commit/fc59ea61139228440d2063ead9db42f656d84ff7))
+* use numpy std with bessel correction and test ([3adaf4c](https://github.com/dreamquark-ai/tabnet/commit/3adaf4c0858f5d9af8f0f2a2fdaa92360d12cb87))
+
+
+### Features
+
+* add augmentations inside the fit method ([6d0485f](https://github.com/dreamquark-ai/tabnet/commit/6d0485f58bd1028cffd195d9e27eb97915b9cb2c))
+* add warm_start matching scikit-learn ([d725101](https://github.com/dreamquark-ai/tabnet/commit/d725101a559c6be49a6f8e20c3e68b18b8eb7b01))
+* added conda install option ([ca14b76](https://github.com/dreamquark-ai/tabnet/commit/ca14b76fc771459745c49723733ff88ef1126d30)), closes [#346](https://github.com/dreamquark-ai/tabnet/issues/346)
+* disable tests in docker file gpu to save CI time ([233f74e](https://github.com/dreamquark-ai/tabnet/commit/233f74e41648dad62899ceba7481d58ecfbd87b7))
+* enable feature grouping for attention mechanism ([bcae5f4](https://github.com/dreamquark-ai/tabnet/commit/bcae5f43b89fb2c53a0fe8be7c218a7b91afac96))
+* enable torch 2.0 by relaxing poetry ([bbd7a4e](https://github.com/dreamquark-ai/tabnet/commit/bbd7a4e96d5503ad23048ce39997462ed1a2eca0))
+* pretraining matches paper ([5adb804](https://github.com/dreamquark-ai/tabnet/commit/5adb80482c8242dde7b7942529db94fa9ccbfe48))
+* raise error in case cat_dims and cat_idxs are incoherent ([8c3b795](https://github.com/dreamquark-ai/tabnet/commit/8c3b7951642f62e7449bb95875b5265d4b89148e))
+* update python ([dea62b4](https://github.com/dreamquark-ai/tabnet/commit/dea62b410e3f4cc729f1c1933018d7d8db24d016))
+
+
+
+## [3.1.1](https://github.com/dreamquark-ai/tabnet/compare/v3.1.0...v3.1.1) (2021-02-02)
+
+
 ### Bug Fixes
 
 * add preds_mapper to pretraining ([76f2c85](https://github.com/dreamquark-ai/tabnet/commit/76f2c852f59c6ed2c5dc5f0766cb99310bae5f2c))
@@ -166,11 +202,11 @@
 
 ### Bug Fixes
 
-* **regression:** fix scheduler ([01e46b7](https://github.com/dreamquark-ai/tabnet/commit/01e46b7b53aa5cb880cca5d1492ef67788c0075e))
 * fixing Dockerfile for poetry 1.0 ([6c5cdec](https://github.com/dreamquark-ai/tabnet/commit/6c5cdeca8f3c5a58e2f557f2d8bb5127d3d7f691))
 * importance indexing fixed ([a8382c3](https://github.com/dreamquark-ai/tabnet/commit/a8382c31099d59e03c432479b2798abc90f55a58))
 * local explain all batches ([91461fb](https://github.com/dreamquark-ai/tabnet/commit/91461fbcd4b8c806e920936e0154258b2dc02373))
 * regression gpu integration an typos ([269b4c5](https://github.com/dreamquark-ai/tabnet/commit/269b4c59fcb12d1c24fea7b9e15c7b63aa9939e0))
+* **regression:** fix scheduler ([01e46b7](https://github.com/dreamquark-ai/tabnet/commit/01e46b7b53aa5cb880cca5d1492ef67788c0075e))
 * resolve timer issue and warnings ([ecd2cd9](https://github.com/dreamquark-ai/tabnet/commit/ecd2cd9c39c1f977868888d6b3abd719a7ee21f4))
 
 

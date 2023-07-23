@@ -89,6 +89,7 @@
 <li class="toctree-l1"><a class="reference internal" href="README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="README.html#how-to-use-it">How to use it?</a></li>
@@ -190,8 +191,8 @@
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X_train</strong> (<em>np.ndarray</em>) – Training data</p></li>
-<li><p><strong>eval_set</strong> (<em>list of np.array</em>) – List of eval sets</p></li>
+<li><p><strong>X_train</strong> (<em>np.ndarray</em><em> or </em><em>scipy.sparse.csr_matrix</em>) – Training data</p></li>
+<li><p><strong>eval_set</strong> (<em>list of np.array</em><em> (</em><em>for Xs and ys</em><em>) or </em><em>scipy.sparse.csr_matrix</em><em> (</em><em>for Xs</em><em>)</em>) – List of eval sets</p></li>
 <li><p><strong>weights</strong> (<em>either 0</em><em>, </em><em>1</em><em>, </em><em>dict</em><em> or </em><em>iterable</em>) – <p>if 0 (default) : no weights will be applied
 if 1 : classification only, will balanced class with inverse frequency
 if dict : keys are corresponding class values are sample weights
@@ -266,7 +267,7 @@ and certain loss), following a beta distribution.</p>
 <span id="pytorch-tabnet-tab-network-module"></span><h2>pytorch_tabnet.tab_network module<a class="headerlink" href="#module-pytorch_tabnet.tab_network" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pytorch_tabnet.tab_network.AttentiveTransformer">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">AttentiveTransformer</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">output_dim</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#AttentiveTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.AttentiveTransformer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">AttentiveTransformer</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">group_dim</em>, <em class="sig-param">group_matrix</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#AttentiveTransformer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.AttentiveTransformer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.AttentiveTransformer.forward">
@@ -282,11 +283,16 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.AttentiveTransformer.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.AttentiveTransformer.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.tab_network.EmbeddingGenerator">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">EmbeddingGenerator</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">cat_dims</em>, <em class="sig-param">cat_idxs</em>, <em class="sig-param">cat_emb_dim</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#EmbeddingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.EmbeddingGenerator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">EmbeddingGenerator</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">cat_dims</em>, <em class="sig-param">cat_idxs</em>, <em class="sig-param">cat_emb_dims</em>, <em class="sig-param">group_matrix</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#EmbeddingGenerator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.EmbeddingGenerator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <p>Classical embeddings generator</p>
 <dl class="method">
@@ -296,6 +302,11 @@ registered hooks while the latter silently ignores them.</p>
 Inputs should be (batch_size, input_dim)
 Outputs will be of size (batch_size, self.post_embed_dim)</p>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.EmbeddingGenerator.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.EmbeddingGenerator.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -316,6 +327,11 @@ instead of this since the former takes care of running the
 registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.FeatTransformer.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.FeatTransformer.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -339,6 +355,11 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.GBN.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.GBN.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -360,6 +381,11 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.GLU_Block.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.GLU_Block.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
@@ -380,13 +406,19 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.GLU_Layer.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.GLU_Layer.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.tab_network.RandomObfuscator">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">RandomObfuscator</code><span class="sig-paren">(</span><em class="sig-param">pretraining_ratio</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#RandomObfuscator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.RandomObfuscator" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">RandomObfuscator</code><span class="sig-paren">(</span><em class="sig-param">pretraining_ratio</em>, <em class="sig-param">group_matrix</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#RandomObfuscator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.RandomObfuscator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
-<p>Create and applies obfuscation masks</p>
+<p>Create and applies obfuscation masks.
+The obfuscation is done at group level to match attention.</p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.RandomObfuscator.forward">
 <code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#RandomObfuscator.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.RandomObfuscator.forward" title="Permalink to this definition">¶</a></dt>
@@ -401,11 +433,16 @@ registered hooks while the latter silently ignores them.</p>
 </dl>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.RandomObfuscator.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.RandomObfuscator.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.tab_network.TabNet">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">TabNet</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">output_dim</em>, <em class="sig-param">n_d=8</em>, <em class="sig-param">n_a=8</em>, <em class="sig-param">n_steps=3</em>, <em class="sig-param">gamma=1.3</em>, <em class="sig-param">cat_idxs=[]</em>, <em class="sig-param">cat_dims=[]</em>, <em class="sig-param">cat_emb_dim=1</em>, <em class="sig-param">n_independent=2</em>, <em class="sig-param">n_shared=2</em>, <em class="sig-param">epsilon=1e-15</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNet" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">TabNet</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">output_dim</em>, <em class="sig-param">n_d=8</em>, <em class="sig-param">n_a=8</em>, <em class="sig-param">n_steps=3</em>, <em class="sig-param">gamma=1.3</em>, <em class="sig-param">cat_idxs=[]</em>, <em class="sig-param">cat_dims=[]</em>, <em class="sig-param">cat_emb_dim=1</em>, <em class="sig-param">n_independent=2</em>, <em class="sig-param">n_shared=2</em>, <em class="sig-param">epsilon=1e-15</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em>, <em class="sig-param">group_attention_matrix=[]</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNet"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.TabNet.forward">
@@ -424,6 +461,11 @@ registered hooks while the latter silently ignores them.</p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.TabNet.forward_masks">
 <code class="sig-name descname">forward_masks</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNet.forward_masks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNet.forward_masks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.TabNet.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNet.training" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -446,11 +488,16 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.TabNetDecoder.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetDecoder.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.tab_network.TabNetEncoder">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">TabNetEncoder</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">output_dim</em>, <em class="sig-param">n_d=8</em>, <em class="sig-param">n_a=8</em>, <em class="sig-param">n_steps=3</em>, <em class="sig-param">gamma=1.3</em>, <em class="sig-param">n_independent=2</em>, <em class="sig-param">n_shared=2</em>, <em class="sig-param">epsilon=1e-15</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetEncoder" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">TabNetEncoder</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">output_dim</em>, <em class="sig-param">n_d=8</em>, <em class="sig-param">n_a=8</em>, <em class="sig-param">n_steps=3</em>, <em class="sig-param">gamma=1.3</em>, <em class="sig-param">n_independent=2</em>, <em class="sig-param">n_shared=2</em>, <em class="sig-param">epsilon=1e-15</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em>, <em class="sig-param">group_attention_matrix=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetEncoder" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.TabNetEncoder.forward">
@@ -471,11 +518,16 @@ registered hooks while the latter silently ignores them.</p>
 <code class="sig-name descname">forward_masks</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetEncoder.forward_masks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetEncoder.forward_masks" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.TabNetEncoder.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetEncoder.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.tab_network.TabNetNoEmbeddings">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">TabNetNoEmbeddings</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">output_dim</em>, <em class="sig-param">n_d=8</em>, <em class="sig-param">n_a=8</em>, <em class="sig-param">n_steps=3</em>, <em class="sig-param">gamma=1.3</em>, <em class="sig-param">n_independent=2</em>, <em class="sig-param">n_shared=2</em>, <em class="sig-param">epsilon=1e-15</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetNoEmbeddings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetNoEmbeddings" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">TabNetNoEmbeddings</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">output_dim</em>, <em class="sig-param">n_d=8</em>, <em class="sig-param">n_a=8</em>, <em class="sig-param">n_steps=3</em>, <em class="sig-param">gamma=1.3</em>, <em class="sig-param">n_independent=2</em>, <em class="sig-param">n_shared=2</em>, <em class="sig-param">epsilon=1e-15</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em>, <em class="sig-param">group_attention_matrix=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetNoEmbeddings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetNoEmbeddings" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.TabNetNoEmbeddings.forward">
@@ -496,11 +548,16 @@ registered hooks while the latter silently ignores them.</p>
 <code class="sig-name descname">forward_masks</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetNoEmbeddings.forward_masks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetNoEmbeddings.forward_masks" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.TabNetNoEmbeddings.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetNoEmbeddings.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.tab_network.TabNetPretraining">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">TabNetPretraining</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">pretraining_ratio=0.2</em>, <em class="sig-param">n_d=8</em>, <em class="sig-param">n_a=8</em>, <em class="sig-param">n_steps=3</em>, <em class="sig-param">gamma=1.3</em>, <em class="sig-param">cat_idxs=[]</em>, <em class="sig-param">cat_dims=[]</em>, <em class="sig-param">cat_emb_dim=1</em>, <em class="sig-param">n_independent=2</em>, <em class="sig-param">n_shared=2</em>, <em class="sig-param">epsilon=1e-15</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em>, <em class="sig-param">n_shared_decoder=1</em>, <em class="sig-param">n_indep_decoder=1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetPretraining"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetPretraining" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_network.</code><code class="sig-name descname">TabNetPretraining</code><span class="sig-paren">(</span><em class="sig-param">input_dim</em>, <em class="sig-param">pretraining_ratio=0.2</em>, <em class="sig-param">n_d=8</em>, <em class="sig-param">n_a=8</em>, <em class="sig-param">n_steps=3</em>, <em class="sig-param">gamma=1.3</em>, <em class="sig-param">cat_idxs=[]</em>, <em class="sig-param">cat_dims=[]</em>, <em class="sig-param">cat_emb_dim=1</em>, <em class="sig-param">n_independent=2</em>, <em class="sig-param">n_shared=2</em>, <em class="sig-param">epsilon=1e-15</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">momentum=0.02</em>, <em class="sig-param">mask_type='sparsemax'</em>, <em class="sig-param">n_shared_decoder=1</em>, <em class="sig-param">n_indep_decoder=1</em>, <em class="sig-param">group_attention_matrix=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetPretraining"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetPretraining" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.TabNetPretraining.forward">
@@ -516,6 +573,11 @@ obf_vars : which variable where obfuscated</p>
 <dl class="method">
 <dt id="pytorch_tabnet.tab_network.TabNetPretraining.forward_masks">
 <code class="sig-name descname">forward_masks</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_network.html#TabNetPretraining.forward_masks"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetPretraining.forward_masks" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_network.TabNetPretraining.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_network.TabNetPretraining.training" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -637,7 +699,7 @@ obf_vars : which variable where obfuscated</p>
 <dt id="pytorch_tabnet.metrics.RMSLE">
 <em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.metrics.</code><code class="sig-name descname">RMSLE</code><a class="reference internal" href="../_modules/pytorch_tabnet/metrics.html#RMSLE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.metrics.RMSLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pytorch_tabnet.metrics.Metric" title="pytorch_tabnet.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytorch_tabnet.metrics.Metric</span></code></a></p>
-<p>Mean squared logarithmic error regression loss.
+<p>Root Mean squared logarithmic error regression loss.
 Scikit-implementation:
 <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html">https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html</a>
 Note: In order to avoid error, negative predictions are clipped to 0.
@@ -738,7 +800,7 @@ This can happen in degenerated case when a feature has only one value</p></li>
 <span id="pytorch-tabnet-tab-model-module"></span><h2>pytorch_tabnet.tab_model module<a class="headerlink" href="#module-pytorch_tabnet.tab_model" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pytorch_tabnet.tab_model.TabNetClassifier">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_model.</code><code class="sig-name descname">TabNetClassifier</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_model.html#TabNetClassifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_model.TabNetClassifier" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_model.</code><code class="sig-name descname">TabNetClassifier</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em>, <em class="sig-param">grouped_features: List[List[int]] = &lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_model.html#TabNetClassifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_model.TabNetClassifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pytorch_tabnet.abstract_model.TabModel" title="pytorch_tabnet.abstract_model.TabModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytorch_tabnet.abstract_model.TabModel</span></code></a></p>
 <dl class="attribute">
 <dt id="pytorch_tabnet.tab_model.TabNetClassifier.cat_dims">
@@ -771,6 +833,11 @@ This can happen in degenerated case when a feature has only one value</p></li>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pytorch_tabnet.tab_model.TabNetClassifier.grouped_features">
+<code class="sig-name descname">grouped_features</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_model.TabNetClassifier.grouped_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="pytorch_tabnet.tab_model.TabNetClassifier.optimizer_params">
 <code class="sig-name descname">optimizer_params</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_model.TabNetClassifier.optimizer_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -786,7 +853,7 @@ This can happen in degenerated case when a feature has only one value</p></li>
 <dd><p>Make predictions for classification on a batch (valid)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite>) – Input data</p>
+<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite> or matrix: <cite>scipy.sparse.csr_matrix</cite>) – Input data</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>res</strong></p>
@@ -862,7 +929,7 @@ This can happen in degenerated case when a feature has only one value</p></li>
 
 <dl class="class">
 <dt id="pytorch_tabnet.tab_model.TabNetRegressor">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_model.</code><code class="sig-name descname">TabNetRegressor</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_model.html#TabNetRegressor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_model.TabNetRegressor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.tab_model.</code><code class="sig-name descname">TabNetRegressor</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em>, <em class="sig-param">grouped_features: List[List[int]] = &lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/tab_model.html#TabNetRegressor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.tab_model.TabNetRegressor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pytorch_tabnet.abstract_model.TabModel" title="pytorch_tabnet.abstract_model.TabModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytorch_tabnet.abstract_model.TabModel</span></code></a></p>
 <dl class="attribute">
 <dt id="pytorch_tabnet.tab_model.TabNetRegressor.cat_dims">
@@ -893,6 +960,11 @@ This can happen in degenerated case when a feature has only one value</p></li>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="attribute">
+<dt id="pytorch_tabnet.tab_model.TabNetRegressor.grouped_features">
+<code class="sig-name descname">grouped_features</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.tab_model.TabNetRegressor.grouped_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="attribute">
 <dt id="pytorch_tabnet.tab_model.TabNetRegressor.optimizer_params">
@@ -971,11 +1043,16 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.sparsemax.Entmax15.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmax15.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.sparsemax.Entmax15Function">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.sparsemax.</code><code class="sig-name descname">Entmax15Function</code><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#Entmax15Function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmax15Function" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.sparsemax.</code><code class="sig-name descname">Entmax15Function</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#Entmax15Function"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmax15Function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
 <p>An implementation of exact Entmax with alpha=1.5 (B. Peters, V. Niculae, A. Martins). See
 :cite:<a href="#id1"><span class="problematic" id="id2">`</span></a><a class="reference external" href="https://arxiv.org/abs/1905.05702">https://arxiv.org/abs/1905.05702</a> for detailed description.
@@ -983,13 +1060,17 @@ Source: <a class="reference external" href="https://github.com/deep-spin/entmax"
 <dl class="method">
 <dt id="pytorch_tabnet.sparsemax.Entmax15Function.backward">
 <em class="property">static </em><code class="sig-name descname">backward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">grad_output</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#Entmax15Function.backward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmax15Function.backward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines a formula for differentiating the operation.</p>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
-as many outputs did <a class="reference internal" href="#pytorch_tabnet.sparsemax.Entmax15Function.forward" title="pytorch_tabnet.sparsemax.Entmax15Function.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
-tensors, as there were inputs to <a class="reference internal" href="#pytorch_tabnet.sparsemax.Entmax15Function.forward" title="pytorch_tabnet.sparsemax.Entmax15Function.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
-gradient w.r.t the given output, and each returned value should be the
-gradient w.r.t. the corresponding input.</p>
+as many outputs as the <a class="reference internal" href="#pytorch_tabnet.sparsemax.Entmax15Function.forward" title="pytorch_tabnet.sparsemax.Entmax15Function.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#pytorch_tabnet.sparsemax.Entmax15Function.forward" title="pytorch_tabnet.sparsemax.Entmax15Function.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
 <p>The context can be used to retrieve tensors saved during the forward
 pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
 of booleans representing whether each input needs gradient. E.g.,
@@ -1005,27 +1086,36 @@ output.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context ctx as the first argument, followed by any
 number of arguments (tensors or other types).</p>
-<p>The context can be used to store tensors that can be then retrieved
-during the backward pass.</p>
+<p>The context can be used to store arbitrary data that can be then
+retrieved during the backward pass. Tensors should not be stored
+directly on <cite>ctx</cite> (though this is not currently enforced for
+backward compatibility). Instead, tensors should be saved either with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_backward()</span></code> if they are intended to be used in
+<code class="docutils literal notranslate"><span class="pre">backward</span></code> (equivalently, <code class="docutils literal notranslate"><span class="pre">vjp</span></code>) or <code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_forward()</span></code>
+if they are intended to be used for in <code class="docutils literal notranslate"><span class="pre">jvp</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.sparsemax.Entmoid15">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.sparsemax.</code><code class="sig-name descname">Entmoid15</code><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#Entmoid15"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmoid15" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.sparsemax.</code><code class="sig-name descname">Entmoid15</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#Entmoid15"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmoid15" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
 <p>A highly optimized equivalent of lambda x: Entmax15([x, 0])</p>
 <dl class="method">
 <dt id="pytorch_tabnet.sparsemax.Entmoid15.backward">
 <em class="property">static </em><code class="sig-name descname">backward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">grad_output</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#Entmoid15.backward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.Entmoid15.backward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines a formula for differentiating the operation.</p>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
-as many outputs did <a class="reference internal" href="#pytorch_tabnet.sparsemax.Entmoid15.forward" title="pytorch_tabnet.sparsemax.Entmoid15.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
-tensors, as there were inputs to <a class="reference internal" href="#pytorch_tabnet.sparsemax.Entmoid15.forward" title="pytorch_tabnet.sparsemax.Entmoid15.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
-gradient w.r.t the given output, and each returned value should be the
-gradient w.r.t. the corresponding input.</p>
+as many outputs as the <a class="reference internal" href="#pytorch_tabnet.sparsemax.Entmoid15.forward" title="pytorch_tabnet.sparsemax.Entmoid15.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#pytorch_tabnet.sparsemax.Entmoid15.forward" title="pytorch_tabnet.sparsemax.Entmoid15.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
 <p>The context can be used to retrieve tensors saved during the forward
 pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
 of booleans representing whether each input needs gradient. E.g.,
@@ -1041,8 +1131,13 @@ output.</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context ctx as the first argument, followed by any
 number of arguments (tensors or other types).</p>
-<p>The context can be used to store tensors that can be then retrieved
-during the backward pass.</p>
+<p>The context can be used to store arbitrary data that can be then
+retrieved during the backward pass. Tensors should not be stored
+directly on <cite>ctx</cite> (though this is not currently enforced for
+backward compatibility). Instead, tensors should be saved either with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_backward()</span></code> if they are intended to be used in
+<code class="docutils literal notranslate"><span class="pre">backward</span></code> (equivalently, <code class="docutils literal notranslate"><span class="pre">vjp</span></code>) or <code class="xref py py-func docutils literal notranslate"><span class="pre">ctx.save_for_forward()</span></code>
+if they are intended to be used for in <code class="docutils literal notranslate"><span class="pre">jvp</span></code>.</p>
 </dd></dl>
 
 </dd></dl>
@@ -1065,11 +1160,16 @@ registered hooks while the latter silently ignores them.</p>
 </div>
 </dd></dl>
 
+<dl class="attribute">
+<dt id="pytorch_tabnet.sparsemax.Sparsemax.training">
+<code class="sig-name descname">training</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.sparsemax.Sparsemax.training" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 <dl class="class">
 <dt id="pytorch_tabnet.sparsemax.SparsemaxFunction">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.sparsemax.</code><code class="sig-name descname">SparsemaxFunction</code><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#SparsemaxFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.SparsemaxFunction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.sparsemax.</code><code class="sig-name descname">SparsemaxFunction</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#SparsemaxFunction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.SparsemaxFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.autograd.function.Function</span></code></p>
 <p>An implementation of sparsemax (Martins &amp; Astudillo, 2016). See
 <a href="#id3"><span class="problematic" id="id4">:cite:`DBLP:journals/corr/MartinsA16`</span></a> for detailed description.
@@ -1077,13 +1177,17 @@ By Ben Peters and Vlad Niculae</p>
 <dl class="method">
 <dt id="pytorch_tabnet.sparsemax.SparsemaxFunction.backward">
 <em class="property">static </em><code class="sig-name descname">backward</code><span class="sig-paren">(</span><em class="sig-param">ctx</em>, <em class="sig-param">grad_output</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/sparsemax.html#SparsemaxFunction.backward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.sparsemax.SparsemaxFunction.backward" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines a formula for differentiating the operation.</p>
+<dd><p>Defines a formula for differentiating the operation with backward mode
+automatic differentiation (alias to the vjp function).</p>
 <p>This function is to be overridden by all subclasses.</p>
 <p>It must accept a context <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx</span></code> as the first argument, followed by
-as many outputs did <a class="reference internal" href="#pytorch_tabnet.sparsemax.SparsemaxFunction.forward" title="pytorch_tabnet.sparsemax.SparsemaxFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> return, and it should return as many
-tensors, as there were inputs to <a class="reference internal" href="#pytorch_tabnet.sparsemax.SparsemaxFunction.forward" title="pytorch_tabnet.sparsemax.SparsemaxFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the
-gradient w.r.t the given output, and each returned value should be the
-gradient w.r.t. the corresponding input.</p>
+as many outputs as the <a class="reference internal" href="#pytorch_tabnet.sparsemax.SparsemaxFunction.forward" title="pytorch_tabnet.sparsemax.SparsemaxFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a> returned (None will be passed in
+for non tensor outputs of the forward function),
+and it should return as many tensors, as there were inputs to
+<a class="reference internal" href="#pytorch_tabnet.sparsemax.SparsemaxFunction.forward" title="pytorch_tabnet.sparsemax.SparsemaxFunction.forward"><code class="xref py py-func docutils literal notranslate"><span class="pre">forward()</span></code></a>. Each argument is the gradient w.r.t the given output,
+and each returned value should be the gradient w.r.t. the
+corresponding input. If an input is not a Tensor or is a Tensor not
+requiring grads, you can just pass None as a gradient for that input.</p>
 <p>The context can be used to retrieve tensors saved during the forward
 pass. It also has an attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">ctx.needs_input_grad</span></code> as a tuple
 of booleans representing whether each input needs gradient. E.g.,
@@ -1393,7 +1497,7 @@ Set this to True for OneCycleLR for example</p></li>
 <span id="pytorch-tabnet-abstract-model-module"></span><h2>pytorch_tabnet.abstract_model module<a class="headerlink" href="#module-pytorch_tabnet.abstract_model" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pytorch_tabnet.abstract_model.TabModel">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.abstract_model.</code><code class="sig-name descname">TabModel</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/abstract_model.html#TabModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.abstract_model.TabModel" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.abstract_model.</code><code class="sig-name descname">TabModel</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em>, <em class="sig-param">grouped_features: List[List[int]] = &lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/abstract_model.html#TabModel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.abstract_model.TabModel" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sklearn.base.BaseEstimator</span></code></p>
 <p>Class for TabNet model.</p>
 <dl class="attribute">
@@ -1453,7 +1557,7 @@ Set this to True for OneCycleLR for example</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>X</strong> (tensor: <cite>torch.Tensor</cite>) – Input data</p></li>
+<li><p><strong>X</strong> (tensor: <cite>torch.Tensor</cite> or matrix: <cite>scipy.sparse.csr_matrix</cite>) – Input data</p></li>
 <li><p><strong>normalize</strong> (<em>bool</em><em> (</em><em>default False</em><em>)</em>) – Wheter to normalize so that sum of features are equal to 1</p></li>
 </ul>
 </dd>
@@ -1469,7 +1573,7 @@ Set this to True for OneCycleLR for example</p></li>
 
 <dl class="method">
 <dt id="pytorch_tabnet.abstract_model.TabModel.fit">
-<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X_train</em>, <em class="sig-param">y_train</em>, <em class="sig-param">eval_set=None</em>, <em class="sig-param">eval_name=None</em>, <em class="sig-param">eval_metric=None</em>, <em class="sig-param">loss_fn=None</em>, <em class="sig-param">weights=0</em>, <em class="sig-param">max_epochs=100</em>, <em class="sig-param">patience=10</em>, <em class="sig-param">batch_size=1024</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">num_workers=0</em>, <em class="sig-param">drop_last=True</em>, <em class="sig-param">callbacks=None</em>, <em class="sig-param">pin_memory=True</em>, <em class="sig-param">from_unsupervised=None</em>, <em class="sig-param">warm_start=False</em>, <em class="sig-param">augmentations=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/abstract_model.html#TabModel.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.abstract_model.TabModel.fit" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">fit</code><span class="sig-paren">(</span><em class="sig-param">X_train</em>, <em class="sig-param">y_train</em>, <em class="sig-param">eval_set=None</em>, <em class="sig-param">eval_name=None</em>, <em class="sig-param">eval_metric=None</em>, <em class="sig-param">loss_fn=None</em>, <em class="sig-param">weights=0</em>, <em class="sig-param">max_epochs=100</em>, <em class="sig-param">patience=10</em>, <em class="sig-param">batch_size=1024</em>, <em class="sig-param">virtual_batch_size=128</em>, <em class="sig-param">num_workers=0</em>, <em class="sig-param">drop_last=True</em>, <em class="sig-param">callbacks=None</em>, <em class="sig-param">pin_memory=True</em>, <em class="sig-param">from_unsupervised=None</em>, <em class="sig-param">warm_start=False</em>, <em class="sig-param">augmentations=None</em>, <em class="sig-param">compute_importance=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/abstract_model.html#TabModel.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.abstract_model.TabModel.fit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Train a neural network stored in self.network
 Using train_dataloader for training data and
 valid_dataloader for validation.</p>
@@ -1497,6 +1601,7 @@ dict for custom weights per class</p></li>
 <li><p><strong>pin_memory</strong> (<em>bool</em>) – Whether to set pin_memory to True or False during training</p></li>
 <li><p><strong>from_unsupervised</strong> (<em>unsupervised trained model</em>) – Use a previously self supervised model as starting weights</p></li>
 <li><p><strong>warm_start</strong> (<em>bool</em>) – If True, current model parameters are used to start training</p></li>
+<li><p><strong>compute_importance</strong> (<em>bool</em>) – Whether to compute feature importance</p></li>
 </ul>
 </dd>
 </dl>
@@ -1505,6 +1610,11 @@ dict for custom weights per class</p></li>
 <dl class="attribute">
 <dt id="pytorch_tabnet.abstract_model.TabModel.gamma">
 <code class="sig-name descname">gamma</code><em class="property">: float</em><em class="property"> = 1.3</em><a class="headerlink" href="#pytorch_tabnet.abstract_model.TabModel.gamma" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="pytorch_tabnet.abstract_model.TabModel.grouped_features">
+<code class="sig-name descname">grouped_features</code><em class="property">: List[List[int]]</em><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.abstract_model.TabModel.grouped_features" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -1605,7 +1715,7 @@ dict for custom weights per class</p></li>
 <dd><p>Make predictions on a batch (valid)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite>) – Input data</p>
+<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite> or matrix: <cite>scipy.sparse.csr_matrix</cite>) – Input data</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>predictions</strong> – Predictions of the regression problem</p>
@@ -1694,7 +1804,7 @@ dict for custom weights per class</p></li>
 <span id="pytorch-tabnet-pretraining-module"></span><h2>pytorch_tabnet.pretraining module<a class="headerlink" href="#module-pytorch_tabnet.pretraining" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pytorch_tabnet.pretraining.TabNetPretrainer">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.pretraining.</code><code class="sig-name descname">TabNetPretrainer</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/pretraining.html#TabNetPretrainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.pretraining.TabNetPretrainer" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.pretraining.</code><code class="sig-name descname">TabNetPretrainer</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em>, <em class="sig-param">grouped_features: List[List[int]] = &lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/pretraining.html#TabNetPretrainer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.pretraining.TabNetPretrainer" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pytorch_tabnet.abstract_model.TabModel" title="pytorch_tabnet.abstract_model.TabModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytorch_tabnet.abstract_model.TabModel</span></code></a></p>
 <dl class="attribute">
 <dt id="pytorch_tabnet.pretraining.TabNetPretrainer.cat_dims">
@@ -1759,6 +1869,11 @@ should be left to None for self supervised and non experts</p></li>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pytorch_tabnet.pretraining.TabNetPretrainer.grouped_features">
+<code class="sig-name descname">grouped_features</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.pretraining.TabNetPretrainer.grouped_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="pytorch_tabnet.pretraining.TabNetPretrainer.optimizer_params">
 <code class="sig-name descname">optimizer_params</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.pretraining.TabNetPretrainer.optimizer_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -1769,7 +1884,7 @@ should be left to None for self supervised and non experts</p></li>
 <dd><p>Make predictions on a batch (valid)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite>) – Input data</p>
+<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite> or matrix: <cite>scipy.sparse.csr_matrix</cite>) – Input data</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>predictions</strong> – Predictions of the regression problem</p>
@@ -1869,6 +1984,33 @@ implement default like this:</p>
 </dd></dl>
 
 <dl class="class">
+<dt id="pytorch_tabnet.utils.SparsePredictDataset">
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">SparsePredictDataset</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#SparsePredictDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.SparsePredictDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code></p>
+<p>Format for csr_matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>X</strong> (<em>CSR matrix</em>) – The input matrix</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="pytorch_tabnet.utils.SparseTorchDataset">
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">SparseTorchDataset</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#SparseTorchDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.SparseTorchDataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code></p>
+<p>Format for csr_matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>X</strong> (<em>CSR matrix</em>) – The input matrix</p></li>
+<li><p><strong>y</strong> (<em>2D array</em>) – The one-hot encoded target</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
 <dt id="pytorch_tabnet.utils.TorchDataset">
 <em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">TorchDataset</code><span class="sig-paren">(</span><em class="sig-param">x</em>, <em class="sig-param">y</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#TorchDataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.TorchDataset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.dataset.Dataset</span></code></p>
@@ -1884,10 +2026,40 @@ implement default like this:</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="pytorch_tabnet.utils.check_embedding_parameters">
+<code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">check_embedding_parameters</code><span class="sig-paren">(</span><em class="sig-param">cat_dims</em>, <em class="sig-param">cat_idxs</em>, <em class="sig-param">cat_emb_dim</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#check_embedding_parameters"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.check_embedding_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check parameters related to embeddings and rearrange them in a unique manner.</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="pytorch_tabnet.utils.check_input">
 <code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">check_input</code><span class="sig-paren">(</span><em class="sig-param">X</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#check_input"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.check_input" title="Permalink to this definition">¶</a></dt>
 <dd><p>Raise a clear error if X is a pandas dataframe
 and check array according to scikit rules</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytorch_tabnet.utils.check_list_groups">
+<code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">check_list_groups</code><span class="sig-paren">(</span><em class="sig-param">list_groups</em>, <em class="sig-param">input_dim</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#check_list_groups"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.check_list_groups" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Check that list groups:</dt><dd><ul class="simple">
+<li><p>is a list of list</p></li>
+<li><p>does not contain twice the same feature in different groups</p></li>
+<li><p>does not contain unknown features (&gt;= input_dim)</p></li>
+<li><p>does not contain empty groups</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list_groups</strong> (<em>-</em>) – Each element is a list representing features in the same group.
+One feature should appear in maximum one group.
+Feature that don’t get assign a group will be in their own group of one feature.</p></li>
+<li><p><strong>input_dim</strong> (<em>-</em>) – </p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="function">
@@ -1953,6 +2125,30 @@ if list of int : size of embedding for each categorical feature</p></li>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="pytorch_tabnet.utils.create_group_matrix">
+<code class="sig-prename descclassname">pytorch_tabnet.utils.</code><code class="sig-name descname">create_group_matrix</code><span class="sig-paren">(</span><em class="sig-param">list_groups</em>, <em class="sig-param">input_dim</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/utils.html#create_group_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.utils.create_group_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create the group matrix corresponding to the given list_groups</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list_groups</strong> (<em>-</em>) – Each element is a list representing features in the same group.
+One feature should appear in maximum one group.
+Feature that don’t get assigned a group will be in their own group of one feature.</p></li>
+<li><p><strong>input_dim</strong> (<em>-</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>- group_matrix</strong> – A matrix of size (n_groups, input_dim)
+where m_ij represents the importance of feature j in group i
+The rows must some to 1 as each group is equally important a priori.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch matrix</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2043,7 +2239,7 @@ The last one is used for early stopping</p></li>
 <span id="pytorch-tabnet-multitask-module"></span><h2>pytorch_tabnet.multitask module<a class="headerlink" href="#module-pytorch_tabnet.multitask" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
 <dt id="pytorch_tabnet.multitask.TabNetMultiTaskClassifier">
-<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.multitask.</code><code class="sig-name descname">TabNetMultiTaskClassifier</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/multitask.html#TabNetMultiTaskClassifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.multitask.TabNetMultiTaskClassifier" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">pytorch_tabnet.multitask.</code><code class="sig-name descname">TabNetMultiTaskClassifier</code><span class="sig-paren">(</span><em class="sig-param">n_d: int = 8</em>, <em class="sig-param">n_a: int = 8</em>, <em class="sig-param">n_steps: int = 3</em>, <em class="sig-param">gamma: float = 1.3</em>, <em class="sig-param">cat_idxs: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_dims: List[int] = &lt;factory&gt;</em>, <em class="sig-param">cat_emb_dim: int = 1</em>, <em class="sig-param">n_independent: int = 2</em>, <em class="sig-param">n_shared: int = 2</em>, <em class="sig-param">epsilon: float = 1e-15</em>, <em class="sig-param">momentum: float = 0.02</em>, <em class="sig-param">lambda_sparse: float = 0.001</em>, <em class="sig-param">seed: int = 0</em>, <em class="sig-param">clip_value: int = 1</em>, <em class="sig-param">verbose: int = 1</em>, <em class="sig-param">optimizer_fn: Any = &lt;class 'torch.optim.adam.Adam'&gt;</em>, <em class="sig-param">optimizer_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">scheduler_fn: Any = None</em>, <em class="sig-param">scheduler_params: Dict = &lt;factory&gt;</em>, <em class="sig-param">mask_type: str = 'sparsemax'</em>, <em class="sig-param">input_dim: int = None</em>, <em class="sig-param">output_dim: int = None</em>, <em class="sig-param">device_name: str = 'auto'</em>, <em class="sig-param">n_shared_decoder: int = 1</em>, <em class="sig-param">n_indep_decoder: int = 1</em>, <em class="sig-param">grouped_features: List[List[int]] = &lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pytorch_tabnet/multitask.html#TabNetMultiTaskClassifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pytorch_tabnet.multitask.TabNetMultiTaskClassifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#pytorch_tabnet.abstract_model.TabModel" title="pytorch_tabnet.abstract_model.TabModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">pytorch_tabnet.abstract_model.TabModel</span></code></a></p>
 <dl class="attribute">
 <dt id="pytorch_tabnet.multitask.TabNetMultiTaskClassifier.cat_dims">
@@ -2076,6 +2272,11 @@ The last one is used for early stopping</p></li>
 </dd></dl>
 
 <dl class="attribute">
+<dt id="pytorch_tabnet.multitask.TabNetMultiTaskClassifier.grouped_features">
+<code class="sig-name descname">grouped_features</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.multitask.TabNetMultiTaskClassifier.grouped_features" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="pytorch_tabnet.multitask.TabNetMultiTaskClassifier.optimizer_params">
 <code class="sig-name descname">optimizer_params</code><em class="property"> = None</em><a class="headerlink" href="#pytorch_tabnet.multitask.TabNetMultiTaskClassifier.optimizer_params" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -2086,7 +2287,7 @@ The last one is used for early stopping</p></li>
 <dd><p>Make predictions on a batch (valid)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite>) – Input data</p>
+<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite> or matrix: <cite>scipy.sparse.csr_matrix</cite>) – Input data</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>results</strong> – Predictions of the most probable class</p>
@@ -2103,7 +2304,7 @@ The last one is used for early stopping</p></li>
 <dd><p>Make predictions for classification on a batch (valid)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite>) – Input data</p>
+<dd class="field-odd"><p><strong>X</strong> (a :tensor: <cite>torch.Tensor</cite> or matrix: <cite>scipy.sparse.csr_matrix</cite>) – Input data</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>res</strong></p>
