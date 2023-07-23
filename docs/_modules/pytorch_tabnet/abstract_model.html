@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
@@ -168,6 +169,7 @@
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet</span> <span class="kn">import</span> <span class="n">tab_network</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SparsePredictDataset</span><span class="p">,</span>
     <span class="n">PredictDataset</span><span class="p">,</span>
     <span class="n">create_explain_matrix</span><span class="p">,</span>
     <span class="n">validate_eval_set</span><span class="p">,</span>
@@ -175,7 +177,9 @@
     <span class="n">define_device</span><span class="p">,</span>
     <span class="n">ComplexEncoder</span><span class="p">,</span>
     <span class="n">check_input</span><span class="p">,</span>
-    <span class="n">check_warm_start</span>
+    <span class="n">check_warm_start</span><span class="p">,</span>
+    <span class="n">create_group_matrix</span><span class="p">,</span>
+    <span class="n">check_embedding_parameters</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.callbacks</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CallbackContainer</span><span class="p">,</span>
@@ -194,11 +198,12 @@
 <span class="kn">import</span> <span class="nn">zipfile</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
 
 
 <div class="viewcode-block" id="TabModel"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">TabModel</span><span class="p">(</span><span class="n">BaseEstimator</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Class for TabNet model.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Class for TabNet model.&quot;&quot;&quot;</span>
 
     <span class="n">n_d</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
     <span class="n">n_a</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
@@ -225,10 +230,13 @@
     <span class="n">device_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span>
     <span class="n">n_shared_decoder</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">n_indep_decoder</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">grouped_features</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># These are default values needed for saving model</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">1024</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span> <span class="o">=</span> <span class="mi">128</span>
+
         <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
         <span class="c1"># Defining device</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">define_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device_name</span><span class="p">))</span>
@@ -239,8 +247,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_fn</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_fn</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scheduler_fn</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scheduler_fn</span><span class="p">)</span>
 
+        <span class="n">updated_params</span> <span class="o">=</span> <span class="n">check_embedding_parameters</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cat_dims</span><span class="p">,</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">cat_idxs</span><span class="p">,</span>
+                                                    <span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dim</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cat_dims</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_idxs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cat_emb_dim</span> <span class="o">=</span> <span class="n">updated_params</span>
+
     <span class="k">def</span> <span class="nf">__update__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates parameters.</span>
 <span class="sd">        If does not already exists, creates it.</span>
 <span class="sd">        Otherwise overwrite with warnings.</span>
@@ -256,6 +269,7 @@
             <span class="s2">&quot;n_independent&quot;</span><span class="p">,</span>
             <span class="s2">&quot;n_shared&quot;</span><span class="p">,</span>
             <span class="s2">&quot;n_steps&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;grouped_features&quot;</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">for</span> <span class="n">var_name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">var_name</span> <span class="ow">in</span> <span class="n">update_list</span><span class="p">:</span>
@@ -288,8 +302,9 @@
         <span class="n">from_unsupervised</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">warm_start</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">augmentations</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">compute_importance</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Train a neural network stored in self.network</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Train a neural network stored in self.network</span>
 <span class="sd">        Using train_dataloader for training data and</span>
 <span class="sd">        valid_dataloader for validation.</span>
 
@@ -333,6 +348,8 @@
 <span class="sd">            Use a previously self supervised model as starting weights</span>
 <span class="sd">        warm_start: bool</span>
 <span class="sd">            If True, current model parameters are used to start training</span>
+<span class="sd">        compute_importance : bool</span>
+<span class="sd">            Whether to compute feature importance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># update model name</span>
 
@@ -346,6 +363,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_stop_training</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pin_memory</span> <span class="o">=</span> <span class="n">pin_memory</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">augmentations</span> <span class="o">=</span> <span class="n">augmentations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_importance</span> <span class="o">=</span> <span class="n">compute_importance</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">augmentations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="c1"># This ensure reproducibility</span>
@@ -417,16 +435,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">on_train_end</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
-        <span class="c1"># compute feature importance once the best model is defined</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">feature_importances_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_feature_importances</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_importance</span><span class="p">:</span>
+            <span class="c1"># compute feature importance once the best model is defined</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">feature_importances_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_feature_importances</span><span class="p">(</span><span class="n">X_train</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TabModel.predict"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Make predictions on a batch (valid)</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        X : a :tensor: `torch.Tensor`</span>
+<span class="sd">        X : a :tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`</span>
 <span class="sd">            Input data</span>
 
 <span class="sd">        Returns</span>
@@ -435,11 +454,19 @@
 <span class="sd">            Predictions of the regression problem</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-            <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+                <span class="n">SparsePredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+                <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">batch_nb</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
@@ -451,12 +478,12 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_func</span><span class="p">(</span><span class="n">res</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TabModel.explain"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.explain">[docs]</a>    <span class="k">def</span> <span class="nf">explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">normalize</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return local explanation</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        X : tensor: `torch.Tensor`</span>
+<span class="sd">        X : tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`</span>
 <span class="sd">            Input data</span>
 <span class="sd">        normalize : bool (default False)</span>
 <span class="sd">            Wheter to normalize so that sum of features are equal to 1</span>
@@ -470,11 +497,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
-        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-            <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+                <span class="n">SparsePredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+                <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">res_explain</span> <span class="o">=</span> <span class="p">[]</span>
 
@@ -486,7 +520,6 @@
                 <span class="n">masks</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
                     <span class="n">value</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">reducing_matrix</span>
                 <span class="p">)</span>
-
             <span class="n">original_feat_explain</span> <span class="o">=</span> <span class="n">csc_matrix</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">M_explain</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span>
                                                    <span class="bp">self</span><span class="o">.</span><span class="n">reducing_matrix</span><span class="p">)</span>
             <span class="n">res_explain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">original_feat_explain</span><span class="p">)</span>
@@ -523,7 +556,7 @@
             <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_name</span><span class="p">,</span> <span class="n">attr_value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TabModel.save_model"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.save_model">[docs]</a>    <span class="k">def</span> <span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Saving TabNet model in two distinct files.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Saving TabNet model in two distinct files.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -566,7 +599,7 @@
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">.zip&quot;</span></div>
 
 <div class="viewcode-block" id="TabModel.load_model"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.load_model">[docs]</a>    <span class="k">def</span> <span class="nf">load_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Load TabNet model.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load TabNet model.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -602,7 +635,7 @@
         <span class="k">return</span></div>
 
     <span class="k">def</span> <span class="nf">_train_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Trains one epoch of the network in self.network</span>
 
 <span class="sd">        Parameters</span>
@@ -625,7 +658,7 @@
         <span class="k">return</span>
 
     <span class="k">def</span> <span class="nf">_train_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Trains one batch of data</span>
 
 <span class="sd">        Parameters</span>
@@ -670,7 +703,7 @@
         <span class="k">return</span> <span class="n">batch_logs</span>
 
     <span class="k">def</span> <span class="nf">_predict_epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">loader</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Predict an epoch and update metrics.</span>
 
 <span class="sd">        Parameters</span>
@@ -700,7 +733,7 @@
         <span class="k">return</span>
 
     <span class="k">def</span> <span class="nf">_predict_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Predict one batch of data.</span>
 
 <span class="sd">        Parameters</span>
@@ -726,8 +759,11 @@
         <span class="k">return</span> <span class="n">scores</span>
 
     <span class="k">def</span> <span class="nf">_set_network</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Setup the network and explain matrix.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup the network and explain matrix.&quot;&quot;&quot;</span>
         <span class="n">torch</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">seed</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">group_matrix</span> <span class="o">=</span> <span class="n">create_group_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">grouped_features</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span> <span class="o">=</span> <span class="n">tab_network</span><span class="o">.</span><span class="n">TabNet</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">input_dim</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">output_dim</span><span class="p">,</span>
@@ -744,6 +780,7 @@
             <span class="n">virtual_batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">virtual_batch_size</span><span class="p">,</span>
             <span class="n">momentum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">momentum</span><span class="p">,</span>
             <span class="n">mask_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_type</span><span class="p">,</span>
+            <span class="n">group_attention_matrix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">group_matrix</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">),</span>
         <span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">reducing_matrix</span> <span class="o">=</span> <span class="n">create_explain_matrix</span><span class="p">(</span>
@@ -754,7 +791,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="p">,</span> <span class="n">eval_names</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Set attributes relative to the metrics.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set attributes relative to the metrics.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -786,7 +823,7 @@
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_callbacks</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_callbacks</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Setup the callbacks functions.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup the callbacks functions.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -829,13 +866,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_callback_container</span><span class="o">.</span><span class="n">set_trainer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_set_optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Setup optimizer.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Setup optimizer.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_optimizer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer_fn</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer_params</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_construct_loaders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate dataloaders for train and eval set.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate dataloaders for train and eval set.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -873,7 +910,7 @@
         <span class="k">return</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">valid_dataloaders</span>
 
     <span class="k">def</span> <span class="nf">_compute_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Compute global feature importance.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute global feature importance.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -891,7 +928,7 @@
 
 <div class="viewcode-block" id="TabModel.update_fit_params"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.update_fit_params">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">update_fit_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set attributes relative to fit function.</span>
 
 <span class="sd">        Parameters</span>
@@ -912,7 +949,7 @@
 
 <div class="viewcode-block" id="TabModel.compute_loss"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.compute_loss">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_score</span><span class="p">,</span> <span class="n">y_true</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute the loss.</span>
 
 <span class="sd">        Parameters</span>
@@ -933,7 +970,7 @@
 
 <div class="viewcode-block" id="TabModel.prepare_target"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.abstract_model.TabModel.prepare_target">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">prepare_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepare target before training.</span>
 
 <span class="sd">        Parameters</span>

@@ -98,6 +98,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="#how-to-use-it">How to use it?</a><ul>
@@ -184,7 +185,7 @@
 </section>
 <section id="tabnet-attentive-interpretable-tabular-learning">
 <h1>TabNet : Attentive Interpretable Tabular Learning<a class="headerlink" href="#tabnet-attentive-interpretable-tabular-learning" title="Permalink to this headline">¶</a></h1>
-<p>This is a pyTorch implementation of Tabnet (Arik, S. O., &amp; Pfister, T. (2019). TabNet: Attentive Interpretable Tabular Learning. arXiv preprint arXiv:1908.07442.) https://arxiv.org/pdf/1908.07442.pdf.</p>
+<p>This is a pyTorch implementation of Tabnet (Arik, S. O., &amp; Pfister, T. (2019). TabNet: Attentive Interpretable Tabular Learning. arXiv preprint arXiv:1908.07442.) https://arxiv.org/pdf/1908.07442.pdf. Please note that some different choices have been made overtime to improve the library which can differ from the orginal paper.</p>
 <!--- BADGES: START ---><p><a class="reference external" href="https://circleci.com/gh/dreamquark-ai/tabnet"><img alt="CircleCI" src="https://circleci.com/gh/dreamquark-ai/tabnet.svg?style=svg" /></a></p>
 <p><a class="reference external" href="https://badge.fury.io/py/pytorch-tabnet"><img alt="PyPI version" src="https://badge.fury.io/py/pytorch-tabnet.svg" /></a></p>
 <p><img alt="PyPI - Downloads" src="https://img.shields.io/pypi/dm/pytorch-tabnet" /></p>
@@ -200,11 +201,11 @@
 <h2>Easy installation<a class="headerlink" href="#easy-installation" title="Permalink to this headline">¶</a></h2>
 <p>You can install using <code class="docutils literal notranslate"><span class="pre">pip</span></code> or <code class="docutils literal notranslate"><span class="pre">conda</span></code> as follows.</p>
 <p><strong>with pip</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install pytorch-tabnet
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>pytorch-tabnet
 </pre></div>
 </div>
 <p><strong>with conda</strong></p>
-<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda install -c conda-forge pytorch-tabnet
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>pytorch-tabnet
 </pre></div>
 </div>
 </section>
@@ -234,6 +235,12 @@
 </ul>
 </section>
 </section>
+</section>
+<section id="what-is-new">
+<h1>What is new ?<a class="headerlink" href="#what-is-new" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p>from version <strong>&gt; 4.0</strong> attention is now embedding aware. This aims to maintain a good attention mechanism even with large number of embedding. It is also now possible to specify attention groups (using <code class="docutils literal notranslate"><span class="pre">grouped_features</span></code>). Attention is now done at the group level and not feature level. This is especially useful if a dataset has a lot of columns coming from on single source of data (exemple: a text column transformed using TD-IDF).</p></li>
+</ul>
 </section>
 <section id="contributing">
 <h1>Contributing<a class="headerlink" href="#contributing" title="Permalink to this headline">¶</a></h1>
@@ -451,6 +458,11 @@ Usual values range from 1 to 5</p>
 ‘cpu’ for cpu training, ‘gpu’ for gpu training, ‘auto’ to automatically detect gpu.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">mask_type:</span> <span class="pre">str</span></code> (default=’sparsemax’)
 Either “sparsemax” or “entmax” : this is the masking function to use for selecting features.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">grouped_features:</span> <span class="pre">list</span> <span class="pre">of</span> <span class="pre">list</span> <span class="pre">of</span> <span class="pre">ints</span></code> (default=None)
+This allows the model to share it’s attention accross feature inside a same group.
+This can be especially useful when your preprocessing generates correlated or dependant features: like if you use a TF-IDF or a PCA on a text column.
+Note that feature importance will be exactly the same between features on a same group.
+Please also note that embeddings generated for a categorical variable are always inside a same group.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_shared_decoder</span></code> : int (default=1)</p>
 <p>Number of shared GLU block in decoder, this is only useful for <code class="docutils literal notranslate"><span class="pre">TabNetPretrainer</span></code>.</p>
 </li>
@@ -462,7 +474,7 @@ Either “sparsemax” or “entmax” : this is the masking function to use for
 <section id="fit-parameters">
 <h2>Fit parameters<a class="headerlink" href="#fit-parameters" title="Permalink to this headline">¶</a></h2>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code> : np.array</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">X_train</span></code> : np.array or scipy.sparse.csr_matrix</p>
 <p>Training features</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">y_train</span></code> : np.array</p>
@@ -517,6 +529,9 @@ each task will be assigned its own loss function</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">warm_start</span></code> : bool (default=False)
 In order to match scikit-learn API, this is set to False.
 It allows to fit twice the same model and start from a warm start.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">compute_importance</span></code> : bool (default=True)</p>
+<p>Whether to compute feature importance</p>
+</li>
 </ul>
 </section>
 </section>

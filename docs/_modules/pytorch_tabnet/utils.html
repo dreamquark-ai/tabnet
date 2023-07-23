@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
@@ -171,7 +172,7 @@
 
 
 <div class="viewcode-block" id="TorchDataset"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.TorchDataset">[docs]</a><span class="k">class</span> <span class="nc">TorchDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Format for numpy array</span>
 
 <span class="sd">    Parameters</span>
@@ -194,8 +195,33 @@
         <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
 
 
+<div class="viewcode-block" id="SparseTorchDataset"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.SparseTorchDataset">[docs]</a><span class="k">class</span> <span class="nc">SparseTorchDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format for csr_matrix</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : CSR matrix</span>
+<span class="sd">        The input matrix</span>
+<span class="sd">    y : 2D array</span>
+<span class="sd">        The one-hot encoded target</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span></div>
+
+
 <div class="viewcode-block" id="PredictDataset"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.PredictDataset">[docs]</a><span class="k">class</span> <span class="nc">PredictDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Format for numpy array</span>
 
 <span class="sd">    Parameters</span>
@@ -215,8 +241,29 @@
         <span class="k">return</span> <span class="n">x</span></div>
 
 
+<div class="viewcode-block" id="SparsePredictDataset"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.SparsePredictDataset">[docs]</a><span class="k">class</span> <span class="nc">SparsePredictDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Format for csr_matrix</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    X : CSR matrix</span>
+<span class="sd">        The input matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">index</span><span class="p">]</span><span class="o">.</span><span class="n">toarray</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
 <div class="viewcode-block" id="create_sampler"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_sampler">[docs]</a><span class="k">def</span> <span class="nf">create_sampler</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This creates a sampler from the given weights</span>
 
 <span class="sd">    Parameters</span>
@@ -267,7 +314,7 @@
 <div class="viewcode-block" id="create_dataloaders"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_dataloaders">[docs]</a><span class="k">def</span> <span class="nf">create_dataloaders</span><span class="p">(</span>
     <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">,</span> <span class="n">eval_set</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">num_workers</span><span class="p">,</span> <span class="n">drop_last</span><span class="p">,</span> <span class="n">pin_memory</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create dataloaders with or without subsampling depending on weights and balanced.</span>
 
 <span class="sd">    Parameters</span>
@@ -303,33 +350,55 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">need_shuffle</span><span class="p">,</span> <span class="n">sampler</span> <span class="o">=</span> <span class="n">create_sampler</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="n">y_train</span><span class="p">)</span>
 
-    <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-        <span class="n">TorchDataset</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y_train</span><span class="p">),</span>
-        <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-        <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
-        <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
-        <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-        <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
-        <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X_train</span><span class="p">):</span>
+        <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">SparseTorchDataset</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y_train</span><span class="p">),</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
+            <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">train_dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+            <span class="n">TorchDataset</span><span class="p">(</span><span class="n">X_train</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y_train</span><span class="p">),</span>
+            <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+            <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+            <span class="n">shuffle</span><span class="o">=</span><span class="n">need_shuffle</span><span class="p">,</span>
+            <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+            <span class="n">drop_last</span><span class="o">=</span><span class="n">drop_last</span><span class="p">,</span>
+            <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="n">valid_dataloaders</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">eval_set</span><span class="p">:</span>
-        <span class="n">valid_dataloaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
-            <span class="n">DataLoader</span><span class="p">(</span>
-                <span class="n">TorchDataset</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y</span><span class="p">),</span>
-                <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
-                <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
-                <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">valid_dataloaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">DataLoader</span><span class="p">(</span>
+                    <span class="n">SparseTorchDataset</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y</span><span class="p">),</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                    <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+                <span class="p">)</span>
             <span class="p">)</span>
-        <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">valid_dataloaders</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">DataLoader</span><span class="p">(</span>
+                    <span class="n">TorchDataset</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span> <span class="n">y</span><span class="p">),</span>
+                    <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">num_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">,</span>
+                    <span class="n">pin_memory</span><span class="o">=</span><span class="n">pin_memory</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">train_dataloader</span><span class="p">,</span> <span class="n">valid_dataloaders</span></div>
 
 
 <div class="viewcode-block" id="create_explain_matrix"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_explain_matrix">[docs]</a><span class="k">def</span> <span class="nf">create_explain_matrix</span><span class="p">(</span><span class="n">input_dim</span><span class="p">,</span> <span class="n">cat_emb_dim</span><span class="p">,</span> <span class="n">cat_idxs</span><span class="p">,</span> <span class="n">post_embed_dim</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a computational trick.</span>
 <span class="sd">    In order to rapidly sum importances from same embeddings</span>
 <span class="sd">    to the initial index.</span>
@@ -377,8 +446,95 @@
     <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">reducing_matrix</span><span class="p">)</span></div>
 
 
+<div class="viewcode-block" id="create_group_matrix"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.create_group_matrix">[docs]</a><span class="k">def</span> <span class="nf">create_group_matrix</span><span class="p">(</span><span class="n">list_groups</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create the group matrix corresponding to the given list_groups</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - list_groups : list of list of int</span>
+<span class="sd">        Each element is a list representing features in the same group.</span>
+<span class="sd">        One feature should appear in maximum one group.</span>
+<span class="sd">        Feature that don&#39;t get assigned a group will be in their own group of one feature.</span>
+<span class="sd">    - input_dim : number of feature in the initial dataset</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    - group_matrix : torch matrix</span>
+<span class="sd">        A matrix of size (n_groups, input_dim)</span>
+<span class="sd">        where m_ij represents the importance of feature j in group i</span>
+<span class="sd">        The rows must some to 1 as each group is equally important a priori.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">check_list_groups</span><span class="p">(</span><span class="n">list_groups</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_groups</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">group_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">input_dim</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">group_matrix</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">n_groups</span> <span class="o">=</span> <span class="n">input_dim</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">gp</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">gp</span> <span class="ow">in</span> <span class="n">list_groups</span><span class="p">]))</span>
+        <span class="n">group_matrix</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n_groups</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">))</span>
+
+        <span class="n">remaining_features</span> <span class="o">=</span> <span class="p">[</span><span class="n">feat_idx</span> <span class="k">for</span> <span class="n">feat_idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">input_dim</span><span class="p">)]</span>
+
+        <span class="n">current_group_idx</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">list_groups</span><span class="p">:</span>
+            <span class="n">group_size</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">elem_idx</span> <span class="ow">in</span> <span class="n">group</span><span class="p">:</span>
+                <span class="c1"># add importrance of element in group matrix and corresponding group</span>
+                <span class="n">group_matrix</span><span class="p">[</span><span class="n">current_group_idx</span><span class="p">,</span> <span class="n">elem_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">group_size</span>
+                <span class="c1"># remove features from list of features</span>
+                <span class="n">remaining_features</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elem_idx</span><span class="p">)</span>
+            <span class="c1"># move to next group</span>
+            <span class="n">current_group_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="c1"># features not mentionned in list_groups get assigned their own group of singleton</span>
+        <span class="k">for</span> <span class="n">remaining_feat_idx</span> <span class="ow">in</span> <span class="n">remaining_features</span><span class="p">:</span>
+            <span class="n">group_matrix</span><span class="p">[</span><span class="n">current_group_idx</span><span class="p">,</span> <span class="n">remaining_feat_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">current_group_idx</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">group_matrix</span></div>
+
+
+<div class="viewcode-block" id="check_list_groups"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.check_list_groups">[docs]</a><span class="k">def</span> <span class="nf">check_list_groups</span><span class="p">(</span><span class="n">list_groups</span><span class="p">,</span> <span class="n">input_dim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check that list groups:</span>
+<span class="sd">        - is a list of list</span>
+<span class="sd">        - does not contain twice the same feature in different groups</span>
+<span class="sd">        - does not contain unknown features (&gt;= input_dim)</span>
+<span class="sd">        - does not contain empty groups</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    - list_groups : list of list of int</span>
+<span class="sd">        Each element is a list representing features in the same group.</span>
+<span class="sd">        One feature should appear in maximum one group.</span>
+<span class="sd">        Feature that don&#39;t get assign a group will be in their own group of one feature.</span>
+<span class="sd">    - input_dim : number of feature in the initial dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">list_groups</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="s2">&quot;list_groups must be a list of list.&quot;</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_groups</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">group_pos</span><span class="p">,</span> <span class="n">group</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">list_groups</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Groups must be given as a list of list, but found </span><span class="si">{</span><span class="n">group</span><span class="si">}</span><span class="s2"> in position </span><span class="si">{</span><span class="n">group_pos</span><span class="si">}</span><span class="s2">.&quot;</span>  <span class="c1"># noqa</span>
+            <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">group</span><span class="p">,</span> <span class="nb">list</span><span class="p">),</span> <span class="n">msg</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Empty groups are forbidding please remove empty groups []&quot;</span>
+
+    <span class="n">n_elements_in_groups</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">list_groups</span><span class="p">])</span>
+    <span class="n">flat_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">list_groups</span><span class="p">:</span>
+        <span class="n">flat_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">group</span><span class="p">)</span>
+    <span class="n">unique_elements</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">flat_list</span><span class="p">)</span>
+    <span class="n">n_unique_elements_in_groups</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_elements</span><span class="p">)</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;One feature can only appear in one group, please check your grouped_features.&quot;</span>
+    <span class="k">assert</span> <span class="n">n_unique_elements_in_groups</span> <span class="o">==</span> <span class="n">n_elements_in_groups</span><span class="p">,</span> <span class="n">msg</span>
+
+    <span class="n">highest_feat</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">unique_elements</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">highest_feat</span> <span class="o">&lt;</span> <span class="n">input_dim</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Number of features is </span><span class="si">{</span><span class="n">input_dim</span><span class="si">}</span><span class="s2"> but one group contains </span><span class="si">{</span><span class="n">highest_feat</span><span class="si">}</span><span class="s2">.&quot;</span>  <span class="c1"># noqa</span>
+    <span class="k">return</span></div>
+
+
 <div class="viewcode-block" id="filter_weights"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.filter_weights">[docs]</a><span class="k">def</span> <span class="nf">filter_weights</span><span class="p">(</span><span class="n">weights</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This function makes sure that weights are in correct format for</span>
 <span class="sd">    regression and multitask TabNet</span>
 
@@ -402,7 +558,7 @@
 
 
 <div class="viewcode-block" id="validate_eval_set"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.validate_eval_set">[docs]</a><span class="k">def</span> <span class="nf">validate_eval_set</span><span class="p">(</span><span class="n">eval_set</span><span class="p">,</span> <span class="n">eval_name</span><span class="p">,</span> <span class="n">X_train</span><span class="p">,</span> <span class="n">y_train</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check if the shapes of eval_set are compatible with (X_train, y_train).</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if the shapes of eval_set are compatible with (X_train, y_train).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -469,7 +625,7 @@
 
 
 <div class="viewcode-block" id="define_device"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.define_device">[docs]</a><span class="k">def</span> <span class="nf">define_device</span><span class="p">(</span><span class="n">device_name</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Define the device to use during training and inference.</span>
 <span class="sd">    If auto it will detect automatically whether to use cuda or cpu</span>
 
@@ -496,25 +652,25 @@
 
 <div class="viewcode-block" id="ComplexEncoder"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.ComplexEncoder">[docs]</a><span class="k">class</span> <span class="nc">ComplexEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
 <div class="viewcode-block" id="ComplexEncoder.default"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.ComplexEncoder.default">[docs]</a>    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">):</span>
-            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
         <span class="c1"># Let the base class default method raise the TypeError</span>
         <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="check_input"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.check_input">[docs]</a><span class="k">def</span> <span class="nf">check_input</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Raise a clear error if X is a pandas dataframe</span>
 <span class="sd">    and check array according to scikit rules</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="p">(</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">)):</span>
         <span class="n">err_message</span> <span class="o">=</span> <span class="s2">&quot;Pandas DataFrame are not supported: apply X.values when calling fit&quot;</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">err_message</span><span class="p">)</span>
-    <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">)</span></div>
+    <span class="n">check_array</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">accept_sparse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="check_warm_start"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.check_warm_start">[docs]</a><span class="k">def</span> <span class="nf">check_warm_start</span><span class="p">(</span><span class="n">warm_start</span><span class="p">,</span> <span class="n">from_unsupervised</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Gives a warning about ambiguous usage of the two parameters.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">warm_start</span> <span class="ow">and</span> <span class="n">from_unsupervised</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -522,6 +678,40 @@
         <span class="n">warn_msg</span> <span class="o">=</span> <span class="s2">&quot;warm_start will be ignore, training will start from unsupervised weights&quot;</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">warn_msg</span><span class="p">)</span>
     <span class="k">return</span></div>
+
+
+<div class="viewcode-block" id="check_embedding_parameters"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.utils.check_embedding_parameters">[docs]</a><span class="k">def</span> <span class="nf">check_embedding_parameters</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">,</span> <span class="n">cat_idxs</span><span class="p">,</span> <span class="n">cat_emb_dim</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Check parameters related to embeddings and rearrange them in a unique manner.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">cat_dims</span> <span class="o">==</span> <span class="p">[])</span> <span class="o">^</span> <span class="p">(</span><span class="n">cat_idxs</span> <span class="o">==</span> <span class="p">[]):</span>
+        <span class="k">if</span> <span class="n">cat_dims</span> <span class="o">==</span> <span class="p">[]:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;If cat_idxs is non-empty, cat_dims must be defined as a list of same length.&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;If cat_dims is non-empty, cat_idxs must be defined as a list of same length.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_idxs</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The lists cat_dims and cat_idxs must have the same length.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cat_emb_dim</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="n">cat_emb_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat_emb_dim</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_idxs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cat_emb_dims</span> <span class="o">=</span> <span class="n">cat_emb_dim</span>
+
+    <span class="c1"># check that all embeddings are provided</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_emb_dims</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;&quot;&quot;cat_emb_dim and cat_dims must be lists of same length, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cat_emb_dims</span><span class="p">)</span><span class="si">}</span>
+<span class="s2">                    and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">cat_dims</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="c1"># Rearrange to get reproducible seeds with different ordering</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cat_idxs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">sorted_idxs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">cat_idxs</span><span class="p">)</span>
+        <span class="n">cat_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat_dims</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_idxs</span><span class="p">]</span>
+        <span class="n">cat_emb_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">cat_emb_dims</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">sorted_idxs</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">cat_dims</span><span class="p">,</span> <span class="n">cat_idxs</span><span class="p">,</span> <span class="n">cat_emb_dims</span></div>
 </pre></div>
 
            </div>
