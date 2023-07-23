@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
@@ -175,7 +176,7 @@
 
 
 <div class="viewcode-block" id="UnsupervisedLoss"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedLoss">[docs]</a><span class="k">def</span> <span class="nf">UnsupervisedLoss</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">,</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Implements unsupervised loss function.</span>
 <span class="sd">    This differs from orginal paper as it&#39;s scaled to be batch size independent</span>
 <span class="sd">    and number of features reconstructed independent (by taking the mean)</span>
@@ -235,7 +236,7 @@
 
 <div class="viewcode-block" id="UnsupMetricContainer"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupMetricContainer">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">UnsupMetricContainer</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Container holding a list of metrics.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container holding a list of metrics.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -257,7 +258,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_names</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Compute all metrics and store into a dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute all metrics and store into a dict.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -281,7 +282,7 @@
 
 <div class="viewcode-block" id="MetricContainer"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.MetricContainer">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">MetricContainer</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Container holding a list of metrics.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Container holding a list of metrics.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -300,7 +301,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">name</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metric_names</span><span class="p">]</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Compute all metrics and store into a dict.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute all metrics and store into a dict.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -333,7 +334,7 @@
 
 <div class="viewcode-block" id="Metric.get_metrics_by_names"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.Metric.get_metrics_by_names">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">get_metrics_by_names</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">names</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get list of metric classes.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get list of metric classes.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -362,7 +363,7 @@
 
 
 <div class="viewcode-block" id="AUC"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.AUC">[docs]</a><span class="k">class</span> <span class="nc">AUC</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    AUC.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -371,7 +372,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute AUC of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -390,7 +391,7 @@
 
 
 <div class="viewcode-block" id="Accuracy"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.Accuracy">[docs]</a><span class="k">class</span> <span class="nc">Accuracy</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Accuracy.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -399,7 +400,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute Accuracy of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -419,7 +420,7 @@
 
 
 <div class="viewcode-block" id="BalancedAccuracy"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.BalancedAccuracy">[docs]</a><span class="k">class</span> <span class="nc">BalancedAccuracy</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Balanced Accuracy.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -428,7 +429,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute Accuracy of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -448,7 +449,7 @@
 
 
 <div class="viewcode-block" id="LogLoss"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.LogLoss">[docs]</a><span class="k">class</span> <span class="nc">LogLoss</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LogLoss.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -457,7 +458,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute LogLoss of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -476,7 +477,7 @@
 
 
 <div class="viewcode-block" id="MAE"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.MAE">[docs]</a><span class="k">class</span> <span class="nc">MAE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mean Absolute Error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -485,7 +486,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute MAE (Mean Absolute Error) of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -504,7 +505,7 @@
 
 
 <div class="viewcode-block" id="MSE"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.MSE">[docs]</a><span class="k">class</span> <span class="nc">MSE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Mean Squared Error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -513,7 +514,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute MSE (Mean Squared Error) of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -532,8 +533,8 @@
 
 
 <div class="viewcode-block" id="RMSLE"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.RMSLE">[docs]</a><span class="k">class</span> <span class="nc">RMSLE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Mean squared logarithmic error regression loss.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Root Mean squared logarithmic error regression loss.</span>
 <span class="sd">    Scikit-implementation:</span>
 <span class="sd">    https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_squared_log_error.html</span>
 <span class="sd">    Note: In order to avoid error, negative predictions are clipped to 0.</span>
@@ -545,7 +546,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute RMSLE of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -561,11 +562,11 @@
 <span class="sd">            RMSLE of predictions vs targets.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">y_score</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">y_score</span><span class="p">,</span> <span class="n">a_min</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">a_max</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">mean_squared_log_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">mean_squared_log_error</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="UnsupervisedMetric"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedMetric">[docs]</a><span class="k">class</span> <span class="nc">UnsupervisedMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Unsupervised metric</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -574,7 +575,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute MSE (Mean Squared Error) of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -597,7 +598,7 @@
 
 
 <div class="viewcode-block" id="UnsupervisedNumpyMetric"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.UnsupervisedNumpyMetric">[docs]</a><span class="k">class</span> <span class="nc">UnsupervisedNumpyMetric</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Unsupervised metric</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -606,7 +607,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">embedded_x</span><span class="p">,</span> <span class="n">obf_vars</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute MSE (Mean Squared Error) of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -632,7 +633,7 @@
 
 
 <div class="viewcode-block" id="RMSE"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.RMSE">[docs]</a><span class="k">class</span> <span class="nc">RMSE</span><span class="p">(</span><span class="n">Metric</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Root Mean Squared Error.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -641,7 +642,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_maximize</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y_true</span><span class="p">,</span> <span class="n">y_score</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Compute RMSE (Root Mean Squared Error) of predictions.</span>
 
 <span class="sd">        Parameters</span>
@@ -660,7 +661,7 @@
 
 
 <div class="viewcode-block" id="check_metrics"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.metrics.check_metrics">[docs]</a><span class="k">def</span> <span class="nf">check_metrics</span><span class="p">(</span><span class="n">metrics</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check if custom metrics are provided.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if custom metrics are provided.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

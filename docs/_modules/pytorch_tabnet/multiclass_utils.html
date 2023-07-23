@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
@@ -181,7 +182,7 @@
 
 
 <span class="k">def</span> <span class="nf">_assert_all_finite</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Like assert_all_finite, but only for ndarray.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Like assert_all_finite, but only for ndarray.&quot;&quot;&quot;</span>
 
     <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asanyarray</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
     <span class="c1"># First try an O(n) time, O(1) space solution for the common case that</span>
@@ -208,7 +209,7 @@
 
 
 <div class="viewcode-block" id="assert_all_finite"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.assert_all_finite">[docs]</a><span class="k">def</span> <span class="nf">assert_all_finite</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">allow_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Throw a ValueError if X contains NaN or infinity.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Throw a ValueError if X contains NaN or infinity.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -226,7 +227,7 @@
 
 
 <span class="k">def</span> <span class="nf">_unique_indicator</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Not implemented</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">raise</span> <span class="ne">IndexError</span><span class="p">(</span>
@@ -244,7 +245,7 @@
 
 
 <div class="viewcode-block" id="unique_labels"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.unique_labels">[docs]</a><span class="k">def</span> <span class="nf">unique_labels</span><span class="p">(</span><span class="o">*</span><span class="n">ys</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Extract an ordered array of unique labels</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract an ordered array of unique labels</span>
 
 <span class="sd">    We don&#39;t allow:</span>
 <span class="sd">        - mix of multilabel and multiclass (single label) targets</span>
@@ -306,7 +307,7 @@
 
 
 <div class="viewcode-block" id="is_multilabel"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.is_multilabel">[docs]</a><span class="k">def</span> <span class="nf">is_multilabel</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Check if ``y`` is in a multilabel format.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Check if ``y`` is in a multilabel format.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -358,7 +359,7 @@
 
 
 <div class="viewcode-block" id="check_classification_targets"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.check_classification_targets">[docs]</a><span class="k">def</span> <span class="nf">check_classification_targets</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Ensure that target y is of a non-regression type.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Ensure that target y is of a non-regression type.</span>
 
 <span class="sd">    Only the following target types (as defined in type_of_target) are allowed:</span>
 <span class="sd">        &#39;binary&#39;, &#39;multiclass&#39;, &#39;multiclass-multioutput&#39;,</span>
@@ -380,7 +381,7 @@
 
 
 <div class="viewcode-block" id="type_of_target"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.type_of_target">[docs]</a><span class="k">def</span> <span class="nf">type_of_target</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Determine the type of data indicated by the target.</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine the type of data indicated by the target.</span>
 
 <span class="sd">    Note that this type is the most specific type that can be inferred.</span>
 <span class="sd">    For example:</span>
@@ -515,7 +516,7 @@
 
 
 <div class="viewcode-block" id="infer_output_dim"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.infer_output_dim">[docs]</a><span class="k">def</span> <span class="nf">infer_output_dim</span><span class="p">(</span><span class="n">y_train</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer output_dim from targets</span>
 
 <span class="sd">    Parameters</span>
@@ -551,7 +552,7 @@
 
 
 <div class="viewcode-block" id="infer_multitask_output"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.multiclass_utils.infer_multitask_output">[docs]</a><span class="k">def</span> <span class="nf">infer_multitask_output</span><span class="p">(</span><span class="n">y_train</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer output_dim from targets</span>
 <span class="sd">    This is for multiple tasks.</span>
 

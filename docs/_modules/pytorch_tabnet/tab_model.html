@@ -87,6 +87,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#tabnet-attentive-interpretable-tabular-learning">TabNet : Attentive Interpretable Tabular Learning</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#installation">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-is-new">What is new ?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#contributing">Contributing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#what-problems-does-pytorch-tabnet-handle">What problems does pytorch-tabnet handle?</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../generated_docs/README.html#how-to-use-it">How to use it?</a></li>
@@ -162,10 +163,11 @@
 <span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy.special</span> <span class="kn">import</span> <span class="n">softmax</span>
-<span class="kn">from</span> <span class="nn">pytorch_tabnet.utils</span> <span class="kn">import</span> <span class="n">PredictDataset</span><span class="p">,</span> <span class="n">filter_weights</span>
+<span class="kn">from</span> <span class="nn">pytorch_tabnet.utils</span> <span class="kn">import</span> <span class="n">SparsePredictDataset</span><span class="p">,</span> <span class="n">PredictDataset</span><span class="p">,</span> <span class="n">filter_weights</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.abstract_model</span> <span class="kn">import</span> <span class="n">TabModel</span>
 <span class="kn">from</span> <span class="nn">pytorch_tabnet.multiclass_utils</span> <span class="kn">import</span> <span class="n">infer_output_dim</span><span class="p">,</span> <span class="n">check_output_dim</span>
 <span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
 
 
 <div class="viewcode-block" id="TabNetClassifier"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier">[docs]</a><span class="k">class</span> <span class="nc">TabNetClassifier</span><span class="p">(</span><span class="n">TabModel</span><span class="p">):</span>
@@ -176,7 +178,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_metric</span> <span class="o">=</span> <span class="s1">&#39;accuracy&#39;</span>
 
 <div class="viewcode-block" id="TabNetClassifier.weight_updater"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.weight_updater">[docs]</a>    <span class="k">def</span> <span class="nf">weight_updater</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Updates weights dictionary according to target_mapper.</span>
 
 <span class="sd">        Parameters</span>
@@ -235,12 +237,12 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">preds_mapper</span><span class="o">.</span><span class="n">get</span><span class="p">)(</span><span class="n">outputs</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="TabNetClassifier.predict_proba"><a class="viewcode-back" href="../../generated_docs/pytorch_tabnet.html#pytorch_tabnet.tab_model.TabNetClassifier.predict_proba">[docs]</a>    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Make predictions for classification on a batch (valid)</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        X : a :tensor: `torch.Tensor`</span>
+<span class="sd">        X : a :tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`</span>
 <span class="sd">            Input data</span>
 
 <span class="sd">        Returns</span>
@@ -250,11 +252,18 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">network</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 
-        <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
-            <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
-            <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
-            <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">scipy</span><span class="o">.</span><span class="n">sparse</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+            <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+                <span class="n">SparsePredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dataloader</span> <span class="o">=</span> <span class="n">DataLoader</span><span class="p">(</span>
+                <span class="n">PredictDataset</span><span class="p">(</span><span class="n">X</span><span class="p">),</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span><span class="p">,</span>
+                <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
 
         <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">batch_nb</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
