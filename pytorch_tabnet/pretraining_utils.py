@@ -1,9 +1,11 @@
 from torch.utils.data import DataLoader
 from pytorch_tabnet.utils import (
     create_sampler,
+    SparsePredictDataset,
     PredictDataset,
     check_input
 )
+import scipy
 
 
 def create_dataloaders(
@@ -14,9 +16,9 @@ def create_dataloaders(
 
     Parameters
     ----------
-    X_train : np.ndarray
+    X_train : np.ndarray or scipy.sparse.csr_matrix
         Training data
-    eval_set : list of np.array
+    eval_set : list of np.array (for Xs and ys) or scipy.sparse.csr_matrix (for Xs)
         List of eval sets
     weights : either 0, 1, dict or iterable
         if 0 (default) : no weights will be applied
@@ -43,29 +45,53 @@ def create_dataloaders(
     """
     need_shuffle, sampler = create_sampler(weights, X_train)
 
-    train_dataloader = DataLoader(
-        PredictDataset(X_train),
-        batch_size=batch_size,
-        sampler=sampler,
-        shuffle=need_shuffle,
-        num_workers=num_workers,
-        drop_last=drop_last,
-        pin_memory=pin_memory,
-    )
+    if scipy.sparse.issparse(X_train):
+        train_dataloader = DataLoader(
+            SparsePredictDataset(X_train),
+            batch_size=batch_size,
+            sampler=sampler,
+            shuffle=need_shuffle,
+            num_workers=num_workers,
+            drop_last=drop_last,
+            pin_memory=pin_memory,
+        )
+    else:
+        train_dataloader = DataLoader(
+            PredictDataset(X_train),
+            batch_size=batch_size,
+            sampler=sampler,
+            shuffle=need_shuffle,
+            num_workers=num_workers,
+            drop_last=drop_last,
+            pin_memory=pin_memory,
+        )
 
     valid_dataloaders = []
     for X in eval_set:
-        valid_dataloaders.append(
-            DataLoader(
-                PredictDataset(X),
-                batch_size=batch_size,
-                sampler=sampler,
-                shuffle=need_shuffle,
-                num_workers=num_workers,
-                drop_last=drop_last,
-                pin_memory=pin_memory,
+        if scipy.sparse.issparse(X):
+            valid_dataloaders.append(
+                DataLoader(
+                    SparsePredictDataset(X),
+                    batch_size=batch_size,
+                    sampler=sampler,
+                    shuffle=need_shuffle,
+                    num_workers=num_workers,
+                    drop_last=drop_last,
+                    pin_memory=pin_memory,
+                )
             )
-        )
+        else:
+            valid_dataloaders.append(
+                DataLoader(
+                    PredictDataset(X),
+                    batch_size=batch_size,
+                    sampler=sampler,
+                    shuffle=need_shuffle,
+                    num_workers=num_workers,
+                    drop_last=drop_last,
+                    pin_memory=pin_memory,
+                )
+            )
 
     return train_dataloader, valid_dataloaders
 

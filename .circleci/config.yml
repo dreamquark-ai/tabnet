@@ -32,8 +32,8 @@ commands:
                   name: Install prerequisites and poetry
                   command: |
                       apt update && apt install curl make git libopenblas-base build-essential -y
-                      curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
-                      source $HOME/.poetry/env
+                      curl -sSL https://install.python-poetry.org | python3 -
+                      export PATH="/root/.local/bin:$PATH"
                       poetry config virtualenvs.path $POETRY_CACHE
                       poetry run pip install --upgrade --no-cache-dir pip==20.1;
 
@@ -70,10 +70,11 @@ jobs:
                   name: LintCode
                   shell: bash -leo pipefail
                   command: |
+                      export PATH="/root/.local/bin:$PATH"
                       poetry run flake8
     install:
         executor: python-executor
-        resource_class: small
+        resource_class: medium
         steps:
             - checkout
             # Download and cache dependencies
@@ -87,10 +88,10 @@ jobs:
                   name: Install dependencies
                   shell: bash -leo pipefail
                   command: |
-                      source $HOME/.poetry/env
+                      export PATH="/root/.local/bin:$PATH"
                       poetry config virtualenvs.path $POETRY_CACHE
                       poetry run pip install torch==1.4.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-                      poetry install
+                      poetry install --no-ansi
             - save_cache:
                   paths:
                       - /work/.cache/poetry
@@ -108,6 +109,7 @@ jobs:
                   name: run unit-tests
                   shell: bash -leo pipefail
                   command: |
+                      export PATH="/root/.local/bin:$PATH"
                       make unit-tests
     test-nb-census:
         executor: python-executor
@@ -122,6 +124,7 @@ jobs:
                   name: run test-nb-census
                   shell: bash -leo pipefail
                   command: |
+                      export PATH="/root/.local/bin:$PATH"
                       make test-nb-census
     test-nb-multi-regression:
         executor: python-executor
@@ -136,6 +139,7 @@ jobs:
                   name: run test-nb-multi-regression
                   shell: bash -leo pipefail
                   command: |
+                      export PATH="/root/.local/bin:$PATH"
                       make test-nb-multi-regression
     test-nb-forest:
         executor: python-executor
@@ -150,6 +154,7 @@ jobs:
                   name: run test-nb-forest
                   shell: bash -leo pipefail
                   command: |
+                      export PATH="/root/.local/bin:$PATH"
                       make test-nb-forest
     test-nb-regression:
         executor: python-executor
@@ -164,6 +169,7 @@ jobs:
                   name: run test-nb-regression
                   shell: bash -leo pipefail
                   command: |
+                      export PATH="/root/.local/bin:$PATH"
                       make test-nb-regression
     test-nb-multi-task:
         executor: python-executor
@@ -178,6 +184,7 @@ jobs:
                   name: run test-nb-multi-task
                   shell: bash -leo pipefail
                   command: |
+                      export PATH="/root/.local/bin:$PATH"
                       make test-nb-multi-task
     test-nb-customization:
         executor: python-executor
@@ -192,6 +199,7 @@ jobs:
                   name: run test-nb-customization
                   shell: bash -leo pipefail
                   command: |
+                      export PATH="/root/.local/bin:$PATH"
                       make test-nb-customization
     test-nb-pretraining:
             executor: python-executor
@@ -206,6 +214,7 @@ jobs:
                     name: run test-nb-pretraining
                     shell: bash -leo pipefail
                     command: |
+                        export PATH="/root/.local/bin:$PATH"
                         make test-nb-pretraining
 workflows:
     version: 2

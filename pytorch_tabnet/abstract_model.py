@@ -7,6 +7,7 @@ from scipy.sparse import csc_matrix
 from abc import abstractmethod
 from pytorch_tabnet import tab_network
 from pytorch_tabnet.utils import (
+    SparsePredictDataset,
     PredictDataset,
     create_explain_matrix,
     validate_eval_set,
@@ -14,7 +15,9 @@ from pytorch_tabnet.utils import (
     define_device,
     ComplexEncoder,
     check_input,
-    check_warm_start
+    check_warm_start,
+    create_group_matrix,
+    check_embedding_parameters
 )
 from pytorch_tabnet.callbacks import (
     CallbackContainer,
@@ -33,6 +36,7 @@ import shutil
 import zipfile
 import warnings
 import copy
+import scipy
 
 
 @dataclass
@@ -64,10 +68,13 @@ class TabModel(BaseEstimator):
     device_name: str = "auto"
     n_shared_decoder: int = 1
     n_indep_decoder: int = 1
+    grouped_features: List[List[int]] = field(default_factory=list)
 
     def __post_init__(self):
+        # These are default values needed for saving model
         self.batch_size = 1024
         self.virtual_batch_size = 128
+
         torch.manual_seed(self.seed)
         # Defining device
         self.device = torch.device(define_device(self.device_name))
@@ -77,6 +84,11 @@ class TabModel(BaseEstimator):
         # create deep copies of mutable parameters
         self.optimizer_fn = copy.deepcopy(self.optimizer_fn)
         self.scheduler_fn = copy.deepcopy(self.scheduler_fn)
+
+        updated_params = check_embedding_parameters(self.cat_dims,
+                                                    self.cat_idxs,
+                                                    self.cat_emb_dim)
+        self.cat_dims, self.cat_idxs, self.cat_emb_dim = updated_params
 
     def __update__(self, **kwargs):
         """
@@ -95,6 +107,7 @@ class TabModel(BaseEstimator):
             "n_independent",
             "n_shared",
             "n_steps",
+            "grouped_features",
         ]
         for var_name, value in kwargs.items():
             if var_name in update_list:
@@ -127,6 +140,7 @@ class TabModel(BaseEstimator):
         from_unsupervised=None,
         warm_start=False,
         augmentations=None,
+        compute_importance=True
     ):
         """Train a neural network stored in self.network
         Using train_dataloader for training data and
@@ -172,6 +186,8 @@ class TabModel(BaseEstimator):
             Use a previously self supervised model as starting weights
         warm_start: bool
             If True, current model parameters are used to start training
+        compute_importance : bool
+            Whether to compute feature importance
         """
         # update model name
 
@@ -185,6 +201,7 @@ class TabModel(BaseEstimator):
         self._stop_training = False
         self.pin_memory = pin_memory and (self.device.type != "cpu")
         self.augmentations = augmentations
+        self.compute_importance = compute_importance
 
         if self.augmentations is not None:
             # This ensure reproducibility
@@ -256,8 +273,9 @@ class TabModel(BaseEstimator):
         self._callback_container.on_train_end()
         self.network.eval()
 
-        # compute feature importance once the best model is defined
-        self.feature_importances_ = self._compute_feature_importances(X_train)
+        if self.compute_importance:
+            # compute feature importance once the best model is defined
+            self.feature_importances_ = self._compute_feature_importances(X_train)
 
     def predict(self, X):
         """
@@ -265,7 +283,7 @@ class TabModel(BaseEstimator):
 
         Parameters
         ----------
-        X : a :tensor: `torch.Tensor`
+        X : a :tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`
             Input data
 
         Returns
@@ -274,11 +292,19 @@ class TabModel(BaseEstimator):
             Predictions of the regression problem
         """
         self.network.eval()
-        dataloader = DataLoader(
-            PredictDataset(X),
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
+
+        if scipy.sparse.issparse(X):
+            dataloader = DataLoader(
+                SparsePredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
+        else:
+            dataloader = DataLoader(
+                PredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
 
         results = []
         for batch_nb, data in enumerate(dataloader):
@@ -295,7 +321,7 @@ class TabModel(BaseEstimator):
 
         Parameters
         ----------
-        X : tensor: `torch.Tensor`
+        X : tensor: `torch.Tensor` or matrix: `scipy.sparse.csr_matrix`
             Input data
         normalize : bool (default False)
             Wheter to normalize so that sum of features are equal to 1
@@ -309,11 +335,18 @@ class TabModel(BaseEstimator):
         """
         self.network.eval()
 
-        dataloader = DataLoader(
-            PredictDataset(X),
-            batch_size=self.batch_size,
-            shuffle=False,
-        )
+        if scipy.sparse.issparse(X):
+            dataloader = DataLoader(
+                SparsePredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
+        else:
+            dataloader = DataLoader(
+                PredictDataset(X),
+                batch_size=self.batch_size,
+                shuffle=False,
+            )
 
         res_explain = []
 
@@ -325,7 +358,6 @@ class TabModel(BaseEstimator):
                 masks[key] = csc_matrix.dot(
                     value.cpu().detach().numpy(), self.reducing_matrix
                 )
-
             original_feat_explain = csc_matrix.dot(M_explain.cpu().detach().numpy(),
                                                    self.reducing_matrix)
             res_explain.append(original_feat_explain)
@@ -567,6 +599,9 @@ class TabModel(BaseEstimator):
     def _set_network(self):
         """Setup the network and explain matrix."""
         torch.manual_seed(self.seed)
+
+        self.group_matrix = create_group_matrix(self.grouped_features, self.input_dim)
+
         self.network = tab_network.TabNet(
             self.input_dim,
             self.output_dim,
@@ -583,6 +618,7 @@ class TabModel(BaseEstimator):
             virtual_batch_size=self.virtual_batch_size,
             momentum=self.momentum,
             mask_type=self.mask_type,
+            group_attention_matrix=self.group_matrix.to(self.device),
         ).to(self.device)
 
         self.reducing_matrix = create_explain_matrix(
