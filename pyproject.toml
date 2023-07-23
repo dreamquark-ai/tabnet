@@ -28,7 +28,7 @@ pandas="0.25.3"
 flake8="3.7.9"
 sphinx = "^2.2"
 sphinx-rtd-theme = "0.5.0"
-recommonmark = "0.6.0"
+recommonmark = "0.7.1"
 pytest = "6.2.5"
 
 [build-system]
