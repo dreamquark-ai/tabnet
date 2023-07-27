@@ -315,7 +315,7 @@ loaded_clf.load_model(saved_filepath)
     Verbosity for notebooks plots, set to 1 to see every epoch, 0 to get None.
 
 - `device_name` : str (default='auto')
-    'cpu' for cpu training, 'gpu' for gpu training, 'auto' to automatically detect gpu.
+    'cpu' for cpu training, 'cuda' for gpu training, 'auto' to automatically detect gpu.
 
 - `mask_type: str` (default='sparsemax')
     Either "sparsemax" or "entmax" : this is the masking function to use for selecting features.
