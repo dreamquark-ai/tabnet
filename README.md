@@ -1,3 +1,22 @@
+This draft PR is focused on Feature Embedding 
+
+**Feature request**
+
+As requested by some, and as @ekamioka started on this PR #244. It might be interesting to get some helper functions to use embeddings as it's not the simplest concept in deep learning.
+
+**What is the expected behavior?**
+Calling a few helper function to get all the correct parameters before using TabNet.
+
+**#What is motivation or use case for adding/changing the behavior?**
+I think this would make things easier and help a lot of people.
+
+**How should this be implemented in your opinion?**
+Clean and clear, might be available in a helper.py file, completely independent of the rest of the code.
+
+
+
+
+
 # README
 
 # TabNet : Attentive Interpretable Tabular Learning
