@@ -1,5 +1,5 @@
 # GENERATED FROM SCRIPTS
-FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04
+FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04@sha256:e8e94e51bb63ab09d698764aac45611c4370995947e59afc3ead508518e86e91
 
 # Avoid tzdata interactive action
 ENV DEBIAN_FRONTEND noninteractive
