@@ -35,7 +35,7 @@ commands:
                       curl -sSL https://install.python-poetry.org | python3 -
                       export PATH="/root/.local/bin:$PATH"
                       poetry config virtualenvs.path $POETRY_CACHE
-                      poetry run pip install --upgrade --no-cache-dir pip==20.1;
+                      poetry install
 
 jobs:
     test-build-docker:
