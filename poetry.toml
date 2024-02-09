@@ -1,2 +1,4 @@
 [installer]
 parallel = false
+[virtualenvs]
+in-project = true
