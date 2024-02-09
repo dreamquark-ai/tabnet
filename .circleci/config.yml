@@ -90,7 +90,6 @@ jobs:
                   command: |
                       export PATH="/root/.local/bin:$PATH"
                       poetry config virtualenvs.path $POETRY_CACHE
-                      poetry run pip install torch==1.4.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
                       poetry install --no-ansi
             - save_cache:
                   paths:
