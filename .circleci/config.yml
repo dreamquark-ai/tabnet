@@ -8,7 +8,7 @@ executors:
     # here we can define an executor that will be shared across different jobs
     python-executor:
         docker:
-            - image: python:3.7-slim-buster@sha256:fecbb1a9695d25c974906263c64ffba6548ce14a169ed36be58331659383c25e
+            - image: python:3.9-slim-buster
               environment:
                   POETRY_CACHE: /work/.cache/poetry
                   PIP_CACHE_DIR: /work/.cache/pip
@@ -22,7 +22,7 @@ executors:
             - image: dreamquark/docker:latest@sha256:0dfd1a7a7b519e33fde3f2285f19cdb81c9a9f01e457f1940bac36a7b5ca8347
         working_directory: /work
         resource_class: small
-    
+
 commands:
     # here we can define steps that will be shared across different jobs
     install_poetry:
@@ -35,7 +35,7 @@ commands:
                       curl -sSL https://install.python-poetry.org | python3 -
                       export PATH="/root/.local/bin:$PATH"
                       poetry config virtualenvs.path $POETRY_CACHE
-                      poetry run pip install --upgrade --no-cache-dir pip==20.1;
+                      poetry install
 
 jobs:
     test-build-docker:
@@ -90,7 +90,6 @@ jobs:
                   command: |
                       export PATH="/root/.local/bin:$PATH"
                       poetry config virtualenvs.path $POETRY_CACHE
-                      poetry run pip install torch==1.4.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
                       poetry install --no-ansi
             - save_cache:
                   paths:
