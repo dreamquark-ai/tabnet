@@ -14,6 +14,7 @@ class TabNetClassifier(TabModel):
         self._task = 'classification'
         self._default_loss = torch.nn.functional.cross_entropy
         self._default_metric = 'accuracy'
+        self._estimator_type = 'classifier'
 
     def weight_updater(self, weights):
         """
