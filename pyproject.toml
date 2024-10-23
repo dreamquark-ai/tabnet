@@ -21,7 +21,7 @@ scipy=">1.4"
 
 [tool.poetry.dev-dependencies]
 jupyter="1.0.0"
-xgboost="0.90"
+xgboost="2.1.2"
 matplotlib="3.1.1"
 wget="3.2"
 pandas="0.25.3"
