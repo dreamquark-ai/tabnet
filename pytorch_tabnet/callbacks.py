@@ -5,6 +5,7 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import List, Any
 import warnings
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
 class Callback:
@@ -264,8 +265,11 @@ class LRSchedulerCallback(Callback):
     def __post_init__(
         self,
     ):
-        self.is_metric_related = hasattr(self.scheduler_fn, "is_better")
         self.scheduler = self.scheduler_fn(self.optimizer, **self.scheduler_params)
+        self.is_metric_related = (
+            isinstance(self.scheduler, ReduceLROnPlateau)
+            or hasattr(self.scheduler_fn, "is_better")
+        )
         super().__init__()
 
     def on_batch_end(self, batch, logs=None):
